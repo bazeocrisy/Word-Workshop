@@ -139,7 +139,12 @@ try {
   }
   // Remaining "Needs attention" words were compared with the sheet and are right.
   let looks = 0;
-  for (let g = 0; g < 80; g++) { const has = await js(`const x = document.querySelector('.ws-looks-right'); if (x) x.click(); return !!x;`); if (!has) break; looks++; await b.wait(250); }
+  // One click per flagged word: wait until that row is redrawn before the next (so a slow save is never counted twice).
+  for (let g = 0; g < 80; g++) {
+    const has = await js(`const x = document.querySelector('.ws-looks-right'); if (!x) return false; const id = x.closest('[data-item]').dataset.item; x.click();
+      for (let i = 0; i < 150 && document.querySelector('[data-item="' + id + '"] .ws-looks-right'); i++) await new Promise((r) => setTimeout(r, 20)); return true;`);
+    if (!has) break; looks++;
+  }
   act('"Looks right" on a flagged word (after comparing with the photo)', looks);
   for (const k of ['vocab', 'spelling']) if (await js(`return !!document.querySelector('.ws-confirm-${k}');`)) { await click(`.ws-confirm-${k}`); act(`"I checked the ${k === 'vocab' ? 'vocabulary' : 'spelling'} words against the sheet"`); }
 

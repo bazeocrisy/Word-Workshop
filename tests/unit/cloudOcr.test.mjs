@@ -75,7 +75,7 @@ test('worker: asks for the tool (strict schema, low effort; no temperature, no f
   assert.equal(r.truncated, false);
 });
 
-const env = { ANTHROPIC_API_KEY: 'k', READER_PASSPHRASE: 'secret', ALLOWED_ORIGINS: 'https://bazeocrisy.github.io' };
+const env = { ANTHROPIC_API_KEY: 'k', READER_PASSPHRASE: 'secret-passphrase-for-tests', ALLOWED_ORIGINS: 'https://bazeocrisy.github.io' };
 const req = (headers, body, method = 'POST') => new Request('https://reader.example/', { method, headers, body: body == null ? undefined : JSON.stringify(body) });
 const ORIGIN = { Origin: 'https://bazeocrisy.github.io', 'Content-Type': 'application/json' };
 
@@ -91,6 +91,7 @@ test('oversized replies are capped (items and characters)', () => {
   assert.equal(r.spelling.length, 100);
   assert.equal(r.spelling[0].word.length, 500);
   assert.equal(cleanResult(big).spelling.length, 100);
+  assert.ok(r.notes.some((n) => /was shortened/.test(n)) && cleanResult(big).notes.some((n) => /was shortened/.test(n)));
 });
 
 test('worker: refuses other websites, wrong passphrases and bad input; answers a ping', async () => {
@@ -99,20 +100,22 @@ test('worker: refuses other websites, wrong passphrases and bad input; answers a
   let asked = null;
   globalThis.fetch = async (url, init) => { asked = { url: String(url), key: init?.headers?.['x-api-key'] }; return new Response('{}', { status: env.__modelStatus || 200 }); };
   try {
-  assert.equal((await worker.fetch(req({ Origin: 'https://evil.example', 'X-Reader-Key': 'secret' }, { ping: true }), env)).status, 403);
+  assert.equal((await worker.fetch(req({ Origin: 'https://evil.example', 'X-Reader-Key': 'secret-passphrase-for-tests' }, { ping: true }), env)).status, 403);
   assert.equal((await worker.fetch(req({ ...ORIGIN, 'X-Reader-Key': 'nope' }, { ping: true }), env)).status, 401);
-  assert.equal((await worker.fetch(req({ ...ORIGIN, 'X-Reader-Key': 'secret' }, { image: 'x', mediaType: 'text/html' }), env)).status, 400);
+  assert.equal((await worker.fetch(req({ ...ORIGIN, 'X-Reader-Key': 'secret-passphrase-for-tests' }, { image: 'x', mediaType: 'text/html' }), env)).status, 400);
   const pre = await worker.fetch(req(ORIGIN, null, 'OPTIONS'), env);
   assert.equal(pre.status, 204);
   assert.equal(pre.headers.get('Access-Control-Allow-Origin'), 'https://bazeocrisy.github.io');
-  const ping = await worker.fetch(req({ ...ORIGIN, 'X-Reader-Key': 'secret' }, { ping: true }), env);
+  const ping = await worker.fetch(req({ ...ORIGIN, 'X-Reader-Key': 'secret-passphrase-for-tests' }, { ping: true }), env);
   assert.equal(ping.status, 200);
   assert.equal((await ping.json()).ok, true);
   assert.equal(asked.url, 'https://api.anthropic.com/v1/models/claude-sonnet-5-5');
   assert.equal(asked.key, 'k');
   env.__modelStatus = 401; // wrong key: Test connection must not say "Connected"
-  assert.equal((await worker.fetch(req({ ...ORIGIN, 'X-Reader-Key': 'secret' }, { ping: true }), env)).status, 502);
+  assert.equal((await worker.fetch(req({ ...ORIGIN, 'X-Reader-Key': 'secret-passphrase-for-tests' }, { ping: true }), env)).status, 502);
   delete env.__modelStatus;
-  assert.equal((await worker.fetch(req({ ...ORIGIN, 'X-Reader-Key': 'secret' }, { image: 'A'.repeat(7e6) }), env)).status, 413);
+  assert.equal((await worker.fetch(req({ ...ORIGIN, 'X-Reader-Key': 'secret-passphrase-for-tests' }, { image: 'A'.repeat(7e6) }), env)).status, 413);
+  // A Worker deployed with a short passphrase refuses to run.
+  assert.equal((await worker.fetch(req({ ...ORIGIN, 'X-Reader-Key': 'short' }, { ping: true }), { ...env, READER_PASSPHRASE: 'short' })).status, 500);
   } finally { globalThis.fetch = realFetch; }
 });

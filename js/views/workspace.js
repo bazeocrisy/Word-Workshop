@@ -376,7 +376,10 @@ class Workspace extends Editor {
     for (const [i, p] of pages.entries()) {
       let result;
       try {
-        result = await readPhoto(p, { target, onProgress: (f, label) => { job.frac = (i + f) / pages.length; job.label = pages.length > 1 ? `Photo ${i + 1} of ${pages.length}: ${label}` : label; redraw(); } });
+        result = await readPhoto(p, { target, onProgress: (f, label) => {
+          if (job.online && /read on this device instead/.test(label)) job.online = false; // the online reader failed
+          job.frac = (i + f) / pages.length; job.label = pages.length > 1 ? `Photo ${i + 1} of ${pages.length}: ${label}` : label; redraw();
+        } });
       } catch (e) { console.warn(e); job.error = readerError(e); redraw(); return; }
       const d = draftsFromReading(result, target);
       const src = await saveSource(p, result, { target, otherText: d.other, notes: d.notes });

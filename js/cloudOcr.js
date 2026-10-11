@@ -96,7 +96,8 @@ export async function readOnline(canvas, { target = 'auto', onProgress = () => {
 
 /** Turn the server's JSON into the reader-result shape (pure; unit-tested). */
 export function toReading(data, target = 'auto') {
-  const str = (s) => (typeof s === 'string' ? s.replace(/\s+/g, ' ').trim().slice(0, MAX_CHARS) : '');
+  let cut = false;
+  const str = (s) => { const t = typeof s === 'string' ? s.replace(/\s+/g, ' ').trim() : ''; if (t.length > MAX_CHARS) cut = true; return t.slice(0, MAX_CHARS); };
   let spelling = (Array.isArray(data?.spelling) ? data.spelling : []).slice(0, MAX_ITEMS).map((x) => ({ number: Number.isInteger(x?.number) ? x.number : null, word: str(x?.word), unsure: !!x?.unsure })).filter((x) => x.word);
   let vocabulary = (Array.isArray(data?.vocabulary) ? data.vocabulary : []).slice(0, MAX_ITEMS).map((x) => ({ word: str(x?.word), definition: str(x?.definition), unsure: !!x?.unsure })).filter((x) => x.word || x.definition);
   if (target === 'spelling') vocabulary = [];
@@ -105,6 +106,7 @@ export function toReading(data, target = 'auto') {
   if (spelling.length && spelling.every((x) => x.number != null)) spelling = [...spelling].sort((a, b) => a.number - b.number);
   const notes = (Array.isArray(data?.notes) ? data.notes : []).slice(0, 20).map(str).filter(Boolean);
   if (data?.truncated) notes.push('The online reader stopped early; some words may be missing.');
+  if (cut && !notes.some((n) => /was shortened/.test(n))) notes.push('A very long word or definition was shortened; check it against the photo.');
   const nums = spelling.map((x) => x.number).filter((n) => n != null);
   if (nums.length === spelling.length && nums.length) {
     const missing = []; for (let n = 1; n <= Math.max(...nums); n++) if (!nums.includes(n)) missing.push(n);

@@ -244,3 +244,35 @@ Every run ended with an approved lesson that exactly matches the teacher's sheet
 ## Online photo reader (2026-10-11, branch `claude/online-ocr`)
 Optional Claude-vision photo reader behind an owner-deployed Cloudflare Worker (`server/ocr-worker/`), set up per browser in Settings, with automatic fallback to on-device reading. Details, privacy and cost: docs/OCR.md. Not deployed; real-photo accuracy not yet measured (needs the owner's API key: `npm run test:ocr:online`). Totals: 67 unit tests; browser suite adds 11 checks (`onlineReader`). In this Linux/Chromium test environment 8 existing on-device OCR checks fail identically with and without this change (Tesseract reads an extra "HT" row from the synthetic vocabulary page); they pass on Windows Chrome/Edge per earlier runs.
 Applied and checked on Windows (2026-10-11): 67 unit tests and 241 browser checks pass (Chrome). Follow-up fix: the page's Content-Security-Policy blocked every request to the reader (verified with a real request), so `connect-src` now also allows `https://*.workers.dev`, Settings accepts only a workers.dev address, and a browser check makes a real request to confirm it is not blocked. The photo-upload test helpers now wait for reading to start instead of a fixed 300 ms (a timing race seen once).
+
+**Pre-deployment security audit (2026-10-11; independent reviewer, two rounds; PR #4 stays unmerged)**
+- **Critical, fixed:** the Worker sent `temperature: 0` and a forced `tool_choice`. Both are rejected with HTTP 400 by Claude Sonnet 5.5, Opus 5.5 and Haiku 5.5, so every real reading would have failed and silently fallen back to the device, while "Test connection" still said Connected.
+  - The request now uses `tool_choice` auto with a strict tool schema (`additionalProperties: false`; every property required; `number` nullable), `output_config.effort: 'low'` and `max_tokens` 6000.
+  - Refusals and replies with no tool call are errors.
+  - "Test connection" checks the key and model with Anthropic for free (`GET /v1/models/{model}`).
+  - Only the live smoke test can confirm that Anthropic accepts the request (docs/ONLINE-READER-SETUP.md, step 4).
+- **Major, fixed:**
+  - The on-device fallback and the reader's own warnings (cut-off rows, missing numbers, stopped early) were never visible. They now stay on screen until dismissed, and each photo, including in the phone viewer, says which reader read it and lists its notes.
+  - The upload banner said "on this device" while sending online. It now names the online reader (Anthropic), and switches back to "on this device" during a fallback.
+  - `DAILY_LIMIT` is per instance, and wrong passphrases are not rate-limited. Now:
+    - the passphrase must be at least 20 characters (enforced in the app, and the Worker refuses to run with a shorter one);
+    - it is never shown back in Settings;
+    - a parent PIN is recommended;
+    - the docs say the Anthropic Console spend limit ($5/month) is the only hard cap.
+- **Minor, fixed:**
+  - The docs say plainly that Origin is not authentication, and that the github.io origin is shared by every Pages site of this account.
+  - `.dev.vars` and `.wrangler/` are git-ignored.
+  - Replies are capped at 100 items and 500 characters, with a note when anything is shortened.
+  - A timeout gets its own message.
+  - The Worker log omits the upstream error body.
+  - "Read as a table" is hidden for online reading.
+- **Remaining by design:**
+  - No Cloudflare rate-limiting binding (no extra services; a random 36-character passphrase cannot be guessed).
+  - The CSP allows `https://*.workers.dev` until the reader's exact address is known; narrow it before merging.
+- **Seven points:** all pass. API key server-side; Origin not used as authentication; passphrase protected; spending capped by the Console limit; explicit consent (Settings, and the banner at upload time); visible fallback; parent review and exact definitions unchanged.
+- **Cost (Sonnet 5.5 at $2/$10 per million tokens):** about 5.8k input tokens per photo.
+  - Typical: $0.02–0.04 per photo, $0.40–$1 a month for 16–20 photos.
+  - Worst case: $0.072 per photo, about $4.30 a month for 60 photos.
+  - Cloudflare Workers free plan: $0.
+- **Deployment checklist and accuracy test:** docs/ONLINE-READER-SETUP.md. `npm run test:ocr:online` now does a free connection check first, asks for the passphrase at a hidden prompt, and prints a summary against the on-device results.
+- **Tests:** 69 unit; 251 browser. The "Looks right" loops in the tests and the walkthrough now wait for each row to save, which fixes an intermittent failure under load. The measured counts are unchanged (Sept 28: 25 actions).

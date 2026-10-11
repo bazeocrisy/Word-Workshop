@@ -109,7 +109,8 @@ function same(a, b) {
 
 /** Keep only well-formed fields from the model's tool input. */
 export function cleanResult(input) {
-  const str = (s) => (typeof s === 'string' ? s.replace(/\s+/g, ' ').trim().slice(0, MAX_CHARS) : '');
+  let cut = false;
+  const str = (s) => { const t = typeof s === 'string' ? s.replace(/\s+/g, ' ').trim() : ''; if (t.length > MAX_CHARS) cut = true; return t.slice(0, MAX_CHARS); };
   const spelling = (Array.isArray(input?.spelling) ? input.spelling : []).slice(0, MAX_ITEMS)
     .map((x) => ({ number: Number.isInteger(x?.number) ? x.number : null, word: str(x?.word), unsure: !!x?.unsure }))
     .filter((x) => x.word);
@@ -117,6 +118,7 @@ export function cleanResult(input) {
     .map((x) => ({ word: str(x?.word), definition: str(x?.definition), unsure: !!x?.unsure }))
     .filter((x) => x.word || x.definition);
   const notes = (Array.isArray(input?.notes) ? input.notes : []).map(str).filter(Boolean).slice(0, 20);
+  if (cut) notes.push('A very long word or definition was shortened; check it against the photo.');
   return { spelling, vocabulary, notes };
 }
 
@@ -166,7 +168,8 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { status: ok ? 204 : 403, headers });
     if (!ok) return json({ error: 'origin not allowed' }, 403, headers);
     if (request.method !== 'POST') return json({ error: 'method not allowed' }, 405, headers);
-    if (!env.ANTHROPIC_API_KEY || !env.READER_PASSPHRASE) return json({ error: 'reader not configured' }, 500, headers);
+    // A short passphrase could be guessed by trying many (there is no lockout): refuse to run with one.
+    if (!env.ANTHROPIC_API_KEY || !env.READER_PASSPHRASE || String(env.READER_PASSPHRASE).length < 20) return json({ error: 'reader not configured' }, 500, headers);
     if (!same(request.headers.get('X-Reader-Key'), env.READER_PASSPHRASE)) return json({ error: 'wrong passphrase' }, 401, headers);
 
     let body;
