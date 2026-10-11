@@ -21,10 +21,10 @@ Devices: ☐ iPhone (Safari) ☐ iPad (Safari) ☐ Android phone (Chrome) ☐ Wi
 ## Speech
 - ☐ Settings → Test the voice: you hear "stepped…" at normal and slow speed. iPhone: silent switch off.
 - ☐ Spelling test: after tapping Start, the first word is spoken; Next speaks the next word; replay works.
-- ☐ With the volume muted, the app never claims sound played (it says "did not play" after a few seconds).
+- ☐ "Playing…" appears only while speech is actually running. (A muted device still counts as playing — the app cannot detect the volume — so check the silent switch and volume first.)
 
 ## Study, practice, test (child does this)
-- ☐ Flashcards: swipe/tap Next through all cards; pictures load; definitions match the teacher sheet.
+- ☐ Flashcards: tap Next through all cards; pictures load; definitions match the teacher sheet.
 - ☐ Each vocabulary activity (meaning, word, blank, match, write) works with touch and with an external keyboard.
 - ☐ A spelling test: the word is never visible before submitting; results show score and missed words; "Practice missed words" works.
 - ☐ Rotate the tablet and refresh the page mid-test: answers are kept. (Closing the tab ends an unfinished test; finished results are always saved.)
