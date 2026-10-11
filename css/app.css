@@ -35,7 +35,7 @@ h2 { font-size: 1.3rem; margin: 1.25rem 0 .5rem; }
 h3 { font-size: 1.1rem; margin: 1rem 0 .4rem; }
 h1:focus { outline: none; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
-.skip-link { position: absolute; left: -999px; top: 0; background: var(--ink); color: #fff; padding: .5rem 1rem; z-index: 50; }
+.skip-link { position: absolute; left: -999px; top: 0; background: var(--ink); color: #fff; padding: .5rem 1rem; z-index: 50; min-height: 44px; display: inline-flex; align-items: center; }
 .skip-link:focus { left: .5rem; }
 .muted, .hint { color: var(--muted); }
 .hint { font-size: .95rem; margin: .25rem 0 .5rem; }
@@ -506,7 +506,7 @@ details[open] > summary::before { content: "▾"; }
 .ws-table-vocab { border-top: 6px solid #f59e0b; }
 .ws-table-spelling { border-top: 6px solid #0ea5e9; }
 .ws-cols, .ws-row { display: grid; gap: .4rem .6rem; align-items: start; }
-.ws-cols-vocab, .ws-table-vocab .ws-row { grid-template-columns: 2rem minmax(7rem, 1fr) minmax(0, 2.4fr) 9.5rem 2.75rem; }
+.ws-cols-vocab, .ws-table-vocab .ws-row { grid-template-columns: 2rem minmax(9.5rem, 1fr) minmax(0, 2.4fr) 8.5rem 2.75rem; }
 .ws-cols-spelling, .ws-table-spelling .ws-row { grid-template-columns: 2rem minmax(0, 1fr) 9.5rem 2.75rem; }
 .ws-cols { font-size: .8rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; padding: 0 .5rem .25rem; }
 .ws-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: .35rem; }

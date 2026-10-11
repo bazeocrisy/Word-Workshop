@@ -1,6 +1,6 @@
 # Word Workshop — build status (checkpoint log)
 
-Branches: `claude/build-v1` (v1, merged to `main` and deployed 2026-10-11 with owner approval) · `claude/ux-wizard` (landing page + lesson wizard, awaiting owner review). Never merge or deploy without owner approval.
+Branches: `main` is live (v1 + four-step wizard, PR #1 and PR #2, deployed 2026-10-11 with owner approval) · `claude/parent-ux-v2` (Redesign 2.0 lesson workspace, awaiting owner approval). Never merge or deploy without owner approval.
 Architecture: `docs/ARCHITECTURE-PROPOSAL.md` (vanilla JS ES modules, IndexedDB, hash routes, no build step).
 
 ## How to resume
@@ -157,6 +157,77 @@ The first real parent test showed parents could not find where to upload workshe
 **Second round (fresh-browser review of the whole workflow, 8 owner checks):** added a visible "All changes saved" status and **Save and finish later**. Approval now opens the new lesson, where Study, Practice and Test are ready. Reviewer found 1 Major: on tablets and phones the Spelling upload and paste buttons (and on phones the vocabulary paste button) were below the first screen or under the bottom bar. Fixed with a block of all four buttons at the top of Add words on narrow screens; "Add one word" folds there, and the bottom bar is one row on phones. Minor fixes: the approve action comes first in Step 4; student cards no longer overflow. Re-review: all 8 checks pass at 1366, 768 and 390 px. Totals: 61 unit tests, 245 browser checks. Branch head 2e9b887 plus this note; not merged or deployed.
 
 **Not verified:** real phones, tablets and screen readers; a timed session with a real parent.
+
+## Redesign 2.0: parent workspace (2026-10-11, branch `claude/parent-ux-v2`)
+The owner's real-world test showed the four-step wizard still cost too many screens and actions, and that the separate photo tool felt like leaving the app. This redesign makes the existing features easier to find and use; it adds no new features. **Not merged or deployed; awaiting owner approval.**
+
+**What a parent sees**
+- **Landing page (`#/`)**: *Parents: create and manage lessons*: **Create this week's lesson**, *Continue unfinished lesson* (hidden while a PIN locks the parent area), and *Manage lessons*. *Students: study and test* holds the profile cards. Backup reminders, settings and the "saved on this device" note moved to the parent area, settings and backup screens.
+- **Lesson workspace (`#/parent/new`, `#/parent/lesson/:id?stage=add|check|finish`)**: one screen, three stages.
+  - **Add**: student, week (Mon–Fri default; end follows start) and an optional name at the top. Vocabulary and Spelling cards sit side by side, each with *Upload … worksheet*, *Type or paste* (inline, with a live preview) and *Add one word* (inline).
+    - Upload is preset to the card's subject. The photo is read on the device on the same screen, with a progress bar, and the words go straight to Check.
+    - *One photo with both lists?* covers a combined upload.
+    - The lesson is saved with the first word. A second lesson for the same student and week is refused, with a link to the existing one.
+  - **Check**: every word is an editable row.
+    - Vocabulary rows: number, word, the teacher's exact definition, status, ⋯. Spelling rows: number, word, status, ⋯.
+    - The worksheet photo sits beside the rows on wide screens. It is larger, follows the row being edited, and enlarges in place. Phones get a Photos viewer, so the parent keeps their place.
+    - *Needs attention* lists the words with problems (reader unsure, misread numbering, possible mismatch, duplicates…). Each takes one fix, or one *Looks right*.
+    - The other words are confirmed with one action per subject: *I checked these N words against the sheet*.
+    - Editing the spelling word or the vocabulary definition counts as checking that row. Editing only a vocabulary word does not.
+    - The ⋯ menu offers move up/down, move to the other subject, and delete. Moving keeps the definition and asks first.
+    - *Other text found* keeps every line the reader could not place, with *+ Vocabulary / + Spelling* to recover a word.
+    - Sentence and picture status is shown per word. *Add sentences…* opens the existing helper; *Continue without sentences* is one action per subject.
+    - *Words in a grid of cards? Read as a table* re-reads a vocabulary photo with the corner tool.
+  - **Finish**: summary (student, week, vocabulary and spelling counts, checked, unresolved issues) and what is left, each with a link to it. One explicit **Approve and give to {student}** appears only when nothing is left. Approval still goes through `store.approveWeek` (blockers and definition-integrity checks, immutable snapshot), then opens the student's lesson page (Study / Practice / Test).
+  - Everything saves as it happens ("Saved"). The stage is remembered (meta `wizard:<id>`), and half-typed text survives reloads. Old wizard addresses open the matching stage. The earlier all-in-one lesson page stays as *Spelling patterns, test order, history and more*.
+- **Code**:
+  - `js/views/workspace.js` (subclasses the existing `Editor`) and `js/views/lessonSteps.js`.
+  - `js/photoImport.js`: inline reading, using the same extraction and matching as the photo page (`buildDraftItems` and `markTableCorners` extracted from `importView.js`).
+  - The four-step wizard (`wizard.js`) was removed.
+- **Data**: no schema change.
+  - New optional fields: `item.sourceId`, `spellingItem.movedFrom`, and `source.otherText`, `source.target`, `source.table`.
+  - Backups round-trip; the reviewer verified this.
+
+**Real-world walkthrough** (`tests/walkthrough.mjs`; real UI, every parent action counted; photos in git-ignored local-fixtures/):
+
+| Worksheets | Parent actions | Screen changes | OCR corrections | Estimated time* |
+|---|---|---|---|---|
+| Sept 28 newsletter, sentence helper (same as the earlier 72-action measurement) | **32** + 6 in another app (was 72 + 6) | 2 | 1 | ~4 min |
+| Sept 28 newsletter, without sentences | **25** | 2 | 1 | ~3 min |
+| Oct 12 photos, vocabulary photo as taken | **54** | 2 | spelling 1, vocabulary 16 | ~8 min |
+| Oct 12 photos, vocabulary read as a table (4 corner drags + 2 counts) | **50** | 2 | spelling 1, vocabulary 13 | ~7 min |
+
+\*Estimated, not timed with a person: 3 s per click, 4 s + 0.35 s per character for each typed field, 3 s per word to compare with the sheet, plus the measured reading time (desktop, 30–47 s).
+
+Every run ended with an approved lesson that exactly matches the teacher's sheets, and the student page opened with Study / Practice / Test. Screen changes: home → workspace → student lesson; Add, Check and Finish switch on the same screen.
+
+**OCR problems vs interface problems**
+- **OCR, not interface:**
+  - The vocabulary photo of Oct 12 is read badly: 3/12 words as taken, 7/12 words and 4/12 exact definitions as a table. That is 13–16 of the corrections and most of the typing (312–477 characters).
+  - The reader also flags many words it read correctly. On Sept 28, 14 of 15 flagged words were right, which costs 14 *Looks right* clicks.
+  - Both need better source photos or an owner-approved online reader. They are not UI defects.
+- **Interface, fixed:**
+  - The separate photo screen and its raw text boxes are gone.
+  - One warning acknowledgement per warning became one decision per word.
+  - Ticking each word became one confirmation per subject.
+  - One "no sentence" acknowledgement per word became one decision per subject.
+  - The four wizard screens became one workspace.
+
+**Independent review**
+- Round 1: no Critical. 3 Major, all fixed:
+  - Editing only a vocabulary word marked the row checked and cleared definition warnings.
+  - Moving to the other subject dropped the definition.
+  - Text being typed was lost when a photo finished reading.
+- 3 Minor, all fixed:
+  - Drafts leaked into the next new lesson.
+  - "Photo reader read" was shown for typed words.
+  - An off-screen workspace could change the address.
+- Notes, also fixed: Escape and click-outside close the ⋯ menu; 44 px targets; larger photo that follows the row, with zoom in place.
+- Round 2: all six findings confirmed fixed; one new Minor (long vocabulary words cut off on desktop after the photo panel grew) fixed by giving the word column a minimum width; the skip link is now 44 px.
+- All 10 owner checks pass at 1366, 768 and 390 px.
+- Tests: 61 unit; 229 browser checks, including the new `workspace` suite (56).
+
+**Not verified**: real phones and tablets, a timed session with a real parent, screen readers.
 
 ## Known limitations / decisions log
 - Data lives in one browser on one device; no sync (by design, documented in the UI).
