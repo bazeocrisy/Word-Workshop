@@ -1,12 +1,12 @@
 // Photo import: choose photos → read them on this device → check the text beside each photo → add as drafts.
 // Nothing here is ever approved automatically; every imported word lands in the week editor unchecked.
-import { h, fill, page, btn, link, field, toast, progressBar, confirmDialog } from '../ui.js';
+import { h, fill, page, btn, link, field, toast, progressBar, confirmDialog, dialog } from '../ui.js';
 import * as store from '../store.js';
 import { newVocabItem, newSpellingItem, weekLabel, nowIso, similarity, compareKey } from '../model.js';
 import { suggestGroups } from '../spelling.js';
 import { parseVocabLines, parseSpellingLines, splitSections, splitPair, isHeading, stripMarker } from '../parse.js';
 import { decode, toCanvas, canvasToBlob, checkFile, ImageError } from '../images.js';
-import { extractNumberedList, pairCardGrid, vocabStart } from '../layout.js';
+import { extractNumberedList, voteNumbered, pairCardGrid, vocabStart } from '../layout.js';
 import { go } from '../router.js';
 
 const MAX_PAGES = 6;
@@ -48,7 +48,7 @@ export function extractPages(pages, target) {
   const rowNotes = new Map();
   let spText = null, voText = null;
   if (target !== 'vocab') {
-    const list = extractNumberedList(all);
+    const list = voteNumbered([extractNumberedList(all), ...pages.flatMap((p) => (p.alternatives || []).map((alt) => extractNumberedList(alt)))]);
     if (list) {
       const lines = list.items.map((it) => { const t = `${it.number}. ${it.word}`; conf.set(t, it.conf); return t; });
       spText = lines.join('\n');
@@ -59,7 +59,10 @@ export function extractPages(pages, target) {
   if (target !== 'spelling') {
     const rows = [];
     let headingFound = false;
+    // Pages the parent marked as a table of word cards were read card by card.
+    for (const p of pages) if (p.cards) { headingFound = true; rows.push(...p.cards.filter((c) => c.word || c.definition).map((c) => ({ ...c, word: c.word || 'Unreadable' }))); }
     for (const p of pages) {
+      if (p.cards) continue;
       const start = vocabStart(p.lines);
       if (start < 0 && target !== 'vocab') continue;
       headingFound = true;
@@ -145,10 +148,60 @@ class Importer {
       const img = h('img', { src: c.toDataURL('image/jpeg', 0.6), alt: `Page ${i + 1}: ${p.name}` });
       return h('figure', { class: 'thumb-page' }, img, h('figcaption', null, `Page ${i + 1}`),
         h('div', { class: 'row' },
-          btn('↺', () => { p.rotate = (p.rotate + 270) % 360; this.drawThumbs(); }, 'btn-ghost btn-small', { 'aria-label': `Turn page ${i + 1} left` }),
-          btn('↻', () => { p.rotate = (p.rotate + 90) % 360; this.drawThumbs(); }, 'btn-ghost btn-small', { 'aria-label': `Turn page ${i + 1} right` }),
-          btn('Remove', () => { this.pages.splice(i, 1); this.drawThumbs(); }, 'btn-ghost btn-small', { 'aria-label': `Remove page ${i + 1}` })));
+          btn('↺', () => { p.rotate = (p.rotate + 270) % 360; p.corners = null; this.drawThumbs(); }, 'btn-ghost btn-small', { 'aria-label': `Turn page ${i + 1} left` }),
+          btn('↻', () => { p.rotate = (p.rotate + 90) % 360; p.corners = null; this.drawThumbs(); }, 'btn-ghost btn-small', { 'aria-label': `Turn page ${i + 1} right` }),
+          btn('Remove', () => { this.pages.splice(i, 1); this.drawThumbs(); }, 'btn-ghost btn-small', { 'aria-label': `Remove page ${i + 1}` })),
+        h('div', { class: 'row' }, btn(p.corners ? '✓ Table corners marked' : 'Mark table corners', () => this.markCorners(p, i), `btn-small ${p.corners ? 'btn-primary' : 'btn-ghost'} corners-btn`, { 'aria-label': `Mark the corners of a table of word cards on page ${i + 1}` })));
     }));
+  }
+
+  /**
+   * Corner tool for a vocabulary sheet laid out as a table of cards and photographed at an angle: the parent drags
+   * four handles onto the table's outer corners; the app straightens the table and reads each card on its own.
+   */
+  async markCorners(p, i) {
+    p.rotate = p.rotate || 0;
+    const c = this.pageCanvas(p);
+    const { detectTable } = await import('../perspective.js');
+    let pts = p.corners ? p.corners.map((q) => ({ ...q })) : (detectTable(c)?.corners || [{ x: c.width * 0.1, y: c.height * 0.1 }, { x: c.width * 0.9, y: c.height * 0.1 }, { x: c.width * 0.9, y: c.height * 0.6 }, { x: c.width * 0.1, y: c.height * 0.6 }]);
+    const names = ['top-left', 'top-right', 'bottom-right', 'bottom-left'];
+    const img = h('img', { src: c.toDataURL('image/jpeg', 0.8), alt: `Page ${i + 1}`, class: 'corner-img', draggable: 'false' });
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg'); svg.setAttribute('class', 'corner-svg'); svg.setAttribute('viewBox', `0 0 ${c.width} ${c.height}`); svg.setAttribute('preserveAspectRatio', 'none'); svg.setAttribute('aria-hidden', 'true');
+    const poly = document.createElementNS(svgNS, 'polygon'); svg.append(poly);
+    const stage = h('div', { class: 'corner-stage' }, img, svg);
+    const handles = pts.map((q, k) => h('button', { type: 'button', class: 'corner-handle', 'aria-label': `${names[k]} corner of the table. Drag, or use the arrow keys to move it.` }));
+    stage.append(...handles);
+    const place = () => {
+      handles.forEach((hd, k) => { hd.style.left = `${(pts[k].x / c.width) * 100}%`; hd.style.top = `${(pts[k].y / c.height) * 100}%`; });
+      poly.setAttribute('points', pts.map((q) => `${q.x},${q.y}`).join(' '));
+    };
+    handles.forEach((hd, k) => {
+      hd.addEventListener('pointerdown', (e) => {
+        e.preventDefault(); try { hd.setPointerCapture(e.pointerId); } catch { /* synthetic or lost pointer */ }
+        const move = (ev) => { const r = stage.getBoundingClientRect(); pts[k] = { x: Math.max(0, Math.min(c.width, ((ev.clientX - r.left) / r.width) * c.width)), y: Math.max(0, Math.min(c.height, ((ev.clientY - r.top) / r.height) * c.height)) }; place(); };
+        const up = () => { hd.removeEventListener('pointermove', move); hd.removeEventListener('pointerup', up); };
+        hd.addEventListener('pointermove', move); hd.addEventListener('pointerup', up);
+      });
+      hd.addEventListener('keydown', (e) => {
+        const step = (e.shiftKey ? 20 : 4) * (c.width / stage.getBoundingClientRect().width || 1);
+        const d = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
+        if (!d) return;
+        e.preventDefault(); pts[k] = { x: Math.max(0, Math.min(c.width, pts[k].x + d[0])), y: Math.max(0, Math.min(c.height, pts[k].y + d[1])) }; place();
+      });
+    });
+    place();
+    const count = (label, value) => h('select', { 'aria-label': label, class: 'grid-count' }, h('option', { value: '' }, 'Auto'), [1, 2, 3, 4, 5, 6, 7, 8].map((n) => h('option', { value: String(n), selected: value === n }, String(n))));
+    const colsSel = count('Cards across', p.cols), rowsSel = count('Cards down', p.rows);
+    const v = await dialog({ title: 'Mark the table corners', body: h('div', null,
+      h('p', { class: 'hint' }, 'Use this for a vocabulary sheet laid out as a table of word cards. Drag the four round handles onto the outside corners of the table (not the whole page). The app will straighten the table and read each card on its own.'),
+      stage,
+      h('div', { class: 'two-col' }, field('Cards across', colsSel), field('Cards down', rowsSel)),
+      h('p', { class: 'hint' }, 'Count the cards on the sheet, or leave Auto.')),
+    buttons: [...(p.corners ? [{ label: 'Remove corners', value: 'remove', cls: 'btn-ghost' }] : []), { label: 'Use these corners', value: 'use' }] });
+    if (v === 'use') { p.corners = pts; p.cols = Number(colsSel.value) || null; p.rows = Number(rowsSel.value) || null; }
+    if (v === 'remove') { p.corners = null; p.cols = p.rows = null; }
+    this.drawThumbs();
   }
 
   // ── Step 2: read ──
@@ -164,9 +217,12 @@ class Importer {
       const p = this.pages[i];
       const base = i / this.pages.length;
       try {
-        const res = await ocr.readPage(this.pageCanvas(p), {
+        const read = p.corners ? (canvas, opts) => ocr.readTable(canvas, p.corners, { ...opts, cols: p.cols, rows: p.rows }) : (canvas, opts) => ocr.readPage(canvas, opts);
+        const res = await read(this.pageCanvas(p), {
           onProgress: (m) => {
-            if (m.status === 'recognizing text') setProgress(Math.round((base + m.progress / this.pages.length) * 100), 100, `Reading page ${i + 1} of ${this.pages.length}… ${Math.round(m.progress * 100)}%`);
+            if (m.status === 'reading cards') setProgress(Math.round((base + m.progress / this.pages.length) * 100), 100, `Reading the word cards on page ${i + 1} of ${this.pages.length}… ${Math.round(m.progress * 100)}%`);
+            else if (m.status === 'reading again') setProgress(Math.round((base + 0.5 / this.pages.length) * 100), 100, `Reading page ${i + 1} again more carefully…`);
+            else if (m.status === 'recognizing text') setProgress(Math.round((base + m.progress / this.pages.length) * 100), 100, `Reading page ${i + 1} of ${this.pages.length}… ${Math.round(m.progress * 100)}%`);
             else if (/loading|initializ/.test(m.status || '')) setProgress(Math.round(base * 100), 100, `Getting the photo reader ready (page ${i + 1} of ${this.pages.length})…`);
           },
         });

@@ -200,3 +200,12 @@ test('a misread rude word in imported text raises a warning', async () => {
   assert.ok(vocabFlags(bad, w).some((f) => f.code === 'unsuitable' && f.level === 'warning'));
   assert.ok(!vocabFlags(good, w).some((f) => f.code === 'unsuitable'), '"class" contains "ass" but is not a whole-word match');
 });
+
+test('card splitting: the headword comes from the top of the card, never from the definition', async () => {
+  const { splitCard } = await import('../../js/cells.js');
+  const ok = splitCard([{ text: 'Irritating', conf: 90, y0: 10 }, { text: 'To anger or bother', conf: 92, y0: 120 }], 300);
+  assert.deepEqual([ok.word, ok.definition], ['Irritating', 'To anger or bother']);
+  const lost = splitCard([{ text: 'something from', conf: 80, y0: 150 }, { text: 'usual', conf: 80, y0: 230 }], 300);
+  assert.equal(lost.word, null, 'a definition word low on the card is not promoted to headword');
+  assert.match(lost.definition, /something from/);
+});

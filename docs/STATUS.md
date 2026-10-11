@@ -16,7 +16,7 @@ Architecture: `docs/ARCHITECTURE-PROPOSAL.md` (vanilla JS ES modules, IndexedDB,
 | 2 | Weekly lesson editor and approval | **Complete** — reviewed; 4 Major + 6 Minor findings fixed (see below) |
 | 3 | Vocabulary learning and assessment | **Complete** — reviewed; 4 Major + 6 Minor findings fixed (see below) |
 | 4 | Spelling learning and assessment | **Complete** — reviewed; 1 Critical + 1 Major + 6 Minor findings fixed (see below) |
-| 5 | Photograph extraction and verification | **Complete except real-photo measurement, which is BLOCKED** (photos not supplied) — reviewed; 3 Major + 6 Minor fixed |
+| 5 | Photograph extraction and verification | Real photos measured 2026-10-11: spelling 14/15; vocabulary 9/12 words, 4/12 exact definitions at best (table mode) — **vocabulary photo extraction not reliable enough; see docs/OCR.md** |
 | 6 | Illustrated-card workflow and printable materials | **Complete** — reviewed with Milestone 5 |
 | 7 | Full-system testing and final audit | **Complete** — final audit: no Critical/Major; Minor items fixed or listed below |
 
@@ -98,10 +98,19 @@ No Critical findings. Major fixed: (1) text corrected on the photo review screen
 ## Acceptance review (2026-10-11)
 See docs/ACCEPTANCE-REPORT.md. Original photos not available (BLOCKED). Testing on the teacher's real newsletters exposed a layout defect (1/15 spelling, 0% vocabulary pairing); fixed with layout-aware extraction (js/layout.js) → 15/15 and 7/7 with 100% pairing on the clean Sept 28 newsletter, 7/15 with no wrong words on the Sept 21 redraw. Added an unsuitable-word warning for imported text. Sunday workflow measured with tests/walkthrough.mjs. Sentences and pictures for new words are manual (options in the report). Real speech verified to start/finish on Windows Chrome and Edge; mobile devices unverified. Totals: 57 unit tests, 167 browser checks (Chrome and Edge).
 
+## Real-photo OCR results (2026-10-11)
+The owner supplied the two original photos (kept in git-ignored local-fixtures/, never committed). `npm run test:ocr` against sample-data:
+- **Spelling newsletter:** 14/15 words exact, in order, no wrong words (before: 9/15). Missing "opened" (#5), reported to the parent as a missing number.
+- **Vocabulary table:** photo as taken 3/12 words, 0/12 exact definitions, 0/12 pairs. With the new table mode (parent marks the table corners and enters 4 × 3): best 9/12 words, 4/12 exact definitions (33%), 7/12 correct pairs (58%), character accuracy 92%; careful corner placement gave 5/12. Unreliable: limited by the photo's resolution (1152 × 1536, apparently downscaled), curl and pale-on-green text.
+- Fixes made: tolerant list numbering (missing period, misread number → position), multi-reading vote for incomplete numbered lists, table mode (corner tool with keyboard support, perspective correction, grid inference, per-card reading with voting), default page mode restored after extra readings, unreadable-card placeholder.
+- Parent review is unchanged: every imported item is an unchecked draft; card rows carry a "check against the photo" warning; approval is blocked until all are checked; corrections are logged with the reader's original text (browser-tested).
+- Totals: 60 unit tests, 173 browser checks (Chrome and Edge).
+- Unresolved: vocabulary photo extraction needs a better source (full-resolution photo or phone text recognition) or an owner-approved online reader.
+
 ## Known limitations / decisions log
 - Data lives in one browser on one device; no sync (by design, documented in the UI).
 - Demo names only in code; the pre-existing `docs/REQUIREMENTS.md` and `sample-data/*.json` (planning files, already on `main`) still contain the children's first names, and git history keeps earlier versions. Owner decision.
-- **Real-photo OCR accuracy is not measured** (photos not supplied). Synthetic results are in docs/OCR.md and are not evidence of real-photo accuracy.
+- **Real-photo OCR:** spelling 14/15; vocabulary at best 9/12 words and 4/12 exact definitions with table mode (see docs/OCR.md). Not reliable enough for the vocabulary sheet from the supplied (downscaled) photo.
 - **Example sentences:** generated only for the bundled sample list. For other weeks the parent types them, pastes them from any writing tool via the sentence helper, or acknowledges "No example sentence" (spelling test then says the word only; fill-in-the-blank skips the word). Automatic generation would need a paid, owner-approved service.
 - **Pictures:** only the 12 sample words have bundled illustrations; others need a parent upload or show "Picture coming soon". Automatic generation is not built (integration point only).
 - **Speech** depends on the device's voices; a muted device cannot be detected. If no on-device English voice exists, the browser's default voice is used, which on some browsers is an online voice.

@@ -4,7 +4,10 @@
 // Pure functions; everything produced is still a draft for the parent to check.
 
 const WORD = /^[\p{L}][\p{L}'’-]*$/u;
-const NUMBERED = /^[•*»>·\-–]*\s*\(?(\d{1,2})[.)]\s*(.*)$/u;
+// "1. rushed", "1) rushed" and "10 landed" (the period lost in a photo)
+const NUMBERED = /^[•*»>·\-–]*\s*\(?(\d{1,2})(?:[.)]\s*|\s+)(.*)$/u;
+// "T rushed", "g. callec": a list number misread as a letter or mark, then the word
+const GARBLED = /^[^\p{L}\d\s]{0,2}[\p{L}\d]{1,2}[.,]?\s+([\p{L}][\p{L}'’-]+)$/u;
 const cleanWord = (w) => String(w).replace(/^[^\p{L}]+|[^\p{L}'’]+$/gu, '');
 
 /**
@@ -38,11 +41,13 @@ export function extractNumberedList(lines) {
           const next = lines[li + 1]?.segments?.[0]?.text?.trim();
           if (next && WORD.test(cleanWord(next)) && !NUMBERED.test(next) && cleanWord(next).toLowerCase().startsWith(word.toLowerCase())) { word = cleanWord(next); orphans.push({ consumed: `${li + 1}:0` }); }
         }
-        if (word && WORD.test(word) && n >= 1 && n <= 40 && !/\s/.test(m[2].trim())) found.push({ number: n, word, conf: s.conf ?? ln.conf, line: li });
+        if (word && WORD.test(word) && n >= 1 && n <= 40 && !/\s/.test(m[2].trim())) found.push({ number: n, word, conf: s.conf ?? ln.conf, line: li, x0: s.x0 });
         return;
       }
+      const g = GARBLED.exec(t);
+      if (g && s.x0 != null) { orphans.push({ word: g[1], conf: Math.min(s.conf ?? ln.conf ?? 100, 60), line: li, x0: s.x0, key: `${li}:${si}`, garbled: true }); return; }
       // An unnumbered single word in a line of numbered items probably lost its number to a mark ("» crashes").
-      if (hasNumbered && WORD.test(cleanWord(t)) && !/\s/.test(t.replace(/^[^\p{L}]+/u, '')) && si > 0) orphans.push({ word: cleanWord(t), conf: s.conf ?? ln.conf, line: li, key: `${li}:${si}` });
+      if (hasNumbered && WORD.test(cleanWord(t)) && !/\s/.test(t.replace(/^[^\p{L}]+/u, '')) && si > 0) orphans.push({ word: cleanWord(t), conf: s.conf ?? ln.conf, line: li, x0: s.x0, key: `${li}:${si}` });
     });
   });
   if (found.length < 5) return null;
@@ -63,8 +68,22 @@ export function extractNumberedList(lines) {
   const missing = [];
   for (let n = 1; n <= max; n++) if (!byNum.has(n)) missing.push(n);
   const items = [...byNum.values()].sort((a, b) => a.number - b.number).map((f) => ({ number: f.number, word: f.word, conf: f.conf, notes: [] }));
+  let strays = candidates.filter((c) => !items.some((i) => i.word.toLowerCase() === c.word.toLowerCase()));
+  // A word whose number was unreadable sits in a column of numbered words: one row below "2. blasted" is 3.
+  const width = Math.max(1, ...found.map((f) => f.x0 ?? 0)) || 1;
+  for (const st of [...strays]) {
+    if (st.x0 == null) continue;
+    const col = found.filter((f) => f.x0 != null && Math.abs(f.x0 - st.x0) < width * 0.08);
+    const near = col.sort((a, b) => Math.abs(a.line - st.line) - Math.abs(b.line - st.line))[0];
+    if (!near) continue;
+    const n = near.number + (st.line - near.line);
+    if (n < 1 || n > 40 || items.some((i) => i.number === n) || Math.abs(st.line - near.line) > 3) continue;
+    items.push({ number: n, word: st.word, conf: Math.min(st.conf ?? 60, 70), notes: [`Its number was not readable; it was placed as number ${n} from its position. Check the word and the order.`] });
+    strays = strays.filter((x) => x !== st);
+    const mi = missing.indexOf(n); if (mi >= 0) missing.splice(mi, 1);
+  }
+  items.sort((a, b) => a.number - b.number);
   // Exactly one missing number and exactly one stray word next to the list: the stray word is that number.
-  const strays = candidates.filter((c) => !items.some((i) => i.word.toLowerCase() === c.word.toLowerCase()));
   if (missing.length === 1 && strays.length === 1) {
     items.push({ number: missing[0], word: strays[0].word, conf: strays[0].conf, notes: [`Its number was not readable; it was placed as number ${missing[0]}. Check the order.`] });
     items.sort((a, b) => a.number - b.number);
@@ -74,6 +93,41 @@ export function extractNumberedList(lines) {
   }
   if (missing.length) notes.push(`Number${missing.length > 1 ? 's' : ''} ${missing.join(', ')} ${missing.length > 1 ? 'were' : 'was'} not found. A word may be missing.`);
   return { items, notes, lines: new Set(found.map((f) => f.line)) };
+}
+
+/**
+ * Combine several readings of the same numbered list (the page read in different ways): for each number the
+ * word most readings agree on wins (ties → most confident). Disagreements and gaps are reported.
+ */
+export function voteNumbered(lists) {
+  const ok = lists.filter(Boolean);
+  if (!ok.length) return null;
+  if (ok.length === 1) return ok[0];
+  const byNum = new Map();
+  for (const l of ok) for (const it of l.items) {
+    const m = byNum.get(it.number) || new Map();
+    const key = it.word.toLowerCase();
+    const v = m.get(key) || { word: it.word, n: 0, conf: 0, notes: it.notes };
+    const guessed = (it.notes || []).some((n) => /placed as number/.test(n));
+    v.n += guessed ? 0.5 : 1; v.conf = Math.max(v.conf, it.conf ?? 0); m.set(key, v); byNum.set(it.number, m);
+  }
+  const notes = [];
+  // A word can belong to only one number: it stays where it has the most support.
+  const support = new Map();
+  for (const [number, m] of byNum) for (const [key, v] of m) { const s = support.get(key); if (!s || v.n > s.n || (v.n === s.n && v.conf > s.conf)) support.set(key, { number, n: v.n, conf: v.conf }); }
+  for (const [number, m] of byNum) for (const key of [...m.keys()]) if (support.get(key).number !== number) m.delete(key);
+  for (const [number, m] of [...byNum]) if (!m.size) byNum.delete(number);
+  const items = [...byNum.entries()].sort((a, b) => a[0] - b[0]).map(([number, m]) => {
+    const c = [...m.values()].sort((a, b) => b.n - a.n || b.conf - a.conf);
+    const n = [...m.values()].reduce((s, v) => s + v.n, 0);
+    const itemNotes = [...(c[0].notes || [])];
+    if (c.length > 1) itemNotes.push(`Readings differed (${c.map((v) => v.word).join(' / ')}); "${c[0].word}" was chosen. Check it.`);
+    return { number, word: c[0].word, conf: c.length > 1 ? Math.min(c[0].conf, 70) : c[0].conf, notes: itemNotes, votes: n };
+  });
+  const max = Math.max(...items.map((i) => i.number));
+  const missing = []; for (let k = 1; k <= max; k++) if (!items.some((i) => i.number === k)) missing.push(k);
+  if (missing.length) notes.push(`Number${missing.length > 1 ? 's' : ''} ${missing.join(', ')} ${missing.length > 1 ? 'were' : 'was'} not found. A word may be missing.`);
+  return { items, notes, lines: ok[0].lines };
 }
 
 /**

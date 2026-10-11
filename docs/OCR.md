@@ -16,7 +16,35 @@ Privacy: photos are processed in the browser and stored only in this device's st
 ## Accuracy — what has and has not been measured
 Run `npm run test:ocr`. It compares extraction with the human transcription in `sample-data/`.
 
-**Real school photos: NOT YET MEASURED (blocked).** The original photographs are not in the repository (and must not be, because it is public). To measure, copy them into `local-fixtures/` (git-ignored) named `spelling*.jpg` and `vocab*.jpg` and run `npm run test:ocr`.
+### The two original school photographs (measured 2026-10-11)
+Supplied by the owner as `spelling-original.jpg` (Oct 12–16 newsletter) and `vocab-original.jpg` (12-card vocabulary table), both 1152 × 1536 JPEGs, kept only in git-ignored `local-fixtures/`. Compared with the transcription in `sample-data/`.
+
+**Spelling (15 words), photo as taken:**
+
+| | Words exact | Wrong words | Order |
+|---|---|---|---|
+| Before today's fixes | 9/15 (60%) | 0 | 60% |
+| After | **14/15 (93%)** | 0 | 93% |
+
+Missing: **opened** (#5; the reader saw "Cpenea"). The app tells the parent "Number 5 was not found". Fixes: list numbers read without their period ("10 landed") or misread ("T rushed" = 1.) are recovered from the column position; when the list is incomplete the page is read four more ways (enlarged, and in sparse-text mode) and each number is voted on.
+
+**Vocabulary (12 cards in a table, photographed at an angle):**
+
+| Mode | Words found | Definitions exact | Character accuracy | Correct word–definition pairs |
+|---|---|---|---|---|
+| Photo as taken (before and after) | 3/12 (25%) | 0/12 (0%) | 27% | 0/12 (0%) |
+| Table corners marked + card counts entered (4 × 3), corners placed roughly | **9/12 (75%)** | **4/12 (33%)** | 92% | **7/12 (58%)** |
+| Table corners marked carefully, counts entered | 5/12 (42%) | 2/12 (17%) | 74% | 3/12 (25%) |
+| Corners marked, counts left on Auto | 1–5/12 | 0–2/12 | — | 1–3/12 |
+
+With corners marked roughly + 4 × 3: exact — Employee, Ignorant, Constellations, Irritating; near-misses — Fortunate ("Involving" capital I), Installment ("one" for "over"), Melancholy (stray ":"); truncated — Trustworthy ("…to keep" without "promises"), Distracted (missing "To prevent"); failed — Produce, Exception, Peculiar (the pale green top row). Results vary by several cards with small changes in corner placement.
+
+**Assessment:** on-device reading of this vocabulary photo is **not reliable enough for weekly use**. The limit is the image: the definitions are about 8–9 pixels tall (the photo appears to be a downscaled copy — a phone camera photo is about 4032 × 3024), the page is curled, and the top row is pale text on green. Every imported card is still a draft that the parent must check and correct before approval, so nothing wrong reaches a child; but the parent would retype or fix most definitions. Recommended, in order: (1) try the full-resolution original photo from the phone; (2) use the phone's own text recognition (Live Text / Google Lens) and "Paste or type a list"; (3) if neither is good enough, the secure online reader described below (requires owner approval and a small cost).
+
+### Table mode (added 2026-10-11)
+For a vocabulary sheet laid out as a table of cards, the parent taps "Mark table corners" on the page, drags four handles (also movable with arrow keys) onto the table's outer corners and, optionally, enters how many cards go across and down. The app straightens the table (perspective correction), finds the card grid (ruling lines where visible, equal spacing otherwise), reads each card separately in five ways, and keeps the most confident, most agreed reading. Word and definition always come from the same card, so pairing errors come only from unreadable text. On synthetic card tables (straight or tilted 4° with shadow and noise) it reads 12/12 cards exactly.
+
+**Earlier status (kept for the record):** real school photos were not available until 2026-10-11.
 
 Synthetic pages (generated from the sample data, then rotated, shadowed, noised and JPEG-compressed to look photographed). These show the pipeline works; they are **not** evidence of real-photo accuracy:
 

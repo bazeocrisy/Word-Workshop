@@ -50,7 +50,7 @@ try {
     if (only && !only.includes(s.name)) continue;
     console.log(`\n── ${s.name} ──`);
     try { await s.run({ b, check, URL, server }); }
-    catch (e) { check(`${s.name}: suite crashed`, false, e.message); }
+    catch (e) { check(`${s.name}: suite crashed`, false, e.message); if (process.env.TRACE) console.log(e.stack); }
   }
   if (!LIVE) check('no missing files (all paths resolve under /Word-Workshop/)', server.missing.length === 0, server.missing);
   check('no JavaScript errors', b.errors.length === 0, b.errors.slice(0, 5));

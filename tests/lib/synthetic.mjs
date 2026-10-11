@@ -24,6 +24,25 @@ window.__makeSynthetic = async function (kind, { rotate = 2, shadow = 0.45, nois
       x.fillText(line, 560, ly);
       y = ly + 88;
     }
+  } else if (kind === 'cards') {
+    // The teacher's real format: a 4 × 3 table of cards, word on top, definition centred underneath.
+    // Table occupies (100, 260) – (1500, 1460); window.__cardsTable holds its corners.
+    x.font = 'bold 60px Arial'; x.fillText('VOCABULARY', 560, 150);
+    const X0 = 100, Y0 = 260, CW = 350, CH = 400;
+    x.lineWidth = 3; x.strokeStyle = '#333';
+    for (let r = 0; r <= 3; r++) { x.beginPath(); x.moveTo(X0, Y0 + r * CH); x.lineTo(X0 + 4 * CW, Y0 + r * CH); x.stroke(); }
+    for (let c = 0; c <= 4; c++) { x.beginPath(); x.moveTo(X0 + c * CW, Y0); x.lineTo(X0 + c * CW, Y0 + 3 * CH); x.stroke(); }
+    x.textAlign = 'center';
+    vocab.items.forEach((it, i) => {
+      const r = Math.floor(i / 4), c = i % 4, cx = X0 + c * CW + CW / 2;
+      x.fillStyle = '#1d4ed8'; x.font = 'bold 40px Arial'; x.fillText(it.word, cx, Y0 + r * CH + 30);
+      x.fillStyle = '#222'; x.font = '30px Arial';
+      const words = it.sourceDefinition.split(' '); let line = ''; let ly = Y0 + r * CH + 110;
+      for (const w of words) { const t = line ? line + ' ' + w : w; if (x.measureText(t).width > CW - 40) { x.fillText(line, cx, ly); line = w; ly += 40; } else line = t; }
+      x.fillText(line, cx, ly);
+    });
+    x.textAlign = 'left';
+    window.__cardsTable = [{ x: X0, y: Y0 }, { x: X0 + 4 * CW, y: Y0 }, { x: X0 + 4 * CW, y: Y0 + 3 * CH }, { x: X0, y: Y0 + 3 * CH }];
   } else {
     x.font = 'bold 56px Georgia'; x.fillText('Room 12 Weekly News', 120, 90);
     x.font = '32px Georgia'; x.fillText('Week of October 12', 120, 170);
@@ -42,6 +61,10 @@ window.__makeSynthetic = async function (kind, { rotate = 2, shadow = 0.45, nois
   const q = p.getContext('2d');
   q.fillStyle = '#d9d4c7'; q.fillRect(0, 0, W, H);
   q.translate(W / 2, H / 2); q.rotate(rotate * Math.PI / 180); q.drawImage(c, -W / 2, -H / 2); q.setTransform(1, 0, 0, 1, 0, 0);
+  if (kind === 'cards') { // where the table corners ended up after the rotation (what a parent would mark)
+    const t = rotate * Math.PI / 180, cs = Math.cos(t), sn = Math.sin(t);
+    window.__cardsCorners = window.__cardsTable.map((p) => ({ x: W / 2 + (p.x - W / 2) * cs - (p.y - H / 2) * sn, y: H / 2 + (p.x - W / 2) * sn + (p.y - H / 2) * cs }));
+  }
   const g = q.createLinearGradient(0, 0, W, H);
   g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.55, 'rgba(0,0,0,' + (shadow * 0.25) + ')'); g.addColorStop(1, 'rgba(0,0,0,' + shadow + ')');
   q.fillStyle = g; q.fillRect(0, 0, W, H);

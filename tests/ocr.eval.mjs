@@ -17,13 +17,17 @@ const vocabTruth = JSON.parse(fs.readFileSync(path.join(ROOT, 'sample-data/vocab
 
 // Same code path as the app's photo import: read each page, classify lines, parse.
 const PIPELINE = `
-window.__extract = async function (files, target) {
+window.__extract = async function (files, target, cornersList = [], gridList = []) {
   const { decode, toCanvas } = await import('./js/images.js');
   const ocr = await import('./js/ocr.js');
   const { extractPages } = await import('./js/views/importView.js');
   const { parseSpellingLines, parseVocabLines } = await import('./js/parse.js');
   const pages = []; const confs = []; const t0 = performance.now();
-  for (const f of files) { const res = await ocr.readPage(toCanvas(await decode(f), 2200)); pages.push(res); confs.push(res.confidence); }
+  for (const [i, f] of files.entries()) {
+    const canvas = toCanvas(await decode(f), 2200);
+    const res = cornersList[i] ? await ocr.readTable(canvas, cornersList[i], gridList[i] || {}) : await ocr.readPage(canvas);
+    pages.push(res); confs.push(res.confidence);
+  }
   const lines = pages.flatMap((p) => p.lines);
   const ex = extractPages(pages, target);
   const toL = (t) => t.split(String.fromCharCode(10)).map((x) => ({ text: x, conf: ex.conf.get(x.trim()) ?? null }));
@@ -66,10 +70,23 @@ try {
       const mine = photos.filter((f) => f.toLowerCase().startsWith(kind));
       if (!mine.length) { console.log(`\nREAL PHOTOS (${kind}): none named ${kind}*`); continue; }
       const payload = mine.map((f) => ({ name: f, type: /png$/i.test(f) ? 'image/png' : 'image/jpeg', b64: fs.readFileSync(path.join(dir, f)).toString('base64') }));
-      const out = await b.js(`const files = ${JSON.stringify(payload)}.map((p) => new File([Uint8Array.from(atob(p.b64), (c) => c.charCodeAt(0))], p.name, { type: p.type }));
-        return await window.__extract(files, ${JSON.stringify(kind === 'vocab' ? 'vocab' : 'spelling')});`);
-      summary.real[kind] = report(`REAL PHOTOS — ${kind} (${mine.join(', ')})`, kind, out);
-      if (process.env.VERBOSE) console.log(out.rawLines.join('\n'));
+      // <photo>.corners.json: the table corners a parent would mark ('careful' and 'rough' placements).
+      const cornerFiles = mine.map((f) => path.join(dir, f.replace(/\.[^.]+$/, '') + '.corners.json'));
+      const modes = [['as photographed (no corners marked)', mine.map(() => null)]];
+      if (cornerFiles.some((cf) => fs.existsSync(cf))) {
+        const specs = cornerFiles.map((cf) => (fs.existsSync(cf) ? JSON.parse(fs.readFileSync(cf, 'utf8')) : null));
+        for (const which of ['careful', 'rough']) if (specs.some((sp) => sp && sp[which])) {
+          modes.push([`table corners marked (${which}), card counts on Auto`, specs.map((sp) => (sp && sp[which]) || null), []]);
+          if (specs.some((sp) => sp && sp.grid)) modes.push([`table corners marked (${which}), card counts entered (${specs.find((sp) => sp && sp.grid).grid.cols} × ${specs.find((sp) => sp && sp.grid).grid.rows})`, specs.map((sp) => (sp && sp[which]) || null), specs.map((sp) => (sp && sp.grid) || {})]);
+        }
+      }
+      summary.real[kind] = {};
+      for (const [label, corners, grids = []] of modes) {
+        const out = await b.js(`const files = ${JSON.stringify(payload)}.map((p) => new File([Uint8Array.from(atob(p.b64), (c) => c.charCodeAt(0))], p.name, { type: p.type }));
+          return await window.__extract(files, ${JSON.stringify(kind === 'vocab' ? 'vocab' : 'spelling')}, ${JSON.stringify(corners)}, ${JSON.stringify(grids)});`);
+        summary.real[kind][label] = report(`REAL PHOTOS — ${kind} (${mine.join(', ')}) — ${label}`, kind, out);
+        if (process.env.VERBOSE) console.log(out.rawLines.join('\n') + '\n--- rows ---\n' + (kind === 'vocab' ? out.vocab.map((r) => r.word + ' :: ' + r.definition).join('\n') : out.spelling.join(', ')));
+      }
     }
   }
 

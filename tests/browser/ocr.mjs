@@ -73,6 +73,51 @@ export default {
     await b.go(`#/s/${sid}/w/${wid}`);
     check('students cannot see imported words before approval', /not ready yet/.test(await b.text()));
 
+    // Table of word cards (the teacher's real vocabulary format), photographed at a slant: the parent marks the
+    // table corners and the number of cards; each card is read on its own.
+    const w3 = await b.js(`return (await WW.store.createWeek(${JSON.stringify(sid)}, { startDate: '2026-11-09', endDate: '2026-11-13' })).id;`);
+    await b.go(`#/parent/week/${w3}/import`);
+    await b.js(pickFiles(`Promise.all([window.__makeSynthetic('cards', { rotate: 3 })])`));
+    await b.click('.corners-btn');
+    await b.wait(300);
+    const tool = await b.js(`
+      const stage = document.querySelector('.corner-stage'); const handles = [...stage.querySelectorAll('.corner-handle')];
+      const img = stage.querySelector('img'); const W = img.naturalWidth, H = img.naturalHeight;
+      // keyboard: arrow keys move a handle
+      const before = handles[0].style.left; handles[0].focus(); handles[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      const movedByKey = handles[0].style.left !== before;
+      // drag each handle onto the table's corners
+      const r = stage.getBoundingClientRect();
+      window.__cardsCorners.forEach((p, k) => {
+        const cx = r.left + (p.x / W) * r.width, cy = r.top + (p.y / H) * r.height;
+        handles[k].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: cx, clientY: cy, pointerId: 1 }));
+        handles[k].dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: cx, clientY: cy, pointerId: 1 }));
+        handles[k].dispatchEvent(new PointerEvent('pointerup', { bubbles: true, clientX: cx, clientY: cy, pointerId: 1 }));
+      });
+      const sels = document.querySelectorAll('.dialog .grid-count'); sels[0].value = '4'; sels[1].value = '3';
+      return { handles: handles.length, named: handles.every((x) => /corner of the table/.test(x.getAttribute('aria-label'))), movedByKey };`);
+    check('corner tool: four labelled handles, movable by keyboard and by dragging', tool.handles === 4 && tool.named && tool.movedByKey, tool);
+    await b.click('.dialog .btn-primary', '/Use these corners/');
+    await b.wait(200);
+    check('the page shows that table corners are marked', /Table corners marked/.test(await b.js(`return document.querySelector('.corners-btn').textContent;`)));
+    await b.click('.read-btn');
+    await b.js(waitForReview);
+    const tv = await b.js(`return document.getElementById('ocr-vocab').value;`);
+    const pairs = tv.split('\n').filter(Boolean);
+    const expected = { Produce: 'Fresh fruits and vegetables', Constellations: 'A group of stars in the night sky that make up a picture or a pattern', Distracted: 'To prevent something from continuing as usual', Trustworthy: 'The ability to keep promises' };
+    check('table mode reads all 12 cards, each word with its own definition', pairs.length === 12 && Object.entries(expected).every(([w, d]) => tv.includes(`${w} – ${d}`)), tv.slice(0, 400));
+    await b.click('.commit-btn'); await b.wait(800); await b.settle();
+    const w3d = await b.js(`return await WW.store.getWeek(${JSON.stringify(w3)});`);
+    check('card words arrive as unchecked drafts with a "check each card" warning', w3d.vocab.length === 12 && w3d.vocab.every((v) => !v.reviewed && v.importedFlags.some((f) => /table of word cards/.test(f))));
+    const refused = await b.js(`try { await WW.store.approveWeek(${JSON.stringify(w3)}); return 'approved'; } catch (e) { return (e.blockers || []).length; }`);
+    check('approval stays blocked until the parent checks every imported card', typeof refused === 'number' && refused >= 12, refused);
+    await b.js(`
+      const li = [...document.querySelectorAll('[data-item]')].find((x) => x.querySelector('.word-input')?.value === 'Peculiar');
+      const ta = li.querySelector('.teacher-def'); ta.value = 'strange or unusual (corrected)'; ta.dispatchEvent(new Event('change'));
+      await new Promise((r) => setTimeout(r, 400)); return 1;`);
+    const pec3 = await b.js(`return (await WW.store.getWeek(${JSON.stringify(w3)})).vocab.find((v) => v.word === 'Peculiar');`);
+    check('a parent correction to a card definition is recorded with the original reading', pec3.originalTranscription === 'strange or unusual' && pec3.definitionLog.at(-1).to === 'strange or unusual (corrected)');
+
     // A blank photo → no words found, with next steps.
     await b.go(`#/parent/week/${wid}/import`);
     await b.js(pickFiles(`(async () => { const c = document.createElement('canvas'); c.width = 800; c.height = 600; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, 800, 600); return [new File([await new Promise((r) => c.toBlob(r, 'image/png'))], 'blank.png', { type: 'image/png' })]; })()`));

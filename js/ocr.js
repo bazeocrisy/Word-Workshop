@@ -2,7 +2,12 @@
 // The engine (~7 MB with the English data) downloads from this site the first time and is then cached.
 // Output is always a DRAFT: lines of text with the reader's confidence, for the parent to check.
 
+import { extractNumberedList } from './layout.js';
+
 const VENDOR = 'vendor/tesseract/';
+// Tesseract.js's own default layout mode (one block of text). Everything was tuned with it; extra readings that
+// switch modes must put it back.
+export const DEFAULT_PSM = '6';
 let workerPromise = null;
 
 function loadScript(src) {
@@ -193,5 +198,54 @@ export async function readPage(input, { onProgress } = {}) {
     const plain = await attempt(canvas, 'original');
     if (meanConf(plain.lines) > meanConf(best.lines) + 2) best = plain;
   }
-  return { ...best, skew, confidence: Math.round(meanConf(best.lines)) };
+  // A numbered word list that came out incomplete or unsure (common with real phone photos): read the page a few
+  // more ways — enlarged, and in "scattered text" mode — so the words can be voted on per number.
+  const alternatives = [];
+  const list = extractNumberedList(best.lines);
+  const unsure = list ? list.items.filter((i) => (i.conf ?? 100) < 70).length : 0;
+  const looksNumbered = best.lines.filter((l) => /(^|\s)\d{1,2}[.)]?\s+\p{L}/u.test(l.text)).length >= 3;
+  if (list ? (list.notes.some((n) => /not found|without a readable number/.test(n)) || unsure >= 2) : looksNumbered) {
+    for (const v of EXTRA_READINGS) {
+      if (onProgress) onProgress({ status: 'reading again', progress: alternatives.length / EXTRA_READINGS.length });
+      await worker.setParameters({ tessedit_pageseg_mode: v.psm });
+      const big = scaleCanvas(canvas, v.scale);
+      const { data } = await worker.recognize(v.clean ? preprocess(big) : big);
+      alternatives.push(linesFromResult(data, big.width));
+    }
+    await worker.setParameters({ tessedit_pageseg_mode: DEFAULT_PSM });
+  }
+  return { ...best, skew, alternatives, confidence: Math.round(meanConf(best.lines)) };
+}
+
+/**
+ * Read a page the parent marked as a table of word cards: straighten the table from its four corners
+ * (tl, tr, br, bl in the page's pixels), find the card grid, then read each card.
+ * Returns { cards: [{ word, definition, conf, notes }], grid, straightened (canvas), lines: [], confidence }.
+ */
+export async function readTable(input, corners, { onProgress, cols, rows } = {}) {
+  const worker = await getWorker(onProgress);
+  const { warpQuad } = await import('./perspective.js');
+  const { inferGrid, readCards } = await import('./cells.js');
+  const width = 1800, margin = 0.02;
+  const straightened = warpQuad(input, corners, width, margin);
+  const H = straightened.height / (1 + 2 * margin);
+  const grid = inferGrid(straightened, { x0: width * margin, y0: H * margin, x1: width * margin + width, y1: H * margin + H }, { cols, rows });
+  const cards = await readCards(worker, straightened, grid, (p) => onProgress && onProgress({ status: 'reading cards', progress: p }));
+  const confidence = cards.length ? Math.round(cards.reduce((s, c) => s + (c.conf || 0), 0) / cards.length) : 0;
+  return { cards, grid, straightened, lines: [], alternatives: [], skew: 0, confidence };
+}
+
+const EXTRA_READINGS = [
+  { scale: 2, psm: '11', clean: true },
+  { scale: 2, psm: '3', clean: true },
+  { scale: 3, psm: '11', clean: false },
+  { scale: 2, psm: '11', clean: false },
+];
+
+export function scaleCanvas(src, k) {
+  if (k === 1) return src;
+  const c = document.createElement('canvas');
+  c.width = Math.round(src.width * k); c.height = Math.round(src.height * k);
+  const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(src, 0, 0, c.width, c.height);
+  return c;
 }

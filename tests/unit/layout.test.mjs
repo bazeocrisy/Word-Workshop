@@ -68,3 +68,34 @@ test('a two-column word/definition table is not mistaken for a card grid', () =>
   ];
   assert.equal(pairCardGrid(lines), null);
 });
+
+test('real-photo numbering: a missing period and a misread number are recovered', async () => {
+  const { extractNumberedList, voteNumbered } = await import('../../js/layout.js');
+  // shapes from the real Oct 12 newsletter photo: "T rushed" (1. misread), "10 landed" (no period)
+  const lines = [
+    line(seg('e Math - Properties of', 50, 400), seg('T rushed', 520, 640), seg('g. callec', 760, 880)),
+    line(seg('Multiplication', 50, 300), seg('2. blasted', 520, 660), seg('9. lifted', 760, 880)),
+    line(seg('Reading', 50, 300), seg('3. washed', 520, 660), seg('10 landed', 760, 900)),
+    line(seg('Because of Winn-Dixie', 50, 400), seg('4. winked', 520, 660), seg('11. hunted', 760, 900)),
+    line(seg('Writing', 50, 300), seg('5. opened', 520, 660), seg('12. screamed', 760, 920)),
+  ];
+  const r = extractNumberedList(lines);
+  const byN = Object.fromEntries(r.items.map((i) => [i.number, i.word]));
+  assert.equal(byN[1], 'rushed', 'number guessed from the column position');
+  assert.equal(byN[10], 'landed', 'number without a period');
+  assert.ok(r.items.find((i) => i.number === 1).notes.some((n) => /from its position/.test(n)));
+  // voting across readings fixes "callec" → "called" when other readings agree
+  const other = { items: [{ number: 8, word: 'called', conf: 90, notes: [] }, { number: 1, word: 'rushed', conf: 90, notes: [] }], notes: [] };
+  const other2 = { items: [{ number: 8, word: 'called', conf: 88, notes: [] }], notes: [] };
+  const v = voteNumbered([r, other, other2]);
+  assert.equal(v.items.find((i) => i.number === 8).word, 'called');
+  assert.ok(v.items.find((i) => i.number === 8).notes.some((n) => /Readings differed/.test(n)));
+});
+
+test('voting never gives one word to two numbers', async () => {
+  const { voteNumbered } = await import('../../js/layout.js');
+  const a = { items: [{ number: 2, word: 'blasted', conf: 90, notes: [] }, { number: 5, word: 'blasted', conf: 70, notes: ['Its number was not readable; it was placed as number 5 from its position. Check the word and the order.'] }], notes: [] };
+  const b = { items: [{ number: 2, word: 'blasted', conf: 92, notes: [] }], notes: [] };
+  const v = voteNumbered([a, b]);
+  assert.deepEqual(v.items.map((i) => [i.number, i.word]), [[2, 'blasted']]);
+});
