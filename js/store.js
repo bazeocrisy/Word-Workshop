@@ -45,8 +45,8 @@ export async function updateStudent(id, patch) {
 
 /** Removal is only allowed when the student has no weeks or results, so nothing is lost by accident. */
 export async function removeStudent(id) {
-  const [weeks, attempts] = await Promise.all([getAllBy('weeks', 'studentId', id), getAllBy('attempts', 'studentId', id)]);
-  if (weeks.length || attempts.length) throw new Error('This student still has weeks or results. Delete those first, or keep the profile.');
+  const [weeks, attempts, passages, sf] = await Promise.all([getAllBy('weeks', 'studentId', id), getAllBy('attempts', 'studentId', id), getAllBy('passages', 'studentId', id), getAllBy('sentencefix', 'studentId', id)]);
+  if (weeks.length || attempts.length || passages.length || sf.length) throw new Error('This student still has words, passages or results. Delete those first, or keep the profile.');
   await del('students', id);
 }
 
@@ -187,6 +187,29 @@ export async function imageUrl(ref) {
   urlCache.set(ref, url);
   return url;
 }
+
+// ── Reading passages (per student) ───────────────────────────────────────────
+// { id, studentId, title, kind: 'text' | 'photo' | 'pdf', text?, fileRef?, pages?, createdAt, updatedAt, readAt? }
+
+export const listPassages = async (studentId) => (await getAllBy('passages', 'studentId', studentId)).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+export const getPassage = (id) => get('passages', id);
+export async function savePassage(rec) { const r = { ...rec, updatedAt: nowIso() }; await put('passages', r); return r; }
+export async function deletePassage(id) {
+  const p = await get('passages', id);
+  await transact(['passages', 'images'], 'readwrite', (s) => { s.passages.delete(id); if (p?.fileRef) s.images.delete(p.fileRef); });
+}
+
+// ── Sentence Fix (per student) ───────────────────────────────────────────────
+// Progress: { id: 'progress:<studentId>', studentId, kind: 'progress', progress }. Tests: { id, studentId, kind: 'test', ... }.
+
+export async function getSfProgress(studentId) { return (await get('sentencefix', `progress:${studentId}`))?.progress || null; }
+export async function saveSfProgress(studentId, progress) { await put('sentencefix', { id: `progress:${studentId}`, studentId, kind: 'progress', progress, updatedAt: nowIso() }); }
+export async function saveSfTest(studentId, result) {
+  const rec = { id: uid('sft'), studentId, kind: 'test', ...result, savedAt: nowIso() };
+  await put('sentencefix', rec);
+  return rec;
+}
+export const listSfTests = async (studentId) => (await getAllBy('sentencefix', 'studentId', studentId)).filter((r) => r.kind === 'test').sort((a, b) => String(b.savedAt).localeCompare(String(a.savedAt)));
 
 // ── Meta / settings ──────────────────────────────────────────────────────────
 

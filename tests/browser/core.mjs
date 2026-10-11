@@ -12,7 +12,7 @@ export default {
 
     await b.go(`#/s/${alex}`);
     t = await b.text();
-    check('student with no approved weeks sees a friendly empty state', /No lessons are ready yet/.test(t), t);
+    check('a student with no words yet sees the four areas, each inviting them to add words', /Vocabulary/.test(t) && /Spelling/.test(t) && /Reading Passage/.test(t) && /Sentence Fix/.test(t) && /Add your words/.test(t), t);
 
     // Create weeks for both students through the parent UI.
     await b.go('#/parent');
@@ -62,7 +62,7 @@ export default {
     const renamed = await b.js(`return (await WW.store.getStudent(${JSON.stringify(alex)})).displayName;`);
     check('parent can rename a student', renamed === 'Riley', renamed);
     const removeBlocked = await b.js(`try { await WW.store.removeStudent(${JSON.stringify(alex)}); return 'removed'; } catch (e) { return e.message; }`);
-    check('a student with weeks cannot be removed by accident', /still has weeks/.test(removeBlocked), removeBlocked);
+    check('a student with weeks cannot be removed by accident', /still has (weeks|words)/.test(removeBlocked), removeBlocked);
 
     // Backup round trip + malformed rejection (module API; the UI is exercised below).
     const rt = await b.js(`

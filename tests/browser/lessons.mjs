@@ -61,10 +61,10 @@ export default {
     // Student side.
     await b.go(`#/s/${alex}`);
     t = await b.text();
-    check('student now sees the approved week', /15 spelling · 12 vocabulary/.test(t), t.slice(0, 300));
+    check('student now sees the approved words on the home cards', /12 words to learn/.test(t) && /15 words to practise/.test(t), t.slice(0, 300));
     await b.go(`#/s/${alex}/w/${wid}`);
     t = await b.text();
-    check('week home shows Spelling and Vocabulary with Study/Practice/Test', /Spelling/.test(t) && /Vocabulary/.test(t) && (t.match(/Study/g) || []).length >= 2 && (t.match(/Practice/g) || []).length >= 2 && (t.match(/Test/g) || []).length >= 2);
+    check('a week address leads to its Vocabulary and Spelling pages', /Vocabulary/.test(t) && /Spelling/.test(t) && /12 words/.test(t) && /15 words/.test(t), t.slice(0, 300));
     await b.go(`#/s/${jordan}/w/${wid}`);
     check('another student cannot open an approved week by URL', /not ready yet|not available/.test(await b.text()));
     const jordanWeeks = await b.js(`return (await WW.store.listApprovedWeeks(${JSON.stringify(jordan)})).length;`);

@@ -30,12 +30,12 @@ export default {
     const [alex, jordan] = await b.js(`return (await WW.store.listStudents()).map((s) => s.id);`);
 
     // Landing page: two obvious areas, no clutter.
-    await b.go('#/');
+    // (Word Workshop 3.0: the grown-ups' lesson workspace is reached from the parent area; the first screen is the
+    // children's name picker, tested in the student suite.)
+    await b.go('#/parent');
     let t = await b.text();
-    check('landing: a parent area and a student area', /Parents: create and manage lessons/.test(t) && /Students: study and test/.test(t));
-    check('landing: no backup warnings, settings or technical notes', !/backup|Settings|this device only|Results/i.test(t), t);
     const cta = await b.js(`const a = document.querySelector('a.create-lesson'); const r = a.getBoundingClientRect(); return { ok: r.bottom <= innerHeight && r.height > 0, text: a.textContent };`);
-    check('landing: "Create this week\'s lesson" is the visible primary action', cta.ok && /Create this week's lesson/.test(cta.text), cta);
+    check('parent area: "Create this week\'s lesson" is the visible primary action', cta.ok && /Create this week's lesson/.test(cta.text), cta);
 
     // Add stage: one screen with details and both subjects.
     await b.click('a.create-lesson'); await b.settle();
@@ -73,7 +73,7 @@ export default {
     check('the Finish summary shows student, week, counts, issues and checked', await b.js(`const t = document.querySelector('.ws-summary').innerText; return /Student\\s*Alex/.test(t) && /Vocabulary words\\s*2/.test(t) && /Spelling words\\s*0/.test(t) && /Unresolved issues\\s*0/.test(t) && /Checked\\s*2 of 2/.test(t);`));
     await b.click('.approve-btn'); await b.wait(500); await b.settle();
     t = await b.text();
-    check('approval opens the student\'s lesson with Study, Practice and Test', (await b.js('return location.hash;')) === `#/s/${old.sid}/w/${w1}` && /Study/.test(t) && /Practice/.test(t) && /Test/.test(t), t.slice(0, 300));
+    check('approval opens the student\'s new words with Study cards, practice and Test', (await b.js('return location.hash;')) === `#/s/${old.sid}/vocab?w=${w1}` && /Study cards/.test(t) && /Choose the meaning/.test(t) && /Test/.test(t), t.slice(0, 300));
     const s1 = await b.js(`return await WW.store.getApprovedLesson(${JSON.stringify(w1)});`);
     check('the approved snapshot holds the teacher\'s exact definitions', s1 && s1.vocab[0].definition === 'Involving good luck or success' && s1.vocab[0].definitionKind === 'teacher' && s1.spelling.length === 0);
 
@@ -209,10 +209,10 @@ export default {
     await b.go(`#/parent/lesson/${w4}?stage=check`);
     await b.reload();
     await b.js(`for (let i = 0; i < 100 && !window.WW?.ready; i++) await new Promise((r) => setTimeout(r, 50));`);
-    await b.go('#/');
+    await b.go('#/parent');
     t = await b.text();
-    check('the landing page offers to continue the unfinished lesson', /Continue unfinished lesson: Jordan/.test(t), t.slice(0, 400));
-    await b.click('a.resume-btn'); await b.settle();
+    check('the parent area offers to continue the unfinished lesson', /Lessons in progress/.test(t) && /Jordan/.test(t), t.slice(0, 400));
+    await b.js(`[...document.querySelectorAll('a.continue-draft')].find((a) => /Jordan/.test(a.getAttribute('aria-label') || '')).click(); return 1;`); await b.settle();
     check('Continue returns to the stage the parent left (Check)', (await b.js(stage)) === 'Check' && (await b.js(`return document.querySelector('.ws-table-vocab .ws-def')?.value;`)) === 'Dark and sad');
     await b.click('.ws-tab:nth-child(1)'); await b.wait(150);
     await b.click('.add-one-spelling'); await b.wait(100);

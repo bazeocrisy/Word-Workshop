@@ -11,7 +11,7 @@ export async function vocabStudy({ params, query }) {
   if (L.error) return L.error;
   const { st, snap, base } = L;
   const items = snap.vocab;
-  if (!items.length) return themed(st, page({ title: 'Vocabulary flashcards', back: base, backLabel: 'This week' }, emptyState('No vocabulary words this week.')));
+  if (!items.length) return themed(st, page({ title: 'Vocabulary flashcards', back: `#/s/${st.id}/vocab?w=${snap.weekId}`, backLabel: 'Vocabulary' }, emptyState('No vocabulary words this week.')));
   let i = Math.min(Math.max(0, Number(query.card || 1) - 1), items.length - 1);
   const cardSlot = h('div', { class: 'flashcard-slot' });
   const counter = h('p', { class: 'counter', 'aria-live': 'polite' });
@@ -58,7 +58,7 @@ export async function vocabStudy({ params, query }) {
   setLeaveGuard(() => { document.removeEventListener('keydown', onKey); return true; });
 
   await show(i);
-  return themed(st, page({ title: 'Vocabulary flashcards', back: base, backLabel: 'This week', cls: 'student' },
+  return themed(st, page({ title: 'Vocabulary flashcards', back: `#/s/${st.id}/vocab?w=${snap.weekId}`, backLabel: 'Vocabulary', cls: 'student' },
     speechSupported() ? null : h('div', { class: 'card notice notice-warn' }, h('p', null, 'Sound is not available on this device, so words cannot be read aloud here.')),
     counter, cardSlot,
     h('div', { class: 'row fc-nav' }, prev, next),

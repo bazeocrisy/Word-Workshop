@@ -10,7 +10,7 @@ export async function spellStudy({ params, query }) {
   if (L.error) return L.error;
   const { st, snap, base } = L;
   const items = snap.spelling;
-  if (!items.length) return themed(st, page({ title: 'Spelling words', back: base, backLabel: 'This week' }, emptyState('No spelling words this week.')));
+  if (!items.length) return themed(st, page({ title: 'Spelling words', back: `#/s/${st.id}/spelling?w=${snap.weekId}`, backLabel: 'Spelling' }, emptyState('No spelling words this week.')));
   const hasSound = items.some((i) => i.groups && i.groups.sound);
   const views = [['list', 'Teacher\'s order'], ['spelling', 'Spelling patterns'], ...(hasSound ? [['sound', 'Ending sounds']] : [])];
   let view = views.some(([k]) => k === query.view) ? query.view : 'list';
@@ -45,7 +45,7 @@ export async function spellStudy({ params, query }) {
         })))));
   }
   draw();
-  return themed(st, page({ title: 'Spelling words', back: base, backLabel: 'This week', cls: 'student', subtitle: snap.focus ? `This week: ${snap.focus}` : null },
+  return themed(st, page({ title: 'Spelling words', back: `#/s/${st.id}/spelling?w=${snap.weekId}`, backLabel: 'Spelling', cls: 'student', subtitle: snap.focus ? `This week: ${snap.focus}` : null },
     speechSupported() ? null : h('div', { class: 'card notice notice-warn' }, h('p', null, 'Sound is not available on this device, so the words cannot be read aloud here. A grown-up can read them to you.')),
     tabs, slot,
     h('div', { class: 'row' }, link('Practice spelling', `${base}/spell/practice`, 'btn btn-primary'), link('Print the list', `#/print/${snap.weekId}?only=spelling`, 'btn btn-ghost'))));

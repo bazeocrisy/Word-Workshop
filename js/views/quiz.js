@@ -21,7 +21,7 @@ async function vocabSession({ params, query }, mode) {
   if (L.error) return L.error;
   const { st, snap, base } = L;
   const title = mode === 'test' ? 'Vocabulary test' : 'Vocabulary practice';
-  if (!snap.vocab.length) return themed(st, page({ title, back: base, backLabel: 'This week' }, emptyState('No vocabulary words this week.')));
+  if (!snap.vocab.length) return themed(st, page({ title, back: `#/s/${st.id}/vocab?w=${snap.weekId}`, backLabel: 'Vocabulary' }, emptyState('No vocabulary words this week.')));
   const activity = query.type;
   if (!activity || !VOCAB_ACTIVITIES[activity]) return themed(st, picker(st, snap, base, mode, title));
   const only = query.only ? query.only.split(',').filter(Boolean) : null;
@@ -30,16 +30,16 @@ async function vocabSession({ params, query }, mode) {
   const seed = draft ? draft.seed : newSeed();
   const { questions, skipped } = buildActivity(activity, snap.vocab, { seed, only });
   if (!questions.length) {
-    return themed(st, page({ title, back: `${base}/vocab/${mode}`, backLabel: 'Choose an activity' },
-      emptyState(`This activity is not available for these words. ${skipped.map((s) => s.reason)[0] || ''}`)));
+    return themed(st, page({ title, back: `#/s/${st.id}/vocab?w=${snap.weekId}`, backLabel: 'Vocabulary' },
+      emptyState('These words do not have example sentences, so this game cannot be played with them. Go back and pick another game!')));
   }
   const s = new Session({ st, snap, base, mode, activity, only, seed, questions, skipped, key, draft, title });
   return themed(st, s.render());
 }
 
 function picker(st, snap, base, mode, title) {
-  const acts = Object.entries(VOCAB_ACTIVITIES);
-  return page({ title, back: base, backLabel: 'This week', cls: 'student',
+  const acts = Object.entries(VOCAB_ACTIVITIES).filter(([k]) => k !== 'blank' || snap.vocab.some((w) => w.sentence));
+  return page({ title, back: `#/s/${st.id}/vocab?w=${snap.weekId}`, backLabel: 'Vocabulary', cls: 'student',
     subtitle: mode === 'test' ? 'Tests are graded. You will see your answers after you finish.' : 'Practice shows you right away if you are correct.' },
   h('div', { class: 'tiles' }, acts.map(([k, a]) => h('a', { href: `${base}/vocab/${mode}?type=${k}`, class: 'tile' },
     h('span', { class: 'tile-label' }, a.label), h('span', { class: 'tile-desc' }, a.desc)))));
@@ -62,7 +62,7 @@ class Session {
   render() {
     this.body = h('div', { class: 'quiz' });
     this.live = h('div', { class: 'sr-only', 'aria-live': 'assertive', role: 'status' });
-    this.root = page({ title: this.title, back: this.base, backLabel: 'This week', cls: 'student',
+    this.root = page({ title: this.title, back: `#/s/${this.st.id}/vocab?w=${this.snap.weekId}`, backLabel: 'Vocabulary', cls: 'student',
       subtitle: `${VOCAB_ACTIVITIES[this.activity].label}${this.only ? ' · missed words' : ''}` }, this.live, this.body);
     if (this.mode === 'test') {
       setLeaveGuard(async () => this.finished || confirmDialog('Leave the test?', 'Your answers so far are kept on this device, so you can come back and finish it.', 'Leave'));

@@ -1,0 +1,5033 @@
+{
+  "version": 1,
+  "categories": [
+    "spelling",
+    "capitalization",
+    "punctuation",
+    "grammar"
+  ],
+  "items": [
+    {
+      "id": "SF-CAP-001",
+      "skill": "capitalization",
+      "difficulty": "easy",
+      "context": "school",
+      "incorrect": "our class visited the library on monday.",
+      "correct": "Our class visited the library on Monday.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "our",
+          "right": "Our",
+          "explanation": "The first word of a sentence starts with a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "monday",
+          "right": "Monday",
+          "explanation": "Days of the week start with a capital letter."
+        }
+      ],
+      "hints": [
+        "Look for words that need a capital letter.",
+        "Check the first word and the day of the week.",
+        "Two words need capitals: the word that starts the sentence and the name of a day."
+      ],
+      "tags": [
+        "capitalization"
+      ]
+    },
+    {
+      "id": "SF-CAP-002",
+      "skill": "capitalization",
+      "difficulty": "easy",
+      "context": "family",
+      "incorrect": "My grandma and i baked bread for the neighbors.",
+      "correct": "My grandma and I baked bread for the neighbors.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "and i",
+          "right": "and I",
+          "explanation": "The word I is always a capital letter."
+        }
+      ],
+      "hints": [
+        "Look for a word that needs a capital letter.",
+        "Look at the words that tell who baked the bread.",
+        "The word that means \"me\" when you talk about yourself is always a capital letter."
+      ],
+      "tags": [
+        "capitalization"
+      ]
+    },
+    {
+      "id": "SF-CAP-003",
+      "skill": "capitalization",
+      "difficulty": "easy",
+      "context": "nature",
+      "incorrect": "We saw a moose near lake superior last summer.",
+      "correct": "We saw a moose near Lake Superior last summer.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "lake superior",
+          "right": "Lake Superior",
+          "explanation": "The name of a lake starts with capital letters."
+        }
+      ],
+      "hints": [
+        "Look for words that need capital letters.",
+        "Look at where the moose was seen.",
+        "The name of the lake is two words, and both need a capital letter."
+      ],
+      "tags": [
+        "capitalization"
+      ]
+    },
+    {
+      "id": "SF-CAP-004",
+      "skill": "capitalization",
+      "difficulty": "easy",
+      "context": "sports",
+      "incorrect": "Our soccer coach, mr. patel, ran laps with us.",
+      "correct": "Our soccer coach, Mr. Patel, ran laps with us.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "mr. patel",
+          "right": "Mr. Patel",
+          "explanation": "A title like Mr., Mrs., Ms., or Dr. and a person's name start with capital letters."
+        }
+      ],
+      "hints": [
+        "Look for words that need capital letters.",
+        "Look at the words between the commas.",
+        "The coach's title and last name both need a capital letter."
+      ],
+      "tags": [
+        "capitalization"
+      ]
+    },
+    {
+      "id": "SF-CAP-005",
+      "skill": "capitalization",
+      "difficulty": "easy",
+      "context": "history",
+      "incorrect": "george washington was the first president of the united states.",
+      "correct": "George Washington was the first president of the United States.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "george washington",
+          "right": "George Washington",
+          "explanation": "A person's name starts with a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "united states",
+          "right": "United States",
+          "explanation": "The name of a country starts with capital letters."
+        }
+      ],
+      "hints": [
+        "Look for words that need capital letters.",
+        "Check the person's name at the start and the country at the end.",
+        "Both words of the name and both words of the country need capitals."
+      ],
+      "tags": [
+        "capitalization"
+      ]
+    },
+    {
+      "id": "SF-CAP-006",
+      "skill": "capitalization",
+      "difficulty": "medium",
+      "context": "community",
+      "incorrect": "on saturday we helped clean up maple street park.",
+      "correct": "On Saturday we helped clean up Maple Street Park.",
+      "accepted": [
+        "On Saturday, we helped clean up Maple Street Park."
+      ],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "on",
+          "right": "On",
+          "explanation": "The first word of a sentence starts with a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "saturday",
+          "right": "Saturday",
+          "explanation": "Days of the week start with a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "maple street park",
+          "right": "Maple Street Park",
+          "explanation": "The name of a park starts with capital letters."
+        }
+      ],
+      "hints": [
+        "Look for words that need capital letters.",
+        "Check the first word, the day, and the name of the park.",
+        "The park name has three words, and each one needs a capital letter."
+      ],
+      "tags": [
+        "capitalization"
+      ]
+    },
+    {
+      "id": "SF-CAP-007",
+      "skill": "capitalization",
+      "difficulty": "medium",
+      "context": "science",
+      "incorrect": "dr. kim showed our class how bean plants grow toward sunlight in april.",
+      "correct": "Dr. Kim showed our class how bean plants grow toward sunlight in April.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "dr. kim",
+          "right": "Dr. Kim",
+          "explanation": "A title like Mr., Mrs., Ms., or Dr. and a person's name start with capital letters."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "april",
+          "right": "April",
+          "explanation": "Months of the year start with a capital letter."
+        }
+      ],
+      "hints": [
+        "Look for words that need capital letters.",
+        "Check the beginning of the sentence and the last word.",
+        "The doctor's title, the doctor's name, and the month all need capitals."
+      ],
+      "tags": [
+        "capitalization"
+      ]
+    },
+    {
+      "id": "SF-CAP-008",
+      "skill": "capitalization",
+      "difficulty": "medium",
+      "context": "everyday",
+      "incorrect": "My cousin jada is flying to chicago on thursday.",
+      "correct": "My cousin Jada is flying to Chicago on Thursday.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "jada",
+          "right": "Jada",
+          "explanation": "A person's name starts with a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "chicago",
+          "right": "Chicago",
+          "explanation": "The name of a city starts with a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "thursday",
+          "right": "Thursday",
+          "explanation": "Days of the week start with a capital letter."
+        }
+      ],
+      "hints": [
+        "Look for words that need capital letters.",
+        "Check the name of a person, a city, and a day.",
+        "Three words need a capital: who is flying, where she is going, and when."
+      ],
+      "tags": [
+        "capitalization"
+      ]
+    },
+    {
+      "id": "SF-CAP-009",
+      "skill": "capitalization",
+      "difficulty": "medium",
+      "context": "history",
+      "incorrect": "In july 1969, neil armstrong became the first person to walk on the moon.",
+      "correct": "In July 1969, Neil Armstrong became the first person to walk on the moon.",
+      "accepted": [
+        "In July 1969 Neil Armstrong became the first person to walk on the moon.",
+        "In July 1969, Neil Armstrong became the first person to walk on the Moon.",
+        "In July 1969 Neil Armstrong became the first person to walk on the Moon."
+      ],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "july",
+          "right": "July",
+          "explanation": "Months of the year start with a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "neil armstrong",
+          "right": "Neil Armstrong",
+          "explanation": "A person's name starts with a capital letter."
+        }
+      ],
+      "hints": [
+        "Look for words that need capital letters.",
+        "Check the month and the name of the astronaut.",
+        "The month and both parts of the astronaut's name need capitals."
+      ],
+      "tags": [
+        "capitalization"
+      ]
+    },
+    {
+      "id": "SF-CAP-010",
+      "skill": "capitalization",
+      "difficulty": "medium",
+      "context": "school",
+      "incorrect": "Every wednesday, ms. rivera teaches us songs in spanish.",
+      "correct": "Every Wednesday, Ms. Rivera teaches us songs in Spanish.",
+      "accepted": [
+        "Every Wednesday Ms. Rivera teaches us songs in Spanish."
+      ],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "wednesday",
+          "right": "Wednesday",
+          "explanation": "Days of the week start with a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "ms. rivera",
+          "right": "Ms. Rivera",
+          "explanation": "A title like Mr., Mrs., Ms., or Dr. and a person's name start with capital letters."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "spanish",
+          "right": "Spanish",
+          "explanation": "The name of a language starts with a capital letter."
+        }
+      ],
+      "hints": [
+        "Look for words that need capital letters.",
+        "Check the day, the teacher, and the language.",
+        "Capitalize the day, the teacher's title and name, and the name of the language."
+      ],
+      "tags": [
+        "capitalization"
+      ]
+    },
+    {
+      "id": "SF-CAP-011",
+      "skill": "capitalization",
+      "difficulty": "medium",
+      "context": "family",
+      "incorrect": "for thanksgiving, we drove to my aunt's house in ohio.",
+      "correct": "For Thanksgiving, we drove to my aunt's house in Ohio.",
+      "accepted": [
+        "For Thanksgiving we drove to my aunt's house in Ohio."
+      ],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "for",
+          "right": "For",
+          "explanation": "The first word of a sentence starts with a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "thanksgiving",
+          "right": "Thanksgiving",
+          "explanation": "Holidays start with capital letters."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "ohio",
+          "right": "Ohio",
+          "explanation": "The name of a state starts with a capital letter."
+        }
+      ],
+      "hints": [
+        "Look for words that need capital letters.",
+        "Check the first word, the holiday, and the state.",
+        "Three words need capitals: the start of the sentence, the holiday, and the state."
+      ],
+      "tags": [
+        "capitalization"
+      ]
+    },
+    {
+      "id": "SF-CAP-012",
+      "skill": "capitalization",
+      "difficulty": "hard",
+      "context": "nature",
+      "incorrect": "last june, my family camped at yellowstone national park with uncle ray and aunt bea.",
+      "correct": "Last June, my family camped at Yellowstone National Park with Uncle Ray and Aunt Bea.",
+      "accepted": [
+        "Last June my family camped at Yellowstone National Park with Uncle Ray and Aunt Bea."
+      ],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "last",
+          "right": "Last",
+          "explanation": "The first word of a sentence starts with a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "june",
+          "right": "June",
+          "explanation": "Months of the year start with a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "yellowstone national park",
+          "right": "Yellowstone National Park",
+          "explanation": "The name of a park starts with capital letters."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "uncle ray",
+          "right": "Uncle Ray",
+          "explanation": "A family title used with a name, like Uncle Ray, starts with a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "aunt bea",
+          "right": "Aunt Bea",
+          "explanation": "A family title used with a name, like Aunt Bea, starts with a capital letter."
+        }
+      ],
+      "hints": [
+        "Look for words that need capital letters.",
+        "Check the first word, the month, the park, and the names of two relatives.",
+        "The park has three words to capitalize, and \"uncle\" and \"aunt\" are part of the names here."
+      ],
+      "tags": [
+        "capitalization"
+      ]
+    },
+    {
+      "id": "SF-CAP-013",
+      "skill": "capitalization",
+      "difficulty": "hard",
+      "context": "community",
+      "incorrect": "on the fourth of july, people in boston watch fireworks over the charles river.",
+      "correct": "On the Fourth of July, people in Boston watch fireworks over the Charles River.",
+      "accepted": [
+        "On the Fourth of July people in Boston watch fireworks over the Charles River."
+      ],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "on",
+          "right": "On",
+          "explanation": "The first word of a sentence starts with a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "fourth of july",
+          "right": "Fourth of July",
+          "explanation": "The name of a holiday starts with capital letters."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "boston",
+          "right": "Boston",
+          "explanation": "The name of a city starts with a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "charles river",
+          "right": "Charles River",
+          "explanation": "The name of a river starts with capital letters."
+        }
+      ],
+      "hints": [
+        "Look for words that need capital letters.",
+        "Check the first word, the holiday, the city, and the river.",
+        "In the holiday name, \"Fourth\" and \"July\" get capitals but \"of\" does not."
+      ],
+      "tags": [
+        "capitalization"
+      ]
+    },
+    {
+      "id": "SF-CAP-014",
+      "skill": "capitalization",
+      "difficulty": "hard",
+      "context": "school",
+      "incorrect": "mrs. okafor said that i could read my report about harriet tubman on friday.",
+      "correct": "Mrs. Okafor said that I could read my report about Harriet Tubman on Friday.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "mrs. okafor",
+          "right": "Mrs. Okafor",
+          "explanation": "A title like Mr., Mrs., Ms., or Dr. and a person's name start with capital letters."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "i could",
+          "right": "I could",
+          "explanation": "The word I is always a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "harriet tubman",
+          "right": "Harriet Tubman",
+          "explanation": "A person's name starts with a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "friday",
+          "right": "Friday",
+          "explanation": "Days of the week start with a capital letter."
+        }
+      ],
+      "hints": [
+        "Look for words that need capital letters.",
+        "Check the teacher, the word that means \"me,\" a famous person, and a day.",
+        "Capitalize the title and name, the word I, both parts of the famous name, and the day."
+      ],
+      "tags": [
+        "capitalization"
+      ]
+    },
+    {
+      "id": "SF-CAP-015",
+      "skill": "capitalization",
+      "difficulty": "hard",
+      "context": "sports",
+      "incorrect": "my brother's team, the hilltop hawks, won the big game against the lakeview lions on saturday.",
+      "correct": "My brother's team, the Hilltop Hawks, won the big game against the Lakeview Lions on Saturday.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "my",
+          "right": "My",
+          "explanation": "The first word of a sentence starts with a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "hilltop hawks",
+          "right": "Hilltop Hawks",
+          "explanation": "The name of a team starts with capital letters."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "lakeview lions",
+          "right": "Lakeview Lions",
+          "explanation": "The name of a team starts with capital letters."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "saturday",
+          "right": "Saturday",
+          "explanation": "Days of the week start with a capital letter."
+        }
+      ],
+      "hints": [
+        "Look for words that need capital letters.",
+        "Check the first word, the names of two teams, and the day.",
+        "Each team name has two words that need capitals; the word \"the\" before them stays small."
+      ],
+      "tags": [
+        "capitalization"
+      ]
+    },
+    {
+      "id": "SF-END-001",
+      "skill": "ending-punctuation",
+      "difficulty": "easy",
+      "context": "school",
+      "incorrect": "Did you finish your spelling homework last night",
+      "correct": "Did you finish your spelling homework last night?",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "night",
+          "right": "night?",
+          "explanation": "A sentence that asks a question ends with a question mark."
+        }
+      ],
+      "hints": [
+        "Look at the end of the sentence.",
+        "Is this sentence telling something or asking something?",
+        "The sentence starts with \"Did you,\" so it asks a question."
+      ],
+      "tags": [
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-END-002",
+      "skill": "ending-punctuation",
+      "difficulty": "easy",
+      "context": "nature",
+      "incorrect": "The leaves on the maple tree turn red in the fall",
+      "correct": "The leaves on the maple tree turn red in the fall.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "fall",
+          "right": "fall.",
+          "explanation": "A telling sentence ends with a period."
+        }
+      ],
+      "hints": [
+        "Look at the end of the sentence.",
+        "Something is missing after the last word.",
+        "This sentence tells a fact, so it needs the mark used for telling sentences."
+      ],
+      "tags": [
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-END-003",
+      "skill": "ending-punctuation",
+      "difficulty": "easy",
+      "context": "everyday",
+      "incorrect": "Where did I leave my red rain boots.",
+      "correct": "Where did I leave my red rain boots?",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "boots.",
+          "right": "boots?",
+          "explanation": "A sentence that asks a question ends with a question mark."
+        }
+      ],
+      "hints": [
+        "Look at the end of the sentence.",
+        "The sentence starts with the word \"Where.\"",
+        "This sentence asks something, so the period is the wrong mark."
+      ],
+      "tags": [
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-END-004",
+      "skill": "ending-punctuation",
+      "difficulty": "easy",
+      "context": "sports",
+      "incorrect": "How many laps can you swim without stopping",
+      "correct": "How many laps can you swim without stopping?",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "stopping",
+          "right": "stopping?",
+          "explanation": "A sentence that asks a question ends with a question mark."
+        }
+      ],
+      "hints": [
+        "Look at the end of the sentence.",
+        "The sentence starts with \"How many.\"",
+        "This sentence asks something and needs the right mark at the end."
+      ],
+      "tags": [
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-END-005",
+      "skill": "ending-punctuation",
+      "difficulty": "easy",
+      "context": "science",
+      "incorrect": "Water turns into ice when it gets very cold?",
+      "correct": "Water turns into ice when it gets very cold.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "cold?",
+          "right": "cold.",
+          "explanation": "A sentence that tells a fact ends with a period, not a question mark."
+        }
+      ],
+      "hints": [
+        "Look at the end of the sentence.",
+        "Does this sentence ask something, or does it tell something?",
+        "This sentence tells a fact, so change the mark at the end."
+      ],
+      "tags": [
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-END-006",
+      "skill": "ending-punctuation",
+      "difficulty": "easy",
+      "context": "family",
+      "incorrect": "Grandpa asked if we wanted pancakes for breakfast?",
+      "correct": "Grandpa asked if we wanted pancakes for breakfast.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "breakfast?",
+          "right": "breakfast.",
+          "explanation": "This sentence tells what someone asked, so it ends with a period."
+        }
+      ],
+      "hints": [
+        "Look at the end of the sentence.",
+        "Is the sentence asking you something, or telling you what Grandpa did?",
+        "The sentence tells about a question Grandpa asked, so it ends like a telling sentence."
+      ],
+      "tags": [
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-END-007",
+      "skill": "ending-punctuation",
+      "difficulty": "medium",
+      "context": "everyday",
+      "incorrect": "The bus is late again Do you think it will come soon",
+      "correct": "The bus is late again. Do you think it will come soon?",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "again",
+          "right": "again.",
+          "explanation": "A telling sentence ends with a period."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "soon",
+          "right": "soon?",
+          "explanation": "A sentence that asks a question ends with a question mark."
+        }
+      ],
+      "hints": [
+        "There are two sentences here, and each one needs an end mark.",
+        "One sentence ends after \"again.\" The other ends after \"soon.\"",
+        "The first sentence tells something. The second sentence asks something."
+      ],
+      "tags": [
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-END-008",
+      "skill": "ending-punctuation",
+      "difficulty": "medium",
+      "context": "science",
+      "incorrect": "Ants can carry things much heavier than their bodies Isn't that amazing",
+      "correct": "Ants can carry things much heavier than their bodies. Isn't that amazing?",
+      "accepted": [
+        "Ants can carry things much heavier than their bodies. Isn't that amazing!"
+      ],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "bodies",
+          "right": "bodies.",
+          "explanation": "A telling sentence ends with a period."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "amazing",
+          "right": "amazing?",
+          "explanation": "A sentence that asks a question ends with a question mark."
+        }
+      ],
+      "hints": [
+        "There are two sentences here, and each one needs an end mark.",
+        "Look after the word \"bodies\" and after the last word.",
+        "The first sentence tells a fact. The second one starts with \"Isn't,\" so it asks."
+      ],
+      "tags": [
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-END-009",
+      "skill": "ending-punctuation",
+      "difficulty": "medium",
+      "context": "school",
+      "incorrect": "Our class pet is a turtle named Pickles What should we feed him",
+      "correct": "Our class pet is a turtle named Pickles. What should we feed him?",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "Pickles",
+          "right": "Pickles.",
+          "explanation": "A telling sentence ends with a period."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "him",
+          "right": "him?",
+          "explanation": "A sentence that asks a question ends with a question mark."
+        }
+      ],
+      "hints": [
+        "There are two sentences here, and each one needs an end mark.",
+        "One sentence ends after the turtle's name. The other ends at \"him.\"",
+        "The first sentence tells. The second sentence starts with \"What\" and asks."
+      ],
+      "tags": [
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-END-010",
+      "skill": "ending-punctuation",
+      "difficulty": "medium",
+      "context": "community",
+      "incorrect": "The library has a new reading room When does it open.",
+      "correct": "The library has a new reading room. When does it open?",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "room",
+          "right": "room.",
+          "explanation": "A telling sentence ends with a period."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "open.",
+          "right": "open?",
+          "explanation": "A sentence that asks a question ends with a question mark."
+        }
+      ],
+      "hints": [
+        "There are two sentences here. Check the mark at the end of each one.",
+        "Look after \"room\" and at the very end.",
+        "The first sentence needs a mark added. The last mark is the wrong kind for a question."
+      ],
+      "tags": [
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-END-011",
+      "skill": "ending-punctuation",
+      "difficulty": "medium",
+      "context": "history",
+      "incorrect": "Long ago, people wrote letters with feather pens Have you ever tried one",
+      "correct": "Long ago, people wrote letters with feather pens. Have you ever tried one?",
+      "accepted": [
+        "Long ago people wrote letters with feather pens. Have you ever tried one?"
+      ],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "pens",
+          "right": "pens.",
+          "explanation": "A telling sentence ends with a period."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "one",
+          "right": "one?",
+          "explanation": "A sentence that asks a question ends with a question mark."
+        }
+      ],
+      "hints": [
+        "There are two sentences here, and each one needs an end mark.",
+        "Look after \"pens\" and after the last word.",
+        "The first sentence tells about the past. The second sentence starts with \"Have you\" and asks."
+      ],
+      "tags": [
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-END-012",
+      "skill": "ending-punctuation",
+      "difficulty": "medium",
+      "context": "family",
+      "incorrect": "My puppy ran away this morning Can you help me look for him",
+      "correct": "My puppy ran away this morning. Can you help me look for him?",
+      "accepted": [
+        "My puppy ran away this morning! Can you help me look for him?"
+      ],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "morning",
+          "right": "morning.",
+          "explanation": "A telling sentence ends with a period."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "him",
+          "right": "him?",
+          "explanation": "A sentence that asks a question ends with a question mark."
+        }
+      ],
+      "hints": [
+        "There are two sentences here, and each one needs an end mark.",
+        "Look after \"morning\" and after the last word.",
+        "The first sentence tells what happened. The second sentence asks for help."
+      ],
+      "tags": [
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-END-013",
+      "skill": "ending-punctuation",
+      "difficulty": "hard",
+      "context": "nature",
+      "incorrect": "A storm is coming Did you close the windows We should bring the plants inside",
+      "correct": "A storm is coming. Did you close the windows? We should bring the plants inside.",
+      "accepted": [
+        "A storm is coming! Did you close the windows? We should bring the plants inside."
+      ],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "coming",
+          "right": "coming.",
+          "explanation": "A telling sentence ends with a period."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "windows",
+          "right": "windows?",
+          "explanation": "A sentence that asks a question ends with a question mark."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "inside",
+          "right": "inside.",
+          "explanation": "A telling sentence ends with a period."
+        }
+      ],
+      "hints": [
+        "There are three sentences here, and each one needs an end mark.",
+        "The sentences end after \"coming,\" after \"windows,\" and after \"inside.\"",
+        "Two sentences tell something and one asks something. Which one starts with \"Did\"?"
+      ],
+      "tags": [
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-END-014",
+      "skill": "ending-punctuation",
+      "difficulty": "hard",
+      "context": "sports",
+      "incorrect": "Is the game at noon. I packed snacks and water Should we bring chairs too.",
+      "correct": "Is the game at noon? I packed snacks and water. Should we bring chairs too?",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "noon.",
+          "right": "noon?",
+          "explanation": "A sentence that asks a question ends with a question mark."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "water",
+          "right": "water.",
+          "explanation": "A telling sentence ends with a period."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "too.",
+          "right": "too?",
+          "explanation": "A sentence that asks a question ends with a question mark."
+        }
+      ],
+      "hints": [
+        "There are three sentences here. Check the end mark of each one.",
+        "Look after \"noon,\" after \"water,\" and at the very end.",
+        "Two sentences ask something and one tells something. Fix the wrong marks and add the missing one."
+      ],
+      "tags": [
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-END-015",
+      "skill": "ending-punctuation",
+      "difficulty": "hard",
+      "context": "science",
+      "incorrect": "Why do bats sleep during the day They hunt for food at night Bats are amazing animals",
+      "correct": "Why do bats sleep during the day? They hunt for food at night. Bats are amazing animals.",
+      "accepted": [
+        "Why do bats sleep during the day? They hunt for food at night. Bats are amazing animals!"
+      ],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "day",
+          "right": "day?",
+          "explanation": "A sentence that asks a question ends with a question mark."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "night",
+          "right": "night.",
+          "explanation": "A telling sentence ends with a period."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "animals",
+          "right": "animals.",
+          "explanation": "A telling sentence ends with a period."
+        }
+      ],
+      "hints": [
+        "There are three sentences here, and each one needs an end mark.",
+        "The sentences end after \"day,\" after \"night,\" and after \"animals.\"",
+        "The first sentence starts with \"Why,\" so it asks. The other two tell."
+      ],
+      "tags": [
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-COM-001",
+      "skill": "commas",
+      "difficulty": "easy",
+      "context": "school",
+      "incorrect": "Yes we can borrow two books from the library today.",
+      "correct": "Yes, we can borrow two books from the library today.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "Yes",
+          "right": "Yes,",
+          "explanation": "Put a comma after Yes, No, or Well at the start of a sentence."
+        }
+      ],
+      "hints": [
+        "Look for a missing comma.",
+        "Look at the very first word.",
+        "A word like \"Yes\" at the start of a sentence needs a comma after it."
+      ],
+      "tags": [
+        "commas"
+      ]
+    },
+    {
+      "id": "SF-COM-002",
+      "skill": "commas",
+      "difficulty": "easy",
+      "context": "everyday",
+      "incorrect": "Priya please hand me the tape and the scissors.",
+      "correct": "Priya, please hand me the tape and the scissors.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "Priya",
+          "right": "Priya,",
+          "explanation": "Use a comma to set off the name of the person you are talking to."
+        }
+      ],
+      "hints": [
+        "Look for a missing comma.",
+        "Look at the name at the start of the sentence.",
+        "The speaker is talking to Priya, so her name needs a comma after it."
+      ],
+      "tags": [
+        "commas"
+      ]
+    },
+    {
+      "id": "SF-COM-003",
+      "skill": "commas",
+      "difficulty": "easy",
+      "context": "history",
+      "incorrect": "Our town was founded on March 4 1852.",
+      "correct": "Our town was founded on March 4, 1852.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "March 4",
+          "right": "March 4,",
+          "explanation": "Put a comma between the day and the year in a date."
+        }
+      ],
+      "hints": [
+        "Look for a missing comma.",
+        "Look at the date at the end of the sentence.",
+        "A comma goes between the day number and the year."
+      ],
+      "tags": [
+        "commas"
+      ]
+    },
+    {
+      "id": "SF-COM-004",
+      "skill": "commas",
+      "difficulty": "easy",
+      "context": "family",
+      "incorrect": "My grandparents moved to a small house in Tucson Arizona.",
+      "correct": "My grandparents moved to a small house in Tucson, Arizona.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "Tucson",
+          "right": "Tucson,",
+          "explanation": "Put a comma between the name of a city and its state."
+        }
+      ],
+      "hints": [
+        "Look for a missing comma.",
+        "Look at the city and state at the end.",
+        "A comma goes between the city and the state."
+      ],
+      "tags": [
+        "commas"
+      ]
+    },
+    {
+      "id": "SF-COM-005",
+      "skill": "commas",
+      "difficulty": "medium",
+      "context": "science",
+      "incorrect": "We planted beans peas carrots and lettuce in the school garden.",
+      "correct": "We planted beans, peas, carrots and lettuce in the school garden.",
+      "accepted": [
+        "We planted beans, peas, carrots, and lettuce in the school garden."
+      ],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "beans",
+          "right": "beans,",
+          "explanation": "Use commas to separate three or more things in a list."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "peas",
+          "right": "peas,",
+          "explanation": "Use commas to separate three or more things in a list."
+        }
+      ],
+      "hints": [
+        "Look for missing commas.",
+        "Look at the list of things that were planted.",
+        "Put a comma after each item in the list that comes before \"and.\" A comma before \"and\" is OK too."
+      ],
+      "tags": [
+        "commas"
+      ]
+    },
+    {
+      "id": "SF-COM-006",
+      "skill": "commas",
+      "difficulty": "medium",
+      "context": "sports",
+      "incorrect": "No Diego I did not see who kicked the ball.",
+      "correct": "No, Diego, I did not see who kicked the ball.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "No",
+          "right": "No,",
+          "explanation": "Put a comma after Yes, No, or Well at the start of a sentence."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "Diego",
+          "right": "Diego,",
+          "explanation": "Use a comma to set off the name of the person you are talking to."
+        }
+      ],
+      "hints": [
+        "Look for missing commas.",
+        "Look at the first two words of the sentence.",
+        "The word \"No\" needs a comma, and so does the name of the person being spoken to."
+      ],
+      "tags": [
+        "commas"
+      ]
+    },
+    {
+      "id": "SF-COM-007",
+      "skill": "commas",
+      "difficulty": "medium",
+      "context": "school",
+      "incorrect": "Ms. Lee smiled and said \"Yes we can have extra recess today.\"",
+      "correct": "Ms. Lee smiled and said, \"Yes, we can have extra recess today.\"",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "said",
+          "right": "said,",
+          "explanation": "Put a comma before the words someone says inside quotation marks."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "Yes",
+          "right": "Yes,",
+          "explanation": "Put a comma after Yes, No, or Well at the start of a sentence."
+        }
+      ],
+      "hints": [
+        "Look for missing commas.",
+        "Look right before the quotation marks and at the first word Ms. Lee says.",
+        "One comma goes before the words Ms. Lee says, and one goes after \"Yes.\""
+      ],
+      "tags": [
+        "commas"
+      ]
+    },
+    {
+      "id": "SF-COM-008",
+      "skill": "commas",
+      "difficulty": "medium",
+      "context": "everyday",
+      "incorrect": "Well I wanted to play outside but it started to rain.",
+      "correct": "Well, I wanted to play outside, but it started to rain.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "Well",
+          "right": "Well,",
+          "explanation": "Put a comma after Yes, No, or Well at the start of a sentence."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "outside",
+          "right": "outside,",
+          "explanation": "Use a comma before and, but, or so when they join two complete sentences."
+        }
+      ],
+      "hints": [
+        "Look for missing commas.",
+        "Look at the first word and at the word \"but.\"",
+        "Put a comma after \"Well\" and a comma before \"but,\" since \"but\" joins two sentences."
+      ],
+      "tags": [
+        "commas"
+      ]
+    },
+    {
+      "id": "SF-COM-009",
+      "skill": "commas",
+      "difficulty": "medium",
+      "context": "nature",
+      "incorrect": "On our hike, we saw deer rabbits turkeys and a red fox.",
+      "correct": "On our hike, we saw deer, rabbits, turkeys and a red fox.",
+      "accepted": [
+        "On our hike, we saw deer, rabbits, turkeys, and a red fox.",
+        "On our hike we saw deer, rabbits, turkeys and a red fox.",
+        "On our hike we saw deer, rabbits, turkeys, and a red fox."
+      ],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "deer",
+          "right": "deer,",
+          "explanation": "Use commas to separate three or more things in a list."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "rabbits",
+          "right": "rabbits,",
+          "explanation": "Use commas to separate three or more things in a list."
+        }
+      ],
+      "hints": [
+        "Look for missing commas.",
+        "Look at the list of animals.",
+        "Put a comma after each animal that comes before \"and.\" A comma before \"and\" is OK too."
+      ],
+      "tags": [
+        "commas"
+      ]
+    },
+    {
+      "id": "SF-COM-010",
+      "skill": "commas",
+      "difficulty": "medium",
+      "context": "history",
+      "incorrect": "Sam do you know what happened on December 17 1903?",
+      "correct": "Sam, do you know what happened on December 17, 1903?",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "Sam",
+          "right": "Sam,",
+          "explanation": "Use a comma to set off the name of the person you are talking to."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "December 17",
+          "right": "December 17,",
+          "explanation": "Put a comma between the day and the year in a date."
+        }
+      ],
+      "hints": [
+        "Look for missing commas.",
+        "Look at the name at the start and the date at the end.",
+        "Sam is the person being spoken to, and the date needs a comma before the year."
+      ],
+      "tags": [
+        "commas"
+      ]
+    },
+    {
+      "id": "SF-COM-011",
+      "skill": "commas",
+      "difficulty": "medium",
+      "context": "school",
+      "incorrect": "Lucia you can paint the sign and Omar can hang it up.",
+      "correct": "Lucia, you can paint the sign, and Omar can hang it up.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "Lucia",
+          "right": "Lucia,",
+          "explanation": "Use a comma to set off the name of the person you are talking to."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "sign",
+          "right": "sign,",
+          "explanation": "Use a comma before and, but, or so when they join two complete sentences."
+        }
+      ],
+      "hints": [
+        "Look for missing commas.",
+        "Look at the name at the start and at the word \"and.\"",
+        "Lucia is being spoken to, and \"and\" joins two complete sentences."
+      ],
+      "tags": [
+        "commas"
+      ]
+    },
+    {
+      "id": "SF-COM-012",
+      "skill": "commas",
+      "difficulty": "hard",
+      "context": "community",
+      "incorrect": "Yes Mrs. Gomez our class collected cans bottles and boxes for the recycling drive.",
+      "correct": "Yes, Mrs. Gomez, our class collected cans, bottles and boxes for the recycling drive.",
+      "accepted": [
+        "Yes, Mrs. Gomez, our class collected cans, bottles, and boxes for the recycling drive."
+      ],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "Yes",
+          "right": "Yes,",
+          "explanation": "Put a comma after Yes, No, or Well at the start of a sentence."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "Gomez",
+          "right": "Gomez,",
+          "explanation": "Use a comma to set off the name of the person you are talking to."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "cans",
+          "right": "cans,",
+          "explanation": "Use commas to separate three or more things in a list."
+        }
+      ],
+      "hints": [
+        "Look for missing commas.",
+        "Look at the first word, the name of the person being spoken to, and the list.",
+        "Add a comma after \"Yes,\" after the name, and between the things in the list. A comma before \"and\" is OK too."
+      ],
+      "tags": [
+        "commas"
+      ]
+    },
+    {
+      "id": "SF-COM-013",
+      "skill": "commas",
+      "difficulty": "hard",
+      "context": "family",
+      "incorrect": "As we hurried out the door, Dad called out \"Kenji grab your jacket shoes and backpack.\"",
+      "correct": "As we hurried out the door, Dad called out, \"Kenji, grab your jacket, shoes and backpack.\"",
+      "accepted": [
+        "As we hurried out the door, Dad called out, \"Kenji, grab your jacket, shoes, and backpack.\"",
+        "As we hurried out the door Dad called out, \"Kenji, grab your jacket, shoes and backpack.\"",
+        "As we hurried out the door Dad called out, \"Kenji, grab your jacket, shoes, and backpack.\""
+      ],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "called out",
+          "right": "called out,",
+          "explanation": "Put a comma before the words someone says inside quotation marks."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "Kenji",
+          "right": "Kenji,",
+          "explanation": "Use a comma to set off the name of the person you are talking to."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "jacket",
+          "right": "jacket,",
+          "explanation": "Use commas to separate three or more things in a list."
+        }
+      ],
+      "hints": [
+        "Look for missing commas.",
+        "Look before the quotation marks, after the name, and in the list of things to grab.",
+        "Add a comma before Dad's words, after \"Kenji,\" and between the things in the list. A comma before \"and\" is OK too."
+      ],
+      "tags": [
+        "commas"
+      ]
+    },
+    {
+      "id": "SF-COM-014",
+      "skill": "commas",
+      "difficulty": "hard",
+      "context": "school",
+      "incorrect": "Mom I packed crayons glue and paper but I forgot the scissors.",
+      "correct": "Mom, I packed crayons, glue and paper, but I forgot the scissors.",
+      "accepted": [
+        "Mom, I packed crayons, glue, and paper, but I forgot the scissors."
+      ],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "Mom",
+          "right": "Mom,",
+          "explanation": "Use a comma to set off the name of the person you are talking to."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "crayons",
+          "right": "crayons,",
+          "explanation": "Use commas to separate three or more things in a list."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "paper",
+          "right": "paper,",
+          "explanation": "Use a comma before and, but, or so when they join two complete sentences."
+        }
+      ],
+      "hints": [
+        "Look for missing commas.",
+        "Look at the name of the person being spoken to, the list of supplies, and the word \"but.\"",
+        "Add a comma after \"Mom,\" between the supplies, and before \"but.\" A comma before \"and\" is OK too."
+      ],
+      "tags": [
+        "commas"
+      ]
+    },
+    {
+      "id": "SF-COM-015",
+      "skill": "commas",
+      "difficulty": "hard",
+      "context": "history",
+      "incorrect": "No Theo the Golden Gate Bridge in San Francisco opened on May 27 1937.",
+      "correct": "No, Theo, the Golden Gate Bridge in San Francisco opened on May 27, 1937.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "No",
+          "right": "No,",
+          "explanation": "Put a comma after Yes, No, or Well at the start of a sentence."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "Theo",
+          "right": "Theo,",
+          "explanation": "Use a comma to set off the name of the person you are talking to."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "May 27",
+          "right": "May 27,",
+          "explanation": "Put a comma between the day and the year in a date."
+        }
+      ],
+      "hints": [
+        "Look for missing commas.",
+        "Look at the first two words and at the date.",
+        "Add a comma after \"No,\" after the name of the person being spoken to, and before the year."
+      ],
+      "tags": [
+        "commas"
+      ]
+    },
+    {
+      "id": "SF-SPL-001",
+      "skill": "spelling",
+      "difficulty": "easy",
+      "context": "school",
+      "incorrect": "My freind Jamal sits next to me in class.",
+      "correct": "My friend Jamal sits next to me in class.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "freind",
+          "right": "friend",
+          "explanation": "Friend is spelled f-r-i-e-n-d. Remember: a friend to the end."
+        }
+      ],
+      "hints": [
+        "Look for a misspelled word.",
+        "Look at the word that tells who Jamal is.",
+        "In this word, the i comes before the e."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-002",
+      "skill": "spelling",
+      "difficulty": "easy",
+      "context": "everyday",
+      "incorrect": "We stayed inside becuase it was raining hard.",
+      "correct": "We stayed inside because it was raining hard.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "becuase",
+          "right": "because",
+          "explanation": "Because is spelled b-e-c-a-u-s-e."
+        }
+      ],
+      "hints": [
+        "Look for a misspelled word.",
+        "Look at the word that tells why we stayed inside.",
+        "Check the order of the letters a and u in that word."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-003",
+      "skill": "spelling",
+      "difficulty": "easy",
+      "context": "nature",
+      "incorrect": "The butterfly had beatiful orange and black wings.",
+      "correct": "The butterfly had beautiful orange and black wings.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "beatiful",
+          "right": "beautiful",
+          "explanation": "Beautiful is spelled b-e-a-u-t-i-f-u-l."
+        }
+      ],
+      "hints": [
+        "Look for a misspelled word.",
+        "Look at the word that describes the wings.",
+        "That word is missing one letter after \"bea.\""
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-004",
+      "skill": "spelling",
+      "difficulty": "easy",
+      "context": "family",
+      "incorrect": "Grandma made my favrite soup for dinner tonight.",
+      "correct": "Grandma made my favorite soup for dinner tonight.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "favrite",
+          "right": "favorite",
+          "explanation": "Favorite is spelled f-a-v-o-r-i-t-e."
+        }
+      ],
+      "hints": [
+        "Look for a misspelled word.",
+        "Look at the word that tells which soup.",
+        "Say the word slowly. A vowel is missing in the middle."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-005",
+      "skill": "spelling",
+      "difficulty": "easy",
+      "context": "science",
+      "incorrect": "We will test the magnets agian tomorow.",
+      "correct": "We will test the magnets again tomorrow.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "agian",
+          "right": "again",
+          "explanation": "Again is spelled a-g-a-i-n."
+        },
+        {
+          "category": "spelling",
+          "wrong": "tomorow",
+          "right": "tomorrow",
+          "explanation": "Tomorrow has one m and two r letters."
+        }
+      ],
+      "hints": [
+        "Look for two misspelled words.",
+        "Look at the last two words of the sentence.",
+        "One word has two letters switched. The other word needs a double letter."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-006",
+      "skill": "spelling",
+      "difficulty": "easy",
+      "context": "community",
+      "incorrect": "The libary is open untill eight o'clock tonight.",
+      "correct": "The library is open until eight o'clock tonight.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "libary",
+          "right": "library",
+          "explanation": "Library has two r letters: l-i-b-r-a-r-y."
+        },
+        {
+          "category": "spelling",
+          "wrong": "untill",
+          "right": "until",
+          "explanation": "Until ends with just one l."
+        }
+      ],
+      "hints": [
+        "Look for two misspelled words.",
+        "Look at the place that is open and the word before \"eight.\"",
+        "One word is missing a letter, and the other has one letter too many."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-007",
+      "skill": "spelling",
+      "difficulty": "easy",
+      "context": "sports",
+      "incorrect": "Our team was realy tired after the long game.",
+      "correct": "Our team was really tired after the long game.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "realy",
+          "right": "really",
+          "explanation": "Really is real plus -ly, so it has two l letters."
+        }
+      ],
+      "hints": [
+        "Look for a misspelled word.",
+        "Look at the word that tells how tired the team was.",
+        "This word is made from \"real\" plus \"-ly.\""
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-008",
+      "skill": "spelling",
+      "difficulty": "medium",
+      "context": "school",
+      "incorrect": "Ms. Diaz sed we could choose a diffrent book to read.",
+      "correct": "Ms. Diaz said we could choose a different book to read.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "sed",
+          "right": "said",
+          "explanation": "Said is spelled s-a-i-d, even though it sounds like \"sed.\""
+        },
+        {
+          "category": "spelling",
+          "wrong": "diffrent",
+          "right": "different",
+          "explanation": "Different is spelled d-i-f-f-e-r-e-n-t."
+        }
+      ],
+      "hints": [
+        "Look for two misspelled words.",
+        "Look at the word after \"Ms. Diaz\" and the word that describes the book.",
+        "One word does not look the way it sounds. The other word is missing a vowel."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-009",
+      "skill": "spelling",
+      "difficulty": "medium",
+      "context": "science",
+      "incorrect": "In science, we learned wich animals sleep durring the cold winter.",
+      "correct": "In science, we learned which animals sleep during the cold winter.",
+      "accepted": [
+        "In science we learned which animals sleep during the cold winter."
+      ],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "wich",
+          "right": "which",
+          "explanation": "Which starts with w-h."
+        },
+        {
+          "category": "spelling",
+          "wrong": "durring",
+          "right": "during",
+          "explanation": "During has only one r."
+        }
+      ],
+      "hints": [
+        "Look for two misspelled words.",
+        "Look at the word before \"animals\" and the word before \"the cold winter.\"",
+        "One word is missing an h. The other word has one letter too many."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-010",
+      "skill": "spelling",
+      "difficulty": "medium",
+      "context": "nature",
+      "incorrect": "We found a peice of shell and a littel crab in the sand.",
+      "correct": "We found a piece of shell and a little crab in the sand.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "peice",
+          "right": "piece",
+          "explanation": "Piece is spelled p-i-e-c-e. Think \"a piece of pie.\""
+        },
+        {
+          "category": "spelling",
+          "wrong": "littel",
+          "right": "little",
+          "explanation": "Little ends in -le."
+        }
+      ],
+      "hints": [
+        "Look for two misspelled words.",
+        "Look at the word before \"of shell\" and the word that describes the crab.",
+        "One word has the i and e switched. The other word has its last two letters in the wrong order."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-011",
+      "skill": "spelling",
+      "difficulty": "medium",
+      "context": "family",
+      "incorrect": "My nieghbor finaly helped us carry the heavy boxs upstairs.",
+      "correct": "My neighbor finally helped us carry the heavy boxes upstairs.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "nieghbor",
+          "right": "neighbor",
+          "explanation": "Neighbor is spelled n-e-i-g-h-b-o-r."
+        },
+        {
+          "category": "spelling",
+          "wrong": "finaly",
+          "right": "finally",
+          "explanation": "Finally is final plus -ly, so it has two l letters."
+        },
+        {
+          "category": "spelling",
+          "wrong": "boxs",
+          "right": "boxes",
+          "explanation": "Add -es to make words that end in x mean more than one."
+        }
+      ],
+      "hints": [
+        "Look for three misspelled words.",
+        "Look at who helped, when they helped, and what they carried.",
+        "Fix the e and i order in one word, add an l to another, and fix how the plural is made."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-012",
+      "skill": "spelling",
+      "difficulty": "medium",
+      "context": "everyday",
+      "incorrect": "Dad and I beleive the store closes in ten minites.",
+      "correct": "Dad and I believe the store closes in ten minutes.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "beleive",
+          "right": "believe",
+          "explanation": "Believe is spelled b-e-l-i-e-v-e. Remember: i before e."
+        },
+        {
+          "category": "spelling",
+          "wrong": "minites",
+          "right": "minutes",
+          "explanation": "Minutes is spelled m-i-n-u-t-e-s."
+        }
+      ],
+      "hints": [
+        "Look for two misspelled words.",
+        "Look at the word after \"Dad and I\" and the last word.",
+        "One word has the e and i switched. The other has the wrong vowel after the n."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-013",
+      "skill": "spelling",
+      "difficulty": "medium",
+      "context": "sports",
+      "incorrect": "Diego was runing so fast that he allmost tripped on the grass.",
+      "correct": "Diego was running so fast that he almost tripped on the grass.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "runing",
+          "right": "running",
+          "explanation": "For words like run, double the last letter before adding -ing.",
+          "altCategory": "grammar"
+        },
+        {
+          "category": "spelling",
+          "wrong": "allmost",
+          "right": "almost",
+          "explanation": "Almost has only one l."
+        }
+      ],
+      "hints": [
+        "Look for two misspelled words.",
+        "Look at what Diego was doing and the word before \"tripped.\"",
+        "One word needs a double letter. The other word has a double letter that does not belong."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-014",
+      "skill": "spelling",
+      "difficulty": "medium",
+      "context": "history",
+      "incorrect": "Long ago, many peple traveled across the contry in covered wagons.",
+      "correct": "Long ago, many people traveled across the country in covered wagons.",
+      "accepted": [
+        "Long ago many people traveled across the country in covered wagons."
+      ],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "peple",
+          "right": "people",
+          "explanation": "People is spelled p-e-o-p-l-e."
+        },
+        {
+          "category": "spelling",
+          "wrong": "contry",
+          "right": "country",
+          "explanation": "Country is spelled c-o-u-n-t-r-y."
+        }
+      ],
+      "hints": [
+        "Look for two misspelled words.",
+        "Look at who traveled and where they traveled.",
+        "Each word is missing one vowel: one needs an o and the other needs a u."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-015",
+      "skill": "spelling",
+      "difficulty": "medium",
+      "context": "community",
+      "incorrect": "The firefighters stoped by our school to talk about safty.",
+      "correct": "The firefighters stopped by our school to talk about safety.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "stoped",
+          "right": "stopped",
+          "explanation": "For words like stop, double the last letter before adding -ed.",
+          "altCategory": "grammar"
+        },
+        {
+          "category": "spelling",
+          "wrong": "safty",
+          "right": "safety",
+          "explanation": "Safety is safe plus -ty, so it keeps the e."
+        }
+      ],
+      "hints": [
+        "Look for two misspelled words.",
+        "Look at the word after \"firefighters\" and the last word.",
+        "One word needs a double letter before -ed. The other word is missing an e."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-016",
+      "skill": "spelling",
+      "difficulty": "medium",
+      "context": "science",
+      "incorrect": "The two birds carryed twigs and grass togeather to build a nest.",
+      "correct": "The two birds carried twigs and grass together to build a nest.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "carryed",
+          "right": "carried",
+          "explanation": "For words like carry, change the y to i before adding -ed.",
+          "altCategory": "grammar"
+        },
+        {
+          "category": "spelling",
+          "wrong": "togeather",
+          "right": "together",
+          "explanation": "Together is spelled t-o-g-e-t-h-e-r."
+        }
+      ],
+      "hints": [
+        "Look for two misspelled words.",
+        "Look at what the birds did and the word before \"to build.\"",
+        "In one word, the y changes to i. The other word has an extra a."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-017",
+      "skill": "spelling",
+      "difficulty": "medium",
+      "context": "school",
+      "incorrect": "Our class wrote thank-you leters to the lunch workers becuase they work so hard.",
+      "correct": "Our class wrote thank-you letters to the lunch workers because they work so hard.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "leters",
+          "right": "letters",
+          "explanation": "Letters has two t letters."
+        },
+        {
+          "category": "spelling",
+          "wrong": "becuase",
+          "right": "because",
+          "explanation": "Because is spelled b-e-c-a-u-s-e."
+        }
+      ],
+      "hints": [
+        "Look for two misspelled words.",
+        "Look at what the class wrote and the word that tells why.",
+        "One word needs a double t. In the other word, the a and u are switched."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-018",
+      "skill": "spelling",
+      "difficulty": "medium",
+      "context": "everyday",
+      "incorrect": "I was so exsited to open my birthday presants.",
+      "correct": "I was so excited to open my birthday presents.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "exsited",
+          "right": "excited",
+          "explanation": "Excited is spelled e-x-c-i-t-e-d."
+        },
+        {
+          "category": "spelling",
+          "wrong": "presants",
+          "right": "presents",
+          "explanation": "Presents is spelled p-r-e-s-e-n-t-s."
+        }
+      ],
+      "hints": [
+        "Look for two misspelled words.",
+        "Look at how I felt and what I opened.",
+        "One word uses s where it needs c. The other uses a where it needs e."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-019",
+      "skill": "spelling",
+      "difficulty": "medium",
+      "context": "nature",
+      "incorrect": "Two baby foxs were hiding under the bushs near our tent.",
+      "correct": "Two baby foxes were hiding under the bushes near our tent.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "foxs",
+          "right": "foxes",
+          "explanation": "Add -es to make words that end in x mean more than one."
+        },
+        {
+          "category": "spelling",
+          "wrong": "bushs",
+          "right": "bushes",
+          "explanation": "Add -es to make words that end in sh mean more than one."
+        }
+      ],
+      "hints": [
+        "Look for two misspelled words.",
+        "Look at the words that name more than one animal and more than one plant.",
+        "Words that end in x or sh need -es, not just -s, to mean more than one."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-020",
+      "skill": "spelling",
+      "difficulty": "hard",
+      "context": "science",
+      "incorrect": "Our class did an experament to see wich paper towel could hold the most watter.",
+      "correct": "Our class did an experiment to see which paper towel could hold the most water.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "experament",
+          "right": "experiment",
+          "explanation": "Experiment is spelled e-x-p-e-r-i-m-e-n-t."
+        },
+        {
+          "category": "spelling",
+          "wrong": "wich",
+          "right": "which",
+          "explanation": "Which starts with w-h."
+        },
+        {
+          "category": "spelling",
+          "wrong": "watter",
+          "right": "water",
+          "explanation": "Water has only one t."
+        }
+      ],
+      "hints": [
+        "Look for three misspelled words.",
+        "Look at what the class did, the word before \"paper towel,\" and the last word.",
+        "One word has a wrong vowel, one is missing an h, and one has an extra t."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-021",
+      "skill": "spelling",
+      "difficulty": "hard",
+      "context": "family",
+      "incorrect": "On Sunday, my famly went to the beach and stayed untill the sun went down becuase it was realy warm.",
+      "correct": "On Sunday, my family went to the beach and stayed until the sun went down because it was really warm.",
+      "accepted": [
+        "On Sunday my family went to the beach and stayed until the sun went down because it was really warm."
+      ],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "famly",
+          "right": "family",
+          "explanation": "Family is spelled f-a-m-i-l-y."
+        },
+        {
+          "category": "spelling",
+          "wrong": "untill",
+          "right": "until",
+          "explanation": "Until ends with just one l."
+        },
+        {
+          "category": "spelling",
+          "wrong": "becuase",
+          "right": "because",
+          "explanation": "Because is spelled b-e-c-a-u-s-e."
+        },
+        {
+          "category": "spelling",
+          "wrong": "realy",
+          "right": "really",
+          "explanation": "Really is real plus -ly, so it has two l letters."
+        }
+      ],
+      "hints": [
+        "Look for four misspelled words.",
+        "Look at who went, how long they stayed, why, and how warm it was.",
+        "Two words are missing a letter, one has an extra l, and one has two letters switched."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-022",
+      "skill": "spelling",
+      "difficulty": "hard",
+      "context": "school",
+      "incorrect": "Every mornning, our teacher writes a question on the bord, and we write our answers in our jurnals.",
+      "correct": "Every morning, our teacher writes a question on the board, and we write our answers in our journals.",
+      "accepted": [
+        "Every morning our teacher writes a question on the board, and we write our answers in our journals."
+      ],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "mornning",
+          "right": "morning",
+          "explanation": "Morning has only one n in the middle."
+        },
+        {
+          "category": "spelling",
+          "wrong": "bord",
+          "right": "board",
+          "explanation": "Board is spelled b-o-a-r-d."
+        },
+        {
+          "category": "spelling",
+          "wrong": "jurnals",
+          "right": "journals",
+          "explanation": "Journals is spelled j-o-u-r-n-a-l-s."
+        }
+      ],
+      "hints": [
+        "Look for three misspelled words.",
+        "Look at the word after \"Every,\" the place the teacher writes, and where we write our answers.",
+        "One word has an extra n, and the other two are each missing a vowel."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-023",
+      "skill": "spelling",
+      "difficulty": "hard",
+      "context": "sports",
+      "incorrect": "Aisha was hopeing to win the race, but she stoped to help a freind who fell.",
+      "correct": "Aisha was hoping to win the race, but she stopped to help a friend who fell.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "hopeing",
+          "right": "hoping",
+          "explanation": "For words like hope, drop the e before adding -ing.",
+          "altCategory": "grammar"
+        },
+        {
+          "category": "spelling",
+          "wrong": "stoped",
+          "right": "stopped",
+          "explanation": "For words like stop, double the last letter before adding -ed.",
+          "altCategory": "grammar"
+        },
+        {
+          "category": "spelling",
+          "wrong": "freind",
+          "right": "friend",
+          "explanation": "Friend is spelled f-r-i-e-n-d. Remember: a friend to the end."
+        }
+      ],
+      "hints": [
+        "Look for three misspelled words.",
+        "Look at what Aisha was doing, what she did in the race, and who fell.",
+        "Drop a letter in one word, double a letter in another, and switch two letters in the third."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-024",
+      "skill": "spelling",
+      "difficulty": "hard",
+      "context": "history",
+      "incorrect": "Many years ago, childern walked to a small school and wrote their lessons on littel chalkboards evry day.",
+      "correct": "Many years ago, children walked to a small school and wrote their lessons on little chalkboards every day.",
+      "accepted": [
+        "Many years ago children walked to a small school and wrote their lessons on little chalkboards every day."
+      ],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "childern",
+          "right": "children",
+          "explanation": "Children is spelled c-h-i-l-d-r-e-n."
+        },
+        {
+          "category": "spelling",
+          "wrong": "littel",
+          "right": "little",
+          "explanation": "Little ends in -le."
+        },
+        {
+          "category": "spelling",
+          "wrong": "evry",
+          "right": "every",
+          "explanation": "Every is spelled e-v-e-r-y."
+        }
+      ],
+      "hints": [
+        "Look for three misspelled words.",
+        "Look at who walked to school, the size of the chalkboards, and how often.",
+        "Two words have letters in the wrong order, and one is missing a letter."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-SPL-025",
+      "skill": "spelling",
+      "difficulty": "hard",
+      "context": "community",
+      "incorrect": "Our nieghborhood is planting trees in the park, so we need people who are wiling to help on Saterday.",
+      "correct": "Our neighborhood is planting trees in the park, so we need people who are willing to help on Saturday.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "nieghborhood",
+          "right": "neighborhood",
+          "explanation": "Neighborhood is spelled n-e-i-g-h-b-o-r-h-o-o-d."
+        },
+        {
+          "category": "spelling",
+          "wrong": "wiling",
+          "right": "willing",
+          "explanation": "Willing has two l letters."
+        },
+        {
+          "category": "spelling",
+          "wrong": "Saterday",
+          "right": "Saturday",
+          "explanation": "Saturday is spelled S-a-t-u-r-d-a-y."
+        }
+      ],
+      "hints": [
+        "Look for three misspelled words.",
+        "Look at the second word, the word before \"to help,\" and the day of the week.",
+        "Switch two letters in one word, double a letter in another, and fix a vowel in the day."
+      ],
+      "tags": [
+        "spelling"
+      ]
+    },
+    {
+      "id": "SF-TEN-001",
+      "skill": "verb-tense",
+      "difficulty": "easy",
+      "context": "school",
+      "incorrect": "We walk to the science museum last Friday.",
+      "correct": "We walked to the science museum last Friday.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "walk",
+          "right": "walked",
+          "explanation": "This happened last Friday, so the verb must be in the past tense."
+        }
+      ],
+      "hints": [
+        "Look for a verb that is in the wrong tense.",
+        "The words \"last Friday\" tell when this happened.",
+        "Change the action word so it tells about the past."
+      ],
+      "tags": [
+        "verb-tense"
+      ]
+    },
+    {
+      "id": "SF-TEN-002",
+      "skill": "verb-tense",
+      "difficulty": "easy",
+      "context": "family",
+      "incorrect": "Yesterday, my dad cooks spaghetti for dinner.",
+      "correct": "Yesterday, my dad cooked spaghetti for dinner.",
+      "accepted": [
+        "Yesterday my dad cooked spaghetti for dinner."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "cooks",
+          "right": "cooked",
+          "explanation": "The word yesterday tells us to use the past tense."
+        }
+      ],
+      "hints": [
+        "Look for a verb that is in the wrong tense.",
+        "The first word tells when this happened.",
+        "Change what Dad did so it tells about the past."
+      ],
+      "tags": [
+        "verb-tense"
+      ]
+    },
+    {
+      "id": "SF-TEN-003",
+      "skill": "verb-tense",
+      "difficulty": "easy",
+      "context": "sports",
+      "incorrect": "Last week, Mia catched the ball with one hand.",
+      "correct": "Last week, Mia caught the ball with one hand.",
+      "accepted": [
+        "Last week Mia caught the ball with one hand."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "catched",
+          "right": "caught",
+          "explanation": "Catch is a special verb. Its past tense is caught, not catched."
+        }
+      ],
+      "hints": [
+        "Look for a verb that is not formed the right way.",
+        "Look at what Mia did with the ball.",
+        "Some verbs do not use -ed for the past. Think of how you say it."
+      ],
+      "tags": [
+        "verb-tense"
+      ]
+    },
+    {
+      "id": "SF-TEN-004",
+      "skill": "verb-tense",
+      "difficulty": "easy",
+      "context": "nature",
+      "incorrect": "The wind blowed the leaves across the yard last night.",
+      "correct": "The wind blew the leaves across the yard last night.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "blowed",
+          "right": "blew",
+          "explanation": "Blow is a special verb. Its past tense is blew, not blowed."
+        }
+      ],
+      "hints": [
+        "Look for a verb that is not formed the right way.",
+        "Look at what the wind did.",
+        "This verb does not use -ed for the past. It rhymes with \"flew.\""
+      ],
+      "tags": [
+        "verb-tense"
+      ]
+    },
+    {
+      "id": "SF-TEN-005",
+      "skill": "verb-tense",
+      "difficulty": "easy",
+      "context": "everyday",
+      "incorrect": "I eated two pancakes for breakfast this morning.",
+      "correct": "I ate two pancakes for breakfast this morning.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "eated",
+          "right": "ate",
+          "explanation": "Eat is a special verb. Its past tense is ate, not eated."
+        }
+      ],
+      "hints": [
+        "Look for a verb that is not formed the right way.",
+        "Look at what I did with the pancakes.",
+        "This verb does not use -ed for the past. It is a short word."
+      ],
+      "tags": [
+        "verb-tense"
+      ]
+    },
+    {
+      "id": "SF-TEN-006",
+      "skill": "verb-tense",
+      "difficulty": "easy",
+      "context": "community",
+      "incorrect": "Last spring, our town builded a new playground.",
+      "correct": "Last spring, our town built a new playground.",
+      "accepted": [
+        "Last spring our town built a new playground."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "builded",
+          "right": "built",
+          "explanation": "Build is a special verb. Its past tense is built, not builded."
+        }
+      ],
+      "hints": [
+        "Look for a verb that is not formed the right way.",
+        "Look at what the town did.",
+        "This verb does not use -ed for the past. It ends with the letter t."
+      ],
+      "tags": [
+        "verb-tense"
+      ]
+    },
+    {
+      "id": "SF-TEN-007",
+      "skill": "verb-tense",
+      "difficulty": "medium",
+      "context": "school",
+      "incorrect": "Yesterday, Ms. Chen reads us a story, and then we draw pictures about it.",
+      "correct": "Yesterday, Ms. Chen read us a story, and then we drew pictures about it.",
+      "accepted": [
+        "Yesterday Ms. Chen read us a story, and then we drew pictures about it."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "reads",
+          "right": "read",
+          "explanation": "This happened yesterday, so use the past tense. The past tense of read is read."
+        },
+        {
+          "category": "grammar",
+          "wrong": "draw",
+          "right": "drew",
+          "explanation": "Draw is a special verb. Its past tense is drew."
+        }
+      ],
+      "hints": [
+        "Look for two verbs in the wrong tense.",
+        "The first word tells when this happened. Look at what Ms. Chen did and what we did.",
+        "Both actions happened in the past. One verb gets shorter and one changes its vowel."
+      ],
+      "tags": [
+        "verb-tense"
+      ]
+    },
+    {
+      "id": "SF-TEN-008",
+      "skill": "verb-tense",
+      "difficulty": "medium",
+      "context": "science",
+      "incorrect": "Last week, we plant seeds in cups and watch them sprout.",
+      "correct": "Last week, we planted seeds in cups and watched them sprout.",
+      "accepted": [
+        "Last week we planted seeds in cups and watched them sprout."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "plant",
+          "right": "planted",
+          "explanation": "This happened last week, so use the past tense."
+        },
+        {
+          "category": "grammar",
+          "wrong": "watch",
+          "right": "watched",
+          "explanation": "This happened last week, so use the past tense."
+        }
+      ],
+      "hints": [
+        "Look for two verbs in the wrong tense.",
+        "The words \"Last week\" tell when. Look at the two things we did.",
+        "Add the past tense ending to both action words."
+      ],
+      "tags": [
+        "verb-tense"
+      ]
+    },
+    {
+      "id": "SF-TEN-009",
+      "skill": "verb-tense",
+      "difficulty": "medium",
+      "context": "history",
+      "incorrect": "Long ago, people sew their own clothes and grow their own food.",
+      "correct": "Long ago, people sewed their own clothes and grew their own food.",
+      "accepted": [
+        "Long ago people sewed their own clothes and grew their own food."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "sew",
+          "right": "sewed",
+          "explanation": "This happened long ago, so use the past tense."
+        },
+        {
+          "category": "grammar",
+          "wrong": "grow",
+          "right": "grew",
+          "explanation": "Grow is a special verb. Its past tense is grew."
+        }
+      ],
+      "hints": [
+        "Look for two verbs in the wrong tense.",
+        "The words \"Long ago\" tell when. Look at what people did with clothes and food.",
+        "One verb adds -ed. The other changes its vowel, like know and knew."
+      ],
+      "tags": [
+        "verb-tense"
+      ]
+    },
+    {
+      "id": "SF-TEN-010",
+      "skill": "verb-tense",
+      "difficulty": "medium",
+      "context": "sports",
+      "incorrect": "In the last game, Carlos runned fast and throwed the ball to first base.",
+      "correct": "In the last game, Carlos ran fast and threw the ball to first base.",
+      "accepted": [
+        "In the last game Carlos ran fast and threw the ball to first base."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "runned",
+          "right": "ran",
+          "explanation": "Run is a special verb. Its past tense is ran."
+        },
+        {
+          "category": "grammar",
+          "wrong": "throwed",
+          "right": "threw",
+          "explanation": "Throw is a special verb. Its past tense is threw."
+        }
+      ],
+      "hints": [
+        "Look for two verbs that are not formed the right way.",
+        "Look at the two things Carlos did.",
+        "Neither verb uses -ed for the past. Think of how you would say them."
+      ],
+      "tags": [
+        "verb-tense"
+      ]
+    },
+    {
+      "id": "SF-TEN-011",
+      "skill": "verb-tense",
+      "difficulty": "medium",
+      "context": "family",
+      "incorrect": "Last summer, my sister and I swimmed in the lake and finded a smooth rock.",
+      "correct": "Last summer, my sister and I swam in the lake and found a smooth rock.",
+      "accepted": [
+        "Last summer my sister and I swam in the lake and found a smooth rock."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "swimmed",
+          "right": "swam",
+          "explanation": "Swim is a special verb. Its past tense is swam."
+        },
+        {
+          "category": "grammar",
+          "wrong": "finded",
+          "right": "found",
+          "explanation": "Find is a special verb. Its past tense is found."
+        }
+      ],
+      "hints": [
+        "Look for two verbs that are not formed the right way.",
+        "Look at what we did in the lake and what we did with the rock.",
+        "Neither verb uses -ed for the past. One changes i to a, and one changes i to ou."
+      ],
+      "tags": [
+        "verb-tense"
+      ]
+    },
+    {
+      "id": "SF-TEN-012",
+      "skill": "verb-tense",
+      "difficulty": "medium",
+      "context": "nature",
+      "incorrect": "Last Sunday morning, the sun comes up, and the birds sing in the trees.",
+      "correct": "Last Sunday morning, the sun came up, and the birds sang in the trees.",
+      "accepted": [
+        "Last Sunday morning the sun came up, and the birds sang in the trees."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "comes",
+          "right": "came",
+          "explanation": "This happened last Sunday, so use the past tense."
+        },
+        {
+          "category": "grammar",
+          "wrong": "sing",
+          "right": "sang",
+          "explanation": "Sing is a special verb. Its past tense is sang."
+        }
+      ],
+      "hints": [
+        "Look for two verbs in the wrong tense.",
+        "Look at what the sun did and what the birds did.",
+        "Both things already happened. Change each verb to its past tense form."
+      ],
+      "tags": [
+        "verb-tense"
+      ]
+    },
+    {
+      "id": "SF-TEN-013",
+      "skill": "verb-tense",
+      "difficulty": "medium",
+      "context": "family",
+      "incorrect": "Last Saturday, my aunt maked bread, and we eat it while it was still warm.",
+      "correct": "Last Saturday, my aunt made bread, and we ate it while it was still warm.",
+      "accepted": [
+        "Last Saturday my aunt made bread, and we ate it while it was still warm."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "maked",
+          "right": "made",
+          "explanation": "Make is a special verb. Its past tense is made."
+        },
+        {
+          "category": "grammar",
+          "wrong": "eat",
+          "right": "ate",
+          "explanation": "This happened last Saturday, so use the past tense. The past tense of eat is ate."
+        }
+      ],
+      "hints": [
+        "Look for two verbs in the wrong tense or form.",
+        "Look at what my aunt did and what we did with the bread.",
+        "Both actions happened last Saturday, and neither verb uses -ed for the past."
+      ],
+      "tags": [
+        "verb-tense"
+      ]
+    },
+    {
+      "id": "SF-TEN-014",
+      "skill": "verb-tense",
+      "difficulty": "medium",
+      "context": "community",
+      "incorrect": "Last month, our class writed letters to the mayor, and she sends us a reply.",
+      "correct": "Last month, our class wrote letters to the mayor, and she sent us a reply.",
+      "accepted": [
+        "Last month our class wrote letters to the mayor, and she sent us a reply."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "writed",
+          "right": "wrote",
+          "explanation": "Write is a special verb. Its past tense is wrote."
+        },
+        {
+          "category": "grammar",
+          "wrong": "sends",
+          "right": "sent",
+          "explanation": "This happened last month, so use the past tense. The past tense of send is sent."
+        }
+      ],
+      "hints": [
+        "Look for two verbs in the wrong tense or form.",
+        "Look at what our class did and what the mayor did.",
+        "Both actions happened last month, and neither verb uses -ed for the past."
+      ],
+      "tags": [
+        "verb-tense"
+      ]
+    },
+    {
+      "id": "SF-TEN-015",
+      "skill": "verb-tense",
+      "difficulty": "medium",
+      "context": "school",
+      "incorrect": "When the bell rang, Sofia grabs her lunch and sits with her friends.",
+      "correct": "When the bell rang, Sofia grabbed her lunch and sat with her friends.",
+      "accepted": [
+        "When the bell rang Sofia grabbed her lunch and sat with her friends."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "grabs",
+          "right": "grabbed",
+          "explanation": "The bell already rang, so use the past tense."
+        },
+        {
+          "category": "grammar",
+          "wrong": "sits",
+          "right": "sat",
+          "explanation": "The bell already rang, so use the past tense. The past tense of sit is sat."
+        }
+      ],
+      "hints": [
+        "Look for two verbs in the wrong tense.",
+        "The verb \"rang\" is in the past. Look at the two things Sofia did.",
+        "Make both of Sofia's actions match \"rang.\" One doubles its last letter and adds -ed, and one changes its vowel."
+      ],
+      "tags": [
+        "verb-tense"
+      ]
+    },
+    {
+      "id": "SF-TEN-016",
+      "skill": "verb-tense",
+      "difficulty": "hard",
+      "context": "science",
+      "incorrect": "Last Tuesday, our class goes outside at noon, and we trace our shadows with chalk while Mr. Ross takes pictures.",
+      "correct": "Last Tuesday, our class went outside at noon, and we traced our shadows with chalk while Mr. Ross took pictures.",
+      "accepted": [
+        "Last Tuesday our class went outside at noon, and we traced our shadows with chalk while Mr. Ross took pictures."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "goes",
+          "right": "went",
+          "explanation": "This happened last Tuesday, so use the past tense. The past tense of go is went."
+        },
+        {
+          "category": "grammar",
+          "wrong": "trace",
+          "right": "traced",
+          "explanation": "This happened last Tuesday, so use the past tense."
+        },
+        {
+          "category": "grammar",
+          "wrong": "takes",
+          "right": "took",
+          "explanation": "The past tense of take is took."
+        }
+      ],
+      "hints": [
+        "Look for three verbs in the wrong tense.",
+        "The words \"Last Tuesday\" tell when. Look at what the class, we, and Mr. Ross did.",
+        "All three actions happened in the past. Only one of them uses -ed."
+      ],
+      "tags": [
+        "verb-tense"
+      ]
+    },
+    {
+      "id": "SF-TEN-017",
+      "skill": "verb-tense",
+      "difficulty": "hard",
+      "context": "history",
+      "incorrect": "In 1620, the Pilgrims sail on a ship that is called the Mayflower, and the trip takes many weeks.",
+      "correct": "In 1620, the Pilgrims sailed on a ship that was called the Mayflower, and the trip took many weeks.",
+      "accepted": [
+        "In 1620 the Pilgrims sailed on a ship that was called the Mayflower, and the trip took many weeks."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "sail",
+          "right": "sailed",
+          "explanation": "This happened in 1620, so use the past tense."
+        },
+        {
+          "category": "grammar",
+          "wrong": "is called",
+          "right": "was called",
+          "explanation": "The ship was named long ago, so use the past tense was."
+        },
+        {
+          "category": "grammar",
+          "wrong": "takes",
+          "right": "took",
+          "explanation": "The past tense of take is took."
+        }
+      ],
+      "hints": [
+        "Look for three verbs in the wrong tense.",
+        "This happened in 1620. Look at what the Pilgrims did, what the ship was called, and how long the trip was.",
+        "Change all three verbs to tell about the past. One adds -ed, and two change to new words."
+      ],
+      "tags": [
+        "verb-tense"
+      ]
+    },
+    {
+      "id": "SF-TEN-018",
+      "skill": "verb-tense",
+      "difficulty": "hard",
+      "context": "sports",
+      "incorrect": "At the swim meet yesterday, Hana jumps into the pool and swimmed so fast that she wins a blue ribbon.",
+      "correct": "At the swim meet yesterday, Hana jumped into the pool and swam so fast that she won a blue ribbon.",
+      "accepted": [
+        "At the swim meet yesterday Hana jumped into the pool and swam so fast that she won a blue ribbon."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "jumps",
+          "right": "jumped",
+          "explanation": "This happened yesterday, so use the past tense."
+        },
+        {
+          "category": "grammar",
+          "wrong": "swimmed",
+          "right": "swam",
+          "explanation": "Swim is a special verb. Its past tense is swam."
+        },
+        {
+          "category": "grammar",
+          "wrong": "wins",
+          "right": "won",
+          "explanation": "The past tense of win is won."
+        }
+      ],
+      "hints": [
+        "Look for three verbs in the wrong tense or form.",
+        "The word \"yesterday\" tells when. Look at the three things Hana did.",
+        "All three actions happened yesterday. Only one of them uses -ed."
+      ],
+      "tags": [
+        "verb-tense"
+      ]
+    },
+    {
+      "id": "SF-TEN-019",
+      "skill": "verb-tense",
+      "difficulty": "hard",
+      "context": "family",
+      "incorrect": "Last weekend, Grandpa teached me to fish, and I catched a big trout that we cook for dinner.",
+      "correct": "Last weekend, Grandpa taught me to fish, and I caught a big trout that we cooked for dinner.",
+      "accepted": [
+        "Last weekend Grandpa taught me to fish, and I caught a big trout that we cooked for dinner."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "teached",
+          "right": "taught",
+          "explanation": "Teach is a special verb. Its past tense is taught."
+        },
+        {
+          "category": "grammar",
+          "wrong": "catched",
+          "right": "caught",
+          "explanation": "Catch is a special verb. Its past tense is caught."
+        },
+        {
+          "category": "grammar",
+          "wrong": "cook",
+          "right": "cooked",
+          "explanation": "This happened last weekend, so use the past tense."
+        }
+      ],
+      "hints": [
+        "Look for three verbs in the wrong tense or form.",
+        "Look at what Grandpa did, what I did, and what we did with the trout.",
+        "Two of the verbs rhyme in the past tense and end in -aught. The third one adds -ed."
+      ],
+      "tags": [
+        "verb-tense"
+      ]
+    },
+    {
+      "id": "SF-TEN-020",
+      "skill": "verb-tense",
+      "difficulty": "hard",
+      "context": "everyday",
+      "incorrect": "Yesterday, the power goes out, so we find flashlights and tell stories until the lights came back on.",
+      "correct": "Yesterday, the power went out, so we found flashlights and told stories until the lights came back on.",
+      "accepted": [
+        "Yesterday the power went out, so we found flashlights and told stories until the lights came back on."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "goes",
+          "right": "went",
+          "explanation": "This happened yesterday, so use the past tense. The past tense of go is went."
+        },
+        {
+          "category": "grammar",
+          "wrong": "find",
+          "right": "found",
+          "explanation": "The past tense of find is found."
+        },
+        {
+          "category": "grammar",
+          "wrong": "tell",
+          "right": "told",
+          "explanation": "The past tense of tell is told."
+        }
+      ],
+      "hints": [
+        "Look for three verbs in the wrong tense.",
+        "The first word tells when. Look at what the power did, and the two things we did.",
+        "Make these verbs match \"came,\" which is already in the past. None of them use -ed."
+      ],
+      "tags": [
+        "verb-tense"
+      ]
+    },
+    {
+      "id": "SF-SVA-001",
+      "skill": "subject-verb",
+      "difficulty": "easy",
+      "context": "school",
+      "incorrect": "Maya and Leo is in the same reading group.",
+      "correct": "Maya and Leo are in the same reading group.",
+      "accepted": [
+        "Maya and Leo were in the same reading group."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "is",
+          "right": "are",
+          "explanation": "Maya and Leo are two people, so use are, not is."
+        }
+      ],
+      "hints": [
+        "Look for a verb that does not match who the sentence is about.",
+        "Look at the word right after \"Maya and Leo.\"",
+        "The sentence is about two people. Choose the verb that goes with more than one."
+      ],
+      "tags": [
+        "subject-verb"
+      ]
+    },
+    {
+      "id": "SF-SVA-002",
+      "skill": "subject-verb",
+      "difficulty": "easy",
+      "context": "nature",
+      "incorrect": "Look! The robins is building a nest in our tree.",
+      "correct": "Look! The robins are building a nest in our tree.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "is",
+          "right": "are",
+          "explanation": "Use are when the sentence tells about more than one person or thing."
+        }
+      ],
+      "hints": [
+        "Look for a verb that does not match who the sentence is about.",
+        "Look at the word right after \"robins.\"",
+        "\"Robins\" means more than one bird, so the verb must match more than one."
+      ],
+      "tags": [
+        "subject-verb"
+      ]
+    },
+    {
+      "id": "SF-SVA-003",
+      "skill": "subject-verb",
+      "difficulty": "easy",
+      "context": "everyday",
+      "incorrect": "My little sister don't like spicy food at all.",
+      "correct": "My little sister doesn't like spicy food at all.",
+      "accepted": [
+        "My little sister does not like spicy food at all."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "don't",
+          "right": "doesn't",
+          "explanation": "Use doesn't with one person, like he, she, or my sister."
+        }
+      ],
+      "hints": [
+        "Look for a verb that does not match who the sentence is about.",
+        "Look at the word right after \"sister.\"",
+        "The sentence is about one sister. Would you say \"she don't\" or \"she doesn't\"?"
+      ],
+      "tags": [
+        "subject-verb"
+      ]
+    },
+    {
+      "id": "SF-SVA-004",
+      "skill": "subject-verb",
+      "difficulty": "easy",
+      "context": "sports",
+      "incorrect": "Our players has new jerseys this year.",
+      "correct": "Our players have new jerseys this year.",
+      "accepted": [
+        "Our players had new jerseys this year."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "has",
+          "right": "have",
+          "explanation": "Use have, not has, when the sentence tells about more than one person."
+        }
+      ],
+      "hints": [
+        "Look for a verb that does not match who the sentence is about.",
+        "Look at the word right after \"players.\"",
+        "\"Players\" means more than one person. Choose the verb that goes with \"they.\""
+      ],
+      "tags": [
+        "subject-verb"
+      ]
+    },
+    {
+      "id": "SF-SVA-005",
+      "skill": "subject-verb",
+      "difficulty": "medium",
+      "context": "school",
+      "incorrect": "Our teacher always say that the books in our library is for everyone.",
+      "correct": "Our teacher always says that the books in our library are for everyone.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "say",
+          "right": "says",
+          "explanation": "Use says with one person, like he, she, or our teacher."
+        },
+        {
+          "category": "grammar",
+          "wrong": "is",
+          "right": "are",
+          "explanation": "Use are when the sentence tells about more than one person or thing."
+        }
+      ],
+      "hints": [
+        "Look for two verbs that do not match who or what they tell about.",
+        "Look at the word after \"always\" and the word after \"library.\"",
+        "One teacher needs a verb that ends in s. Many books need a verb for more than one."
+      ],
+      "tags": [
+        "subject-verb"
+      ]
+    },
+    {
+      "id": "SF-SVA-006",
+      "skill": "subject-verb",
+      "difficulty": "medium",
+      "context": "science",
+      "incorrect": "A spider have eight legs, but an insect only have six.",
+      "correct": "A spider has eight legs, but an insect only has six.",
+      "accepted": [
+        "A spider has eight legs, but an insect has only six."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "have",
+          "right": "has",
+          "explanation": "Use has, not have, when the sentence tells about one person or thing."
+        },
+        {
+          "category": "grammar",
+          "wrong": "have",
+          "right": "has",
+          "explanation": "Use has, not have, when the sentence tells about one person or thing."
+        }
+      ],
+      "hints": [
+        "Look for two verbs that do not match what they tell about.",
+        "Look at the word after \"spider\" and the word after \"only.\"",
+        "\"A spider\" is one animal and \"an insect\" is one animal. Use the verb that goes with one."
+      ],
+      "tags": [
+        "subject-verb"
+      ]
+    },
+    {
+      "id": "SF-SVA-007",
+      "skill": "subject-verb",
+      "difficulty": "medium",
+      "context": "family",
+      "incorrect": "My grandparents lives on a farm, and their cow give lots of milk.",
+      "correct": "My grandparents live on a farm, and their cow gives lots of milk.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "lives",
+          "right": "live",
+          "explanation": "Grandparents means more than one person, so use live, not lives."
+        },
+        {
+          "category": "grammar",
+          "wrong": "give",
+          "right": "gives",
+          "explanation": "Use gives with one animal or thing, like one cow."
+        }
+      ],
+      "hints": [
+        "Look for two verbs that do not match who or what they tell about.",
+        "Look at what the grandparents do and what the cow does.",
+        "Two grandparents need a verb without s. One cow needs a verb with s."
+      ],
+      "tags": [
+        "subject-verb"
+      ]
+    },
+    {
+      "id": "SF-SVA-008",
+      "skill": "subject-verb",
+      "difficulty": "medium",
+      "context": "community",
+      "incorrect": "The mail carrier come to our street every day, and the dogs barks at her.",
+      "correct": "The mail carrier comes to our street every day, and the dogs bark at her.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "come",
+          "right": "comes",
+          "explanation": "Use comes with one person, like one mail carrier."
+        },
+        {
+          "category": "grammar",
+          "wrong": "barks",
+          "right": "bark",
+          "explanation": "Dogs means more than one, so use bark, not barks."
+        }
+      ],
+      "hints": [
+        "Look for two verbs that do not match who they tell about.",
+        "Look at what the mail carrier does and what the dogs do.",
+        "One mail carrier needs a verb with s. Many dogs need a verb without s."
+      ],
+      "tags": [
+        "subject-verb"
+      ]
+    },
+    {
+      "id": "SF-SVA-009",
+      "skill": "subject-verb",
+      "difficulty": "medium",
+      "context": "nature",
+      "incorrect": "Honeybees makes honey, and each bee have a special job in the hive.",
+      "correct": "Honeybees make honey, and each bee has a special job in the hive.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "makes",
+          "right": "make",
+          "explanation": "Honeybees means more than one, so use make, not makes."
+        },
+        {
+          "category": "grammar",
+          "wrong": "have",
+          "right": "has",
+          "explanation": "Each bee means one bee at a time, so use has."
+        }
+      ],
+      "hints": [
+        "Look for two verbs that do not match what they tell about.",
+        "Look at the word after \"Honeybees\" and the word after \"each bee.\"",
+        "Many bees need a verb without s. \"Each bee\" is one bee, so it needs a verb for one."
+      ],
+      "tags": [
+        "subject-verb"
+      ]
+    },
+    {
+      "id": "SF-SVA-010",
+      "skill": "subject-verb",
+      "difficulty": "medium",
+      "context": "sports",
+      "incorrect": "Jin and his brother plays tennis, and Jin win most of the games.",
+      "correct": "Jin and his brother play tennis, and Jin wins most of the games.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "plays",
+          "right": "play",
+          "explanation": "Jin and his brother are two people, so use play, not plays."
+        },
+        {
+          "category": "grammar",
+          "wrong": "win",
+          "right": "wins",
+          "explanation": "Use wins with one person, like Jin."
+        }
+      ],
+      "hints": [
+        "Look for two verbs that do not match who they tell about.",
+        "Look at what the two boys do together and what Jin does alone.",
+        "Two people need a verb without s. One person needs a verb with s."
+      ],
+      "tags": [
+        "subject-verb"
+      ]
+    },
+    {
+      "id": "SF-SVA-011",
+      "skill": "subject-verb",
+      "difficulty": "medium",
+      "context": "everyday",
+      "incorrect": "There is three apples in the bowl, and Omar want one.",
+      "correct": "There are three apples in the bowl, and Omar wants one.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "is",
+          "right": "are",
+          "explanation": "Three apples means more than one, so use are."
+        },
+        {
+          "category": "grammar",
+          "wrong": "want",
+          "right": "wants",
+          "explanation": "Use wants with one person, like Omar."
+        }
+      ],
+      "hints": [
+        "Look for two verbs that do not match what they tell about.",
+        "Look at the word after \"There\" and the word after \"Omar.\"",
+        "Three apples need a verb for more than one. One boy needs a verb with s."
+      ],
+      "tags": [
+        "subject-verb"
+      ]
+    },
+    {
+      "id": "SF-SVA-012",
+      "skill": "subject-verb",
+      "difficulty": "hard",
+      "context": "school",
+      "incorrect": "Every Friday, Mr. Park's students takes a spelling test, and Ravi always get every word right because he study hard.",
+      "correct": "Every Friday, Mr. Park's students take a spelling test, and Ravi always gets every word right because he studies hard.",
+      "accepted": [
+        "Every Friday Mr. Park's students take a spelling test, and Ravi always gets every word right because he studies hard."
+      ],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "takes",
+          "right": "take",
+          "explanation": "Students means more than one person, so use take, not takes."
+        },
+        {
+          "category": "grammar",
+          "wrong": "get",
+          "right": "gets",
+          "explanation": "Use gets with one person, like Ravi."
+        },
+        {
+          "category": "grammar",
+          "wrong": "study",
+          "right": "studies",
+          "explanation": "Use studies with one person, like he."
+        }
+      ],
+      "hints": [
+        "Look for three verbs that do not match who they tell about.",
+        "Look at what the students do, what Ravi does, and what \"he\" does.",
+        "Many students need a verb without s. Ravi is one boy, so both of his verbs need an s ending."
+      ],
+      "tags": [
+        "subject-verb"
+      ]
+    },
+    {
+      "id": "SF-SVA-013",
+      "skill": "subject-verb",
+      "difficulty": "hard",
+      "context": "history",
+      "incorrect": "The old tools in our museum shows how farmers worked, and each one have a sign that tell about it.",
+      "correct": "The old tools in our museum show how farmers worked, and each one has a sign that tells about it.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "shows",
+          "right": "show",
+          "explanation": "The tools are more than one thing, so use show, not shows."
+        },
+        {
+          "category": "grammar",
+          "wrong": "have",
+          "right": "has",
+          "explanation": "Each one means one tool at a time, so use has."
+        },
+        {
+          "category": "grammar",
+          "wrong": "tell",
+          "right": "tells",
+          "explanation": "Use tells with one thing, like one sign."
+        }
+      ],
+      "hints": [
+        "Look for three verbs that do not match what they tell about.",
+        "Look at what the tools do, what each tool has, and what each sign does.",
+        "Many tools need a verb without s. \"Each one\" and \"a sign\" are each one thing."
+      ],
+      "tags": [
+        "subject-verb"
+      ]
+    },
+    {
+      "id": "SF-SVA-014",
+      "skill": "subject-verb",
+      "difficulty": "hard",
+      "context": "nature",
+      "incorrect": "Owls hunts at night, but a hawk hunt during the day, and both birds has sharp claws.",
+      "correct": "Owls hunt at night, but a hawk hunts during the day, and both birds have sharp claws.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "hunts",
+          "right": "hunt",
+          "explanation": "Owls means more than one, so use hunt, not hunts."
+        },
+        {
+          "category": "grammar",
+          "wrong": "hunt",
+          "right": "hunts",
+          "explanation": "Use hunts with one animal, like a hawk."
+        },
+        {
+          "category": "grammar",
+          "wrong": "has",
+          "right": "have",
+          "explanation": "Both birds means two birds, so use have, not has."
+        }
+      ],
+      "hints": [
+        "Look for three verbs that do not match what they tell about.",
+        "Look at what owls do, what a hawk does, and what both birds have.",
+        "Many owls need a verb without s. One hawk needs a verb with s. Two birds need have."
+      ],
+      "tags": [
+        "subject-verb"
+      ]
+    },
+    {
+      "id": "SF-SVA-015",
+      "skill": "subject-verb",
+      "difficulty": "hard",
+      "context": "everyday",
+      "incorrect": "My brothers is cleaning the garage, and Dad say we can go swimming when the job are done.",
+      "correct": "My brothers are cleaning the garage, and Dad says we can go swimming when the job is done.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "is",
+          "right": "are",
+          "explanation": "Brothers means more than one person, so use are."
+        },
+        {
+          "category": "grammar",
+          "wrong": "say",
+          "right": "says",
+          "explanation": "Use says with one person, like Dad."
+        },
+        {
+          "category": "grammar",
+          "wrong": "are",
+          "right": "is",
+          "explanation": "The job is one thing, so use is, not are."
+        }
+      ],
+      "hints": [
+        "Look for three verbs that do not match who or what they tell about.",
+        "Look at the word after \"brothers,\" the word after \"Dad,\" and the word after \"job.\"",
+        "More than one brother needs a verb for more than one. One dad needs a verb with s. One job needs a verb for one thing."
+      ],
+      "tags": [
+        "subject-verb"
+      ]
+    },
+    {
+      "id": "SF-HOM-001",
+      "skill": "homophones",
+      "difficulty": "easy",
+      "context": "everyday",
+      "incorrect": "We walked over their to see the new puppy.",
+      "correct": "We walked over there to see the new puppy.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "their",
+          "right": "there",
+          "explanation": "There tells where. Their means something belongs to them."
+        }
+      ],
+      "hints": [
+        "Look for a word that sounds right but is the wrong word.",
+        "Look at the word that tells where we walked.",
+        "Use the word that has \"here\" inside it, because it tells a place."
+      ],
+      "tags": [
+        "homophones"
+      ]
+    },
+    {
+      "id": "SF-HOM-002",
+      "skill": "homophones",
+      "difficulty": "easy",
+      "context": "school",
+      "incorrect": "I have to pencils and an eraser in my desk.",
+      "correct": "I have two pencils and an eraser in my desk.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "to",
+          "right": "two",
+          "explanation": "Two is the number 2."
+        }
+      ],
+      "hints": [
+        "Look for a word that sounds right but is the wrong word.",
+        "Look at the word that tells how many pencils.",
+        "Use the spelling for the number that comes after one."
+      ],
+      "tags": [
+        "homophones"
+      ]
+    },
+    {
+      "id": "SF-HOM-003",
+      "skill": "homophones",
+      "difficulty": "easy",
+      "context": "nature",
+      "incorrect": "We could here the frogs singing by the pond.",
+      "correct": "We could hear the frogs singing by the pond.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "here",
+          "right": "hear",
+          "explanation": "Hear means to listen with your ear. Here means this place."
+        }
+      ],
+      "hints": [
+        "Look for a word that sounds right but is the wrong word.",
+        "Look at the word that tells what we did with the frogs' song.",
+        "The word you need has \"ear\" in it."
+      ],
+      "tags": [
+        "homophones"
+      ]
+    },
+    {
+      "id": "SF-HOM-004",
+      "skill": "homophones",
+      "difficulty": "easy",
+      "context": "family",
+      "incorrect": "My brother new the answer to the riddle.",
+      "correct": "My brother knew the answer to the riddle.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "new",
+          "right": "knew",
+          "explanation": "Knew is the past tense of know. New means not old.",
+          "altCategory": "grammar"
+        }
+      ],
+      "hints": [
+        "Look for a word that sounds right but is the wrong word.",
+        "Look at the word right after \"brother.\"",
+        "The word you need starts with a silent k."
+      ],
+      "tags": [
+        "homophones"
+      ]
+    },
+    {
+      "id": "SF-HOM-005",
+      "skill": "homophones",
+      "difficulty": "medium",
+      "context": "sports",
+      "incorrect": "Our team one the game, and the players threw there caps in the air.",
+      "correct": "Our team won the game, and the players threw their caps in the air.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "one",
+          "right": "won",
+          "explanation": "Won means you came in first. One is the number 1.",
+          "altCategory": "grammar"
+        },
+        {
+          "category": "spelling",
+          "wrong": "there",
+          "right": "their",
+          "explanation": "Their means something belongs to them."
+        }
+      ],
+      "hints": [
+        "Look for two words that sound right but are the wrong words.",
+        "Look at what the team did and whose caps were thrown.",
+        "One word should mean \"came in first.\" The other should show the caps belong to the players."
+      ],
+      "tags": [
+        "homophones"
+      ]
+    },
+    {
+      "id": "SF-HOM-006",
+      "skill": "homophones",
+      "difficulty": "medium",
+      "context": "science",
+      "incorrect": "We mixed flower and water too make clay for our science project.",
+      "correct": "We mixed flour and water to make clay for our science project.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "flower",
+          "right": "flour",
+          "explanation": "Flour is the powder used for baking. A flower grows in a garden."
+        },
+        {
+          "category": "spelling",
+          "wrong": "too",
+          "right": "to",
+          "explanation": "Use to before an action word, like to make. Too means also or very."
+        }
+      ],
+      "hints": [
+        "Look for two words that sound right but are the wrong words.",
+        "Look at what we mixed with water and the word before \"make.\"",
+        "One word should name a baking powder. The other word before \"make\" needs only one o."
+      ],
+      "tags": [
+        "homophones"
+      ]
+    },
+    {
+      "id": "SF-HOM-007",
+      "skill": "homophones",
+      "difficulty": "medium",
+      "context": "community",
+      "incorrect": "Dad and I rode to the store to by milk and too loaves of bread.",
+      "correct": "Dad and I rode to the store to buy milk and two loaves of bread.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "by",
+          "right": "buy",
+          "explanation": "Buy means to pay for something."
+        },
+        {
+          "category": "spelling",
+          "wrong": "too",
+          "right": "two",
+          "explanation": "Two is the number 2."
+        }
+      ],
+      "hints": [
+        "Look for two words that sound right but are the wrong words.",
+        "Look at what we did with the milk and how many loaves we got.",
+        "One word means \"pay for.\" The other word is a number."
+      ],
+      "tags": [
+        "homophones"
+      ]
+    },
+    {
+      "id": "SF-HOM-008",
+      "skill": "homophones",
+      "difficulty": "medium",
+      "context": "school",
+      "incorrect": "Please right your name at the top of the paper and hand it in buy noon.",
+      "correct": "Please write your name at the top of the paper and hand it in by noon.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "right",
+          "right": "write",
+          "explanation": "Write means to put words on paper. Right means correct."
+        },
+        {
+          "category": "spelling",
+          "wrong": "buy",
+          "right": "by",
+          "explanation": "By noon means no later than noon. Buy means to pay for something."
+        }
+      ],
+      "hints": [
+        "Look for two words that sound right but are the wrong words.",
+        "Look at what to do with your name and the word before \"noon.\"",
+        "One word starts with a silent w. The other word is only two letters long."
+      ],
+      "tags": [
+        "homophones"
+      ]
+    },
+    {
+      "id": "SF-HOM-009",
+      "skill": "homophones",
+      "difficulty": "medium",
+      "context": "history",
+      "incorrect": "Long ago, sailors used the stars to find there way across the see.",
+      "correct": "Long ago, sailors used the stars to find their way across the sea.",
+      "accepted": [
+        "Long ago sailors used the stars to find their way across the sea."
+      ],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "there",
+          "right": "their",
+          "explanation": "Their means something belongs to them."
+        },
+        {
+          "category": "spelling",
+          "wrong": "see",
+          "right": "sea",
+          "explanation": "The sea is a large body of salt water. See means to look."
+        }
+      ],
+      "hints": [
+        "Look for two words that sound right but are the wrong words.",
+        "Look at whose way it was and what the sailors crossed.",
+        "One word shows the way belongs to the sailors. The other names a big body of water."
+      ],
+      "tags": [
+        "homophones"
+      ]
+    },
+    {
+      "id": "SF-HOM-010",
+      "skill": "homophones",
+      "difficulty": "medium",
+      "context": "family",
+      "incorrect": "Our family ate a hole pizza in less than an our.",
+      "correct": "Our family ate a whole pizza in less than an hour.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "hole",
+          "right": "whole",
+          "explanation": "Whole means all of something. A hole is an opening."
+        },
+        {
+          "category": "spelling",
+          "wrong": "our",
+          "right": "hour",
+          "explanation": "An hour is sixty minutes. Our means it belongs to us."
+        }
+      ],
+      "hints": [
+        "Look for two words that sound right but are the wrong words.",
+        "Look at how much pizza we ate and the last word.",
+        "One word means \"all of it.\" The other word means sixty minutes and starts with a silent h."
+      ],
+      "tags": [
+        "homophones"
+      ]
+    },
+    {
+      "id": "SF-HOM-011",
+      "skill": "homophones",
+      "difficulty": "medium",
+      "context": "nature",
+      "incorrect": "A dear ran across the rode in front of our car.",
+      "correct": "A deer ran across the road in front of our car.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "dear",
+          "right": "deer",
+          "explanation": "A deer is an animal. Dear is a word for someone you love."
+        },
+        {
+          "category": "spelling",
+          "wrong": "rode",
+          "right": "road",
+          "explanation": "A road is a street. Rode is the past tense of ride."
+        }
+      ],
+      "hints": [
+        "Look for two words that sound right but are the wrong words.",
+        "Look at the animal and the place it ran across.",
+        "The animal is spelled with two e letters. The street is spelled with oa."
+      ],
+      "tags": [
+        "homophones"
+      ]
+    },
+    {
+      "id": "SF-HOM-012",
+      "skill": "homophones",
+      "difficulty": "hard",
+      "context": "everyday",
+      "incorrect": "Their are to many leaves in the yard, so we will rake them in a big pile over hear.",
+      "correct": "There are too many leaves in the yard, so we will rake them in a big pile over here.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "Their",
+          "right": "There",
+          "explanation": "Use there to tell that something is in a place. Their means it belongs to them."
+        },
+        {
+          "category": "spelling",
+          "wrong": "to",
+          "right": "too",
+          "explanation": "Too means more than enough."
+        },
+        {
+          "category": "spelling",
+          "wrong": "hear",
+          "right": "here",
+          "explanation": "Here means this place. Hear means to listen."
+        }
+      ],
+      "hints": [
+        "Look for three words that sound right but are the wrong words.",
+        "Look at the first word, the word before \"many,\" and the last word.",
+        "The first word tells that something is in a place. \"Too many\" means more than enough. The last word names a place."
+      ],
+      "tags": [
+        "homophones"
+      ]
+    },
+    {
+      "id": "SF-HOM-013",
+      "skill": "homophones",
+      "difficulty": "hard",
+      "context": "sports",
+      "incorrect": "Jamal new he could win the race, so he trained hard for too weeks and one the gold medal.",
+      "correct": "Jamal knew he could win the race, so he trained hard for two weeks and won the gold medal.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "new",
+          "right": "knew",
+          "explanation": "Knew is the past tense of know. New means not old.",
+          "altCategory": "grammar"
+        },
+        {
+          "category": "spelling",
+          "wrong": "too",
+          "right": "two",
+          "explanation": "Two is the number 2."
+        },
+        {
+          "category": "spelling",
+          "wrong": "one",
+          "right": "won",
+          "explanation": "Won means you came in first. One is the number 1.",
+          "altCategory": "grammar"
+        }
+      ],
+      "hints": [
+        "Look for three words that sound right but are the wrong words.",
+        "Look at the word after \"Jamal,\" how many weeks he trained, and what he did with the medal.",
+        "One word starts with a silent k, one is a number, and one means \"came in first.\""
+      ],
+      "tags": [
+        "homophones"
+      ]
+    },
+    {
+      "id": "SF-HOM-014",
+      "skill": "homophones",
+      "difficulty": "hard",
+      "context": "community",
+      "incorrect": "When we went too the market, we saw a sign for a sail on fresh pairs and peaches.",
+      "correct": "When we went to the market, we saw a sign for a sale on fresh pears and peaches.",
+      "accepted": [
+        "When we went to the market we saw a sign for a sale on fresh pears and peaches."
+      ],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "too",
+          "right": "to",
+          "explanation": "Use to when you tell where someone goes. Too means also or very."
+        },
+        {
+          "category": "spelling",
+          "wrong": "sail",
+          "right": "sale",
+          "explanation": "A sale is when things cost less. A sail is on a boat."
+        },
+        {
+          "category": "spelling",
+          "wrong": "pairs",
+          "right": "pears",
+          "explanation": "Pears are a fruit. A pair is a set of two."
+        }
+      ],
+      "hints": [
+        "Look for three words that sound right but are the wrong words.",
+        "Look at the word before \"the market,\" the word after \"a sign for a,\" and the fruit.",
+        "One word needs only one o, one word means \"lower prices,\" and one word names a fruit."
+      ],
+      "tags": [
+        "homophones"
+      ]
+    },
+    {
+      "id": "SF-HOM-015",
+      "skill": "homophones",
+      "difficulty": "hard",
+      "context": "science",
+      "incorrect": "Do you no wear the moon is during the day? Sometimes it is still up their in the sky.",
+      "correct": "Do you know where the moon is during the day? Sometimes it is still up there in the sky.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "spelling",
+          "wrong": "no",
+          "right": "know",
+          "explanation": "Know means to understand. No is the opposite of yes.",
+          "altCategory": "grammar"
+        },
+        {
+          "category": "spelling",
+          "wrong": "wear",
+          "right": "where",
+          "explanation": "Where asks about a place. Wear is what you do with clothes."
+        },
+        {
+          "category": "spelling",
+          "wrong": "their",
+          "right": "there",
+          "explanation": "There tells where. Their means something belongs to them."
+        }
+      ],
+      "hints": [
+        "Look for three words that sound right but are the wrong words.",
+        "Look at the words after \"Do you\" and the word after \"still up.\"",
+        "One word starts with a silent k. The other two words tell about a place."
+      ],
+      "tags": [
+        "homophones"
+      ]
+    },
+    {
+      "id": "SF-POS-001",
+      "skill": "possessives-contractions",
+      "difficulty": "easy",
+      "context": "everyday",
+      "incorrect": "I cant find my other sock anywhere.",
+      "correct": "I can't find my other sock anywhere.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "cant",
+          "right": "can't",
+          "explanation": "Can't is short for cannot. The apostrophe takes the place of the missing letters."
+        }
+      ],
+      "hints": [
+        "Look for a missing apostrophe.",
+        "Look at the word after \"I.\"",
+        "This word is a short way to say \"cannot.\""
+      ],
+      "tags": [
+        "possessives-contractions"
+      ]
+    },
+    {
+      "id": "SF-POS-002",
+      "skill": "possessives-contractions",
+      "difficulty": "easy",
+      "context": "school",
+      "incorrect": "Mias backpack is hanging on the hook by the door.",
+      "correct": "Mia's backpack is hanging on the hook by the door.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "Mias",
+          "right": "Mia's",
+          "explanation": "Add an apostrophe and s to show that something belongs to someone."
+        }
+      ],
+      "hints": [
+        "Look for a missing apostrophe.",
+        "Look at whose backpack it is.",
+        "The backpack belongs to Mia. Show that with an apostrophe."
+      ],
+      "tags": [
+        "possessives-contractions"
+      ]
+    },
+    {
+      "id": "SF-POS-003",
+      "skill": "possessives-contractions",
+      "difficulty": "easy",
+      "context": "nature",
+      "incorrect": "Its going to snow tonight, so wear your hat.",
+      "correct": "It's going to snow tonight, so wear your hat.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "Its",
+          "right": "It's",
+          "explanation": "It's is short for it is, so it needs an apostrophe.",
+          "altCategory": "spelling"
+        }
+      ],
+      "hints": [
+        "Look for a missing apostrophe.",
+        "Look at the first word.",
+        "The first word means \"it is.\""
+      ],
+      "tags": [
+        "possessives-contractions"
+      ]
+    },
+    {
+      "id": "SF-POS-004",
+      "skill": "possessives-contractions",
+      "difficulty": "easy",
+      "context": "family",
+      "incorrect": "We dont have school on Monday, so we're visiting Grandma.",
+      "correct": "We don't have school on Monday, so we're visiting Grandma.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "dont",
+          "right": "don't",
+          "explanation": "Don't is short for do not. The apostrophe takes the place of the missing o."
+        }
+      ],
+      "hints": [
+        "Look for a missing apostrophe.",
+        "Look at the word after \"We.\"",
+        "This word is a short way to say \"do not.\""
+      ],
+      "tags": [
+        "possessives-contractions"
+      ]
+    },
+    {
+      "id": "SF-POS-005",
+      "skill": "possessives-contractions",
+      "difficulty": "medium",
+      "context": "sports",
+      "incorrect": "Owens new soccer ball rolled under Aunt Rosas red car.",
+      "correct": "Owen's new soccer ball rolled under Aunt Rosa's red car.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "Owens",
+          "right": "Owen's",
+          "explanation": "Add an apostrophe and s to show that something belongs to someone."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "Rosas",
+          "right": "Rosa's",
+          "explanation": "Add an apostrophe and s to show that something belongs to someone."
+        }
+      ],
+      "hints": [
+        "Look for two missing apostrophes.",
+        "Look at whose soccer ball it is and whose car it is.",
+        "The ball belongs to Owen, and the car belongs to Aunt Rosa."
+      ],
+      "tags": [
+        "possessives-contractions"
+      ]
+    },
+    {
+      "id": "SF-POS-006",
+      "skill": "possessives-contractions",
+      "difficulty": "medium",
+      "context": "school",
+      "incorrect": "Were going to visit the zoo, and Im so excited.",
+      "correct": "We're going to visit the zoo, and I'm so excited.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "Were",
+          "right": "We're",
+          "explanation": "We're is short for we are, so it needs an apostrophe."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "Im",
+          "right": "I'm",
+          "explanation": "I'm is short for I am, so it needs an apostrophe."
+        }
+      ],
+      "hints": [
+        "Look for two missing apostrophes.",
+        "Look at the first word and the word after \"and.\"",
+        "The first word means \"we are.\" The other word means \"I am.\""
+      ],
+      "tags": [
+        "possessives-contractions"
+      ]
+    },
+    {
+      "id": "SF-POS-007",
+      "skill": "possessives-contractions",
+      "difficulty": "medium",
+      "context": "nature",
+      "incorrect": "The bird flapped it's wings, but it didnt fly very far.",
+      "correct": "The bird flapped its wings, but it didn't fly very far.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "it's",
+          "right": "its",
+          "explanation": "Its shows that something belongs to it. It's with an apostrophe means it is.",
+          "altCategory": "spelling"
+        },
+        {
+          "category": "punctuation",
+          "wrong": "didnt",
+          "right": "didn't",
+          "explanation": "Didn't is short for did not, so it needs an apostrophe."
+        }
+      ],
+      "hints": [
+        "Look for one apostrophe that does not belong and one that is missing.",
+        "Look at whose wings they are and the word after \"but it.\"",
+        "Try saying \"it is\" in place of the first word. Does it make sense? The second word means \"did not.\""
+      ],
+      "tags": [
+        "possessives-contractions"
+      ]
+    },
+    {
+      "id": "SF-POS-008",
+      "skill": "possessives-contractions",
+      "difficulty": "medium",
+      "context": "family",
+      "incorrect": "My two brothers bikes are in the garage, but Dads car isnt.",
+      "correct": "My two brothers' bikes are in the garage, but Dad's car isn't.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "brothers",
+          "right": "brothers'",
+          "explanation": "When more than one person owns something and the word ends in s, add just an apostrophe."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "Dads",
+          "right": "Dad's",
+          "explanation": "Add an apostrophe and s to show that something belongs to someone."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "isnt",
+          "right": "isn't",
+          "explanation": "Isn't is short for is not, so it needs an apostrophe."
+        }
+      ],
+      "hints": [
+        "Look for three missing apostrophes.",
+        "Look at whose bikes they are, whose car it is, and the last word.",
+        "Two brothers own the bikes, so the apostrophe goes after the s. The last word means \"is not.\""
+      ],
+      "tags": [
+        "possessives-contractions"
+      ]
+    },
+    {
+      "id": "SF-POS-009",
+      "skill": "possessives-contractions",
+      "difficulty": "medium",
+      "context": "community",
+      "incorrect": "The citys new library wont open until next month.",
+      "correct": "The city's new library won't open until next month.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "citys",
+          "right": "city's",
+          "explanation": "Add an apostrophe and s to show that something belongs to someone or something."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "wont",
+          "right": "won't",
+          "explanation": "Won't is short for will not, so it needs an apostrophe."
+        }
+      ],
+      "hints": [
+        "Look for two missing apostrophes.",
+        "Look at whose library it is and the word that means \"will not.\"",
+        "The library belongs to the city. The other word is a short way to say \"will not.\""
+      ],
+      "tags": [
+        "possessives-contractions"
+      ]
+    },
+    {
+      "id": "SF-POS-010",
+      "skill": "possessives-contractions",
+      "difficulty": "medium",
+      "context": "everyday",
+      "incorrect": "Youre welcome to borrow Graces umbrella if it starts to rain.",
+      "correct": "You're welcome to borrow Grace's umbrella if it starts to rain.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "Youre",
+          "right": "You're",
+          "explanation": "You're is short for you are, so it needs an apostrophe."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "Graces",
+          "right": "Grace's",
+          "explanation": "Add an apostrophe and s to show that something belongs to someone."
+        }
+      ],
+      "hints": [
+        "Look for two missing apostrophes.",
+        "Look at the first word and whose umbrella it is.",
+        "The first word means \"you are.\" The umbrella belongs to Grace."
+      ],
+      "tags": [
+        "possessives-contractions"
+      ]
+    },
+    {
+      "id": "SF-POS-011",
+      "skill": "possessives-contractions",
+      "difficulty": "medium",
+      "context": "history",
+      "incorrect": "Abraham Lincolns face is on the penny, isnt it?",
+      "correct": "Abraham Lincoln's face is on the penny, isn't it?",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "Lincolns",
+          "right": "Lincoln's",
+          "explanation": "Add an apostrophe and s to show that something belongs to someone."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "isnt",
+          "right": "isn't",
+          "explanation": "Isn't is short for is not, so it needs an apostrophe."
+        }
+      ],
+      "hints": [
+        "Look for two missing apostrophes.",
+        "Look at whose face is on the penny and the word that means \"is not.\"",
+        "The face belongs to Abraham Lincoln. The other word is a short way to say \"is not.\""
+      ],
+      "tags": [
+        "possessives-contractions"
+      ]
+    },
+    {
+      "id": "SF-POS-012",
+      "skill": "possessives-contractions",
+      "difficulty": "hard",
+      "context": "school",
+      "incorrect": "Theyre hanging all the students drawings in the hallway, and Ms. Lees class can't wait to see them.",
+      "correct": "They're hanging all the students' drawings in the hallway, and Ms. Lee's class can't wait to see them.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "Theyre",
+          "right": "They're",
+          "explanation": "They're is short for they are, so it needs an apostrophe."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "students",
+          "right": "students'",
+          "explanation": "When more than one person owns something and the word ends in s, add just an apostrophe."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "Lees",
+          "right": "Lee's",
+          "explanation": "Add an apostrophe and s to show that something belongs to someone."
+        }
+      ],
+      "hints": [
+        "Look for three missing apostrophes.",
+        "Look at the first word, whose drawings they are, and whose class it is.",
+        "The first word means \"they are.\" Many students own the drawings. The class belongs to Ms. Lee."
+      ],
+      "tags": [
+        "possessives-contractions"
+      ]
+    },
+    {
+      "id": "SF-POS-013",
+      "skill": "possessives-contractions",
+      "difficulty": "hard",
+      "context": "sports",
+      "incorrect": "Lets go watch Kofis game, but we shouldnt sit in the coachs chair.",
+      "correct": "Let's go watch Kofi's game, but we shouldn't sit in the coach's chair.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "Lets",
+          "right": "Let's",
+          "explanation": "Let's is short for let us, so it needs an apostrophe."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "Kofis",
+          "right": "Kofi's",
+          "explanation": "Add an apostrophe and s to show that something belongs to someone."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "shouldnt",
+          "right": "shouldn't",
+          "explanation": "Shouldn't is short for should not, so it needs an apostrophe."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "coachs",
+          "right": "coach's",
+          "explanation": "Add an apostrophe and s to show that something belongs to someone."
+        }
+      ],
+      "hints": [
+        "Look for four missing apostrophes.",
+        "Look at the first word, whose game it is, the word that means \"should not,\" and whose chair it is.",
+        "Two words are short forms, like \"let us.\" Two words show who owns something."
+      ],
+      "tags": [
+        "possessives-contractions"
+      ]
+    },
+    {
+      "id": "SF-POS-014",
+      "skill": "possessives-contractions",
+      "difficulty": "hard",
+      "context": "family",
+      "incorrect": "Im sure Grandpas old photos are in the attic, but its too dark to look today.",
+      "correct": "I'm sure Grandpa's old photos are in the attic, but it's too dark to look today.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "Im",
+          "right": "I'm",
+          "explanation": "I'm is short for I am, so it needs an apostrophe."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "Grandpas",
+          "right": "Grandpa's",
+          "explanation": "Add an apostrophe and s to show that something belongs to someone."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "its",
+          "right": "it's",
+          "explanation": "It's is short for it is, so it needs an apostrophe.",
+          "altCategory": "spelling"
+        }
+      ],
+      "hints": [
+        "Look for three missing apostrophes.",
+        "Look at the first word, whose photos they are, and the word after \"but.\"",
+        "The first word means \"I am.\" The photos belong to Grandpa. The word after \"but\" means \"it is.\""
+      ],
+      "tags": [
+        "possessives-contractions"
+      ]
+    },
+    {
+      "id": "SF-POS-015",
+      "skill": "possessives-contractions",
+      "difficulty": "hard",
+      "context": "nature",
+      "incorrect": "The foxes den is under a log, and we cant see it, but we know its there.",
+      "correct": "The foxes' den is under a log, and we can't see it, but we know it's there.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "foxes",
+          "right": "foxes'",
+          "explanation": "When more than one animal owns something and the word ends in s, add just an apostrophe."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "cant",
+          "right": "can't",
+          "explanation": "Can't is short for cannot, so it needs an apostrophe."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "its",
+          "right": "it's",
+          "explanation": "It's is short for it is, so it needs an apostrophe.",
+          "altCategory": "spelling"
+        }
+      ],
+      "hints": [
+        "Look for three missing apostrophes.",
+        "Look at whose den it is, the word that means \"cannot,\" and the word after \"know.\"",
+        "Many foxes share the den, so the apostrophe goes after the s. The last fix means \"it is.\""
+      ],
+      "tags": [
+        "possessives-contractions"
+      ]
+    },
+    {
+      "id": "SF-MIX-001",
+      "skill": "mixed",
+      "difficulty": "medium",
+      "context": "school",
+      "incorrect": "my sister Ava used bright colers in art class",
+      "correct": "My sister Ava used bright colors in art class.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "my",
+          "right": "My",
+          "explanation": "The first word of a sentence starts with a capital letter."
+        },
+        {
+          "category": "spelling",
+          "wrong": "colers",
+          "right": "colors",
+          "explanation": "Colors is spelled c-o-l-o-r-s."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "class",
+          "right": "class.",
+          "explanation": "A telling sentence ends with a period."
+        }
+      ],
+      "hints": [
+        "Look for a capital-letter mistake, a spelling mistake, and a missing end mark.",
+        "Look at the first word, the word that names things like red and blue, and the end of the sentence.",
+        "Capitalize the first word, fix one vowel in the word for red and blue, and end the telling sentence."
+      ],
+      "tags": [
+        "capitalization",
+        "spelling",
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-MIX-002",
+      "skill": "mixed",
+      "difficulty": "medium",
+      "context": "family",
+      "incorrect": "Last sunday, we goed to the zoo with our cousins.",
+      "correct": "Last Sunday, we went to the zoo with our cousins.",
+      "accepted": [
+        "Last Sunday we went to the zoo with our cousins."
+      ],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "sunday",
+          "right": "Sunday",
+          "explanation": "Days of the week start with a capital letter."
+        },
+        {
+          "category": "grammar",
+          "wrong": "goed",
+          "right": "went",
+          "explanation": "Go is a special verb. Its past tense is went, not goed."
+        }
+      ],
+      "hints": [
+        "Look for a capital-letter mistake and a grammar mistake with a verb.",
+        "Look at the day and at what we did.",
+        "Days start with a capital letter. The past tense of go does not use -ed."
+      ],
+      "tags": [
+        "capitalization",
+        "verb-tense"
+      ]
+    },
+    {
+      "id": "SF-MIX-003",
+      "skill": "mixed",
+      "difficulty": "medium",
+      "context": "everyday",
+      "incorrect": "Please dont forget too bring your lunch to school tomorrow.",
+      "correct": "Please don't forget to bring your lunch to school tomorrow.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "dont",
+          "right": "don't",
+          "explanation": "Don't is short for do not. The apostrophe takes the place of the missing o."
+        },
+        {
+          "category": "spelling",
+          "wrong": "too",
+          "right": "to",
+          "explanation": "Use to before an action word, like to bring. Too means also or very."
+        }
+      ],
+      "hints": [
+        "Look for a punctuation mistake (a missing apostrophe) and a spelling mistake (a word that sounds right but is the wrong word).",
+        "Look at the word after \"Please\" and the word before \"bring.\"",
+        "One word is a short way to say \"do not.\" The word before \"bring\" needs only one o."
+      ],
+      "tags": [
+        "possessives-contractions",
+        "homophones"
+      ]
+    },
+    {
+      "id": "SF-MIX-004",
+      "skill": "mixed",
+      "difficulty": "medium",
+      "context": "nature",
+      "incorrect": "Squirrels hides acorns in the ground before winter comes",
+      "correct": "Squirrels hide acorns in the ground before winter comes.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "hides",
+          "right": "hide",
+          "explanation": "Squirrels means more than one, so use hide, not hides."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "comes",
+          "right": "comes.",
+          "explanation": "A telling sentence ends with a period."
+        }
+      ],
+      "hints": [
+        "Look for a grammar mistake with a verb and a missing end mark.",
+        "Look at the word after \"Squirrels\" and at the end of the sentence.",
+        "Many squirrels need a verb without s. The telling sentence needs an end mark."
+      ],
+      "tags": [
+        "subject-verb",
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-MIX-005",
+      "skill": "mixed",
+      "difficulty": "hard",
+      "context": "sports",
+      "incorrect": "on friday, Tariq and his friends practiced there soccer moves at the park untill dark",
+      "correct": "On Friday, Tariq and his friends practiced their soccer moves at the park until dark.",
+      "accepted": [
+        "On Friday Tariq and his friends practiced their soccer moves at the park until dark."
+      ],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "on",
+          "right": "On",
+          "explanation": "The first word of a sentence starts with a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "friday",
+          "right": "Friday",
+          "explanation": "Days of the week start with a capital letter."
+        },
+        {
+          "category": "spelling",
+          "wrong": "there",
+          "right": "their",
+          "explanation": "Their means something belongs to them."
+        },
+        {
+          "category": "spelling",
+          "wrong": "untill",
+          "right": "until",
+          "explanation": "Until ends with just one l."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "dark",
+          "right": "dark.",
+          "explanation": "A telling sentence ends with a period."
+        }
+      ],
+      "hints": [
+        "Look for capital-letter mistakes, two spelling mistakes (one is a word that sounds right but is the wrong word), and a missing end mark.",
+        "Look at the first two words, whose soccer moves they were, the word before \"dark,\" and the end.",
+        "Capitalize two words, show the moves belong to Tariq and his friends, remove one l, and end the telling sentence."
+      ],
+      "tags": [
+        "capitalization",
+        "homophones",
+        "spelling",
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-MIX-006",
+      "skill": "mixed",
+      "difficulty": "hard",
+      "context": "science",
+      "incorrect": "our class watched a caterpillar turn into a butterfly, and it were a beatiful sight",
+      "correct": "Our class watched a caterpillar turn into a butterfly, and it was a beautiful sight.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "our",
+          "right": "Our",
+          "explanation": "The first word of a sentence starts with a capital letter."
+        },
+        {
+          "category": "grammar",
+          "wrong": "were",
+          "right": "was",
+          "explanation": "Use was, not were, with one thing, like it."
+        },
+        {
+          "category": "spelling",
+          "wrong": "beatiful",
+          "right": "beautiful",
+          "explanation": "Beautiful is spelled b-e-a-u-t-i-f-u-l."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "sight",
+          "right": "sight.",
+          "explanation": "A telling sentence ends with a period."
+        }
+      ],
+      "hints": [
+        "Look for a capital-letter mistake, a grammar mistake with a verb, a spelling mistake, and a missing end mark.",
+        "Look at the first word, the verb after \"it,\" the word that describes the sight, and the end.",
+        "Capitalize the first word, use the verb that goes with \"it,\" add a missing u, and end the telling sentence."
+      ],
+      "tags": [
+        "capitalization",
+        "subject-verb",
+        "spelling",
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-MIX-007",
+      "skill": "mixed",
+      "difficulty": "hard",
+      "context": "history",
+      "incorrect": "In 1776, american leaders met in philadelphia and sign the declaration of independence to start a new country",
+      "correct": "In 1776, American leaders met in Philadelphia and signed the Declaration of Independence to start a new country.",
+      "accepted": [
+        "In 1776 American leaders met in Philadelphia and signed the Declaration of Independence to start a new country."
+      ],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "american",
+          "right": "American",
+          "explanation": "Words made from the name of a country, like American, start with a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "philadelphia",
+          "right": "Philadelphia",
+          "explanation": "The name of a city starts with a capital letter."
+        },
+        {
+          "category": "grammar",
+          "wrong": "sign",
+          "right": "signed",
+          "explanation": "This happened in 1776, so use the past tense."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "declaration of independence",
+          "right": "Declaration of Independence",
+          "explanation": "The name of an important paper starts with capital letters."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "country",
+          "right": "country.",
+          "explanation": "A telling sentence ends with a period."
+        }
+      ],
+      "hints": [
+        "Look for capital-letter mistakes, a grammar mistake with a verb, and a missing end mark.",
+        "Look at the word before \"leaders,\" the city, what the leaders did, the name of the paper, and the end.",
+        "Capitalize \"American,\" the city, and the main words of the paper's name (\"of\" stays small). Use the past tense, and end the sentence."
+      ],
+      "tags": [
+        "capitalization",
+        "verb-tense",
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-MIX-008",
+      "skill": "mixed",
+      "difficulty": "hard",
+      "context": "community",
+      "incorrect": "mrs. jones asked \"who wants to help plant flowers at the park\"",
+      "correct": "Mrs. Jones asked, \"Who wants to help plant flowers at the park?\"",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "mrs. jones",
+          "right": "Mrs. Jones",
+          "explanation": "A title like Mr., Mrs., Ms., or Dr. and a person's name start with capital letters."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "asked",
+          "right": "asked,",
+          "explanation": "Put a comma before the words someone says inside quotation marks."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "\"who",
+          "right": "\"Who",
+          "explanation": "The first word inside quotation marks starts with a capital letter."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "park\"",
+          "right": "park?\"",
+          "explanation": "Mrs. Jones is asking a question, so put a question mark inside the quotation marks."
+        }
+      ],
+      "hints": [
+        "Look for capital-letter mistakes and punctuation mistakes (a missing comma and a missing question mark).",
+        "Look at the teacher's name, the word before the quotation marks, the first word she says, and the end.",
+        "Capitalize her title and name and the first word she says. Add a comma before her words. Her words ask a question."
+      ],
+      "tags": [
+        "capitalization",
+        "commas",
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-MIX-009",
+      "skill": "mixed",
+      "difficulty": "hard",
+      "context": "family",
+      "incorrect": "On tuesday, our puppy turns two, and my brother cant beleive how big he is",
+      "correct": "On Tuesday, our puppy turns two, and my brother can't believe how big he is.",
+      "accepted": [
+        "On Tuesday our puppy turns two, and my brother can't believe how big he is."
+      ],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "tuesday",
+          "right": "Tuesday",
+          "explanation": "Days of the week start with a capital letter."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "cant",
+          "right": "can't",
+          "explanation": "Can't is short for cannot, so it needs an apostrophe."
+        },
+        {
+          "category": "spelling",
+          "wrong": "beleive",
+          "right": "believe",
+          "explanation": "Believe is spelled b-e-l-i-e-v-e. Remember: i before e."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "he is",
+          "right": "he is.",
+          "explanation": "A telling sentence ends with a period."
+        }
+      ],
+      "hints": [
+        "Look for a capital-letter mistake, a spelling mistake, and two punctuation mistakes (an apostrophe and an end mark).",
+        "Look at the day, the word that means \"cannot,\" the word after it, and the end.",
+        "Capitalize the day, add an apostrophe, switch the e and i, and end the telling sentence."
+      ],
+      "tags": [
+        "capitalization",
+        "possessives-contractions",
+        "spelling",
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-MIX-010",
+      "skill": "mixed",
+      "difficulty": "hard",
+      "context": "school",
+      "incorrect": "Yes we finished our projects, but Leah and Nora is still painting there poster",
+      "correct": "Yes, we finished our projects, but Leah and Nora are still painting their poster.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "Yes",
+          "right": "Yes,",
+          "explanation": "Put a comma after Yes, No, or Well at the start of a sentence."
+        },
+        {
+          "category": "grammar",
+          "wrong": "Nora is",
+          "right": "Nora are",
+          "explanation": "Leah and Nora are two people, so use are, not is."
+        },
+        {
+          "category": "spelling",
+          "wrong": "there",
+          "right": "their",
+          "explanation": "Their means something belongs to them."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "poster",
+          "right": "poster.",
+          "explanation": "A telling sentence ends with a period."
+        }
+      ],
+      "hints": [
+        "Look for two punctuation mistakes (a comma and an end mark), a grammar mistake with a verb, and a spelling mistake with a word that sounds right.",
+        "Look at the first word, the verb after \"Leah and Nora,\" whose poster it is, and the end.",
+        "Add a comma after \"Yes.\" Two girls need are. The poster belongs to them. End the telling sentence."
+      ],
+      "tags": [
+        "commas",
+        "subject-verb",
+        "homophones",
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-MIX-011",
+      "skill": "mixed",
+      "difficulty": "hard",
+      "context": "nature",
+      "incorrect": "at the beach, Elena finded a starfish and too tiny crabs under a rock",
+      "correct": "At the beach, Elena found a starfish and two tiny crabs under a rock.",
+      "accepted": [
+        "At the beach Elena found a starfish and two tiny crabs under a rock."
+      ],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "at",
+          "right": "At",
+          "explanation": "The first word of a sentence starts with a capital letter."
+        },
+        {
+          "category": "grammar",
+          "wrong": "finded",
+          "right": "found",
+          "explanation": "Find is a special verb. Its past tense is found."
+        },
+        {
+          "category": "spelling",
+          "wrong": "too",
+          "right": "two",
+          "explanation": "Two is the number 2."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "rock",
+          "right": "rock.",
+          "explanation": "A telling sentence ends with a period."
+        }
+      ],
+      "hints": [
+        "Look for a capital-letter mistake, a grammar mistake with a verb, a spelling mistake with a word that sounds right, and a missing end mark.",
+        "Look at the first word, what Elena did, how many crabs there were, and the end.",
+        "Capitalize the first word, use the past tense of find, use the number word, and end the telling sentence."
+      ],
+      "tags": [
+        "capitalization",
+        "verb-tense",
+        "homophones",
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-MIX-012",
+      "skill": "mixed",
+      "difficulty": "hard",
+      "context": "everyday",
+      "incorrect": "Isaac asked his dad \"can we go to the libary after lunch\"",
+      "correct": "Isaac asked his dad, \"Can we go to the library after lunch?\"",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "dad",
+          "right": "dad,",
+          "explanation": "Put a comma before the words someone says inside quotation marks."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "\"can",
+          "right": "\"Can",
+          "explanation": "The first word inside quotation marks starts with a capital letter."
+        },
+        {
+          "category": "spelling",
+          "wrong": "libary",
+          "right": "library",
+          "explanation": "Library has two r letters: l-i-b-r-a-r-y."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "lunch\"",
+          "right": "lunch?\"",
+          "explanation": "Isaac is asking a question, so put a question mark inside the quotation marks."
+        }
+      ],
+      "hints": [
+        "Look for punctuation mistakes (a comma and an end mark), a capital-letter mistake, and a spelling mistake.",
+        "Look before the quotation marks, at the first word Isaac says, at the place he wants to go, and at the end.",
+        "Add a comma before his words, capitalize his first word, add a missing r, and end his question."
+      ],
+      "tags": [
+        "commas",
+        "capitalization",
+        "spelling",
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-MIX-013",
+      "skill": "mixed",
+      "difficulty": "hard",
+      "context": "sports",
+      "incorrect": "Kai and Noah plays basketball every saturday at the gym on elm street after lunch",
+      "correct": "Kai and Noah play basketball every Saturday at the gym on Elm Street after lunch.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "grammar",
+          "wrong": "plays",
+          "right": "play",
+          "explanation": "Kai and Noah are two people, so use play, not plays."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "saturday",
+          "right": "Saturday",
+          "explanation": "Days of the week start with a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "elm street",
+          "right": "Elm Street",
+          "explanation": "The name of a street starts with capital letters."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "lunch",
+          "right": "lunch.",
+          "explanation": "A telling sentence ends with a period."
+        }
+      ],
+      "hints": [
+        "Look for a grammar mistake with a verb, capital-letter mistakes, and a missing end mark.",
+        "Look at the verb after \"Kai and Noah,\" the day, the street name, and the end.",
+        "Two boys need a verb without s. Capitalize the day and both words of the street. End the telling sentence."
+      ],
+      "tags": [
+        "subject-verb",
+        "capitalization",
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-MIX-014",
+      "skill": "mixed",
+      "difficulty": "hard",
+      "context": "community",
+      "incorrect": "on april 22, our class celebrated earth day by picking up trash in the park",
+      "correct": "On April 22, our class celebrated Earth Day by picking up trash in the park.",
+      "accepted": [
+        "On April 22 our class celebrated Earth Day by picking up trash in the park."
+      ],
+      "errors": [
+        {
+          "category": "capitalization",
+          "wrong": "on",
+          "right": "On",
+          "explanation": "The first word of a sentence starts with a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "april",
+          "right": "April",
+          "explanation": "Months of the year start with a capital letter."
+        },
+        {
+          "category": "capitalization",
+          "wrong": "earth day",
+          "right": "Earth Day",
+          "explanation": "Holidays start with capital letters."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "park",
+          "right": "park.",
+          "explanation": "A telling sentence ends with a period."
+        }
+      ],
+      "hints": [
+        "Look for capital-letter mistakes and a missing end mark.",
+        "Look at the first word, the month, the name of the special day, and the end.",
+        "Capitalize the first word, the month, and both words of the special day. Then end the telling sentence."
+      ],
+      "tags": [
+        "capitalization",
+        "ending-punctuation"
+      ]
+    },
+    {
+      "id": "SF-MIX-015",
+      "skill": "mixed",
+      "difficulty": "hard",
+      "context": "school",
+      "incorrect": "Its time for recess, but Hugo want to finish his drawing of a dinosore first",
+      "correct": "It's time for recess, but Hugo wants to finish his drawing of a dinosaur first.",
+      "accepted": [],
+      "errors": [
+        {
+          "category": "punctuation",
+          "wrong": "Its",
+          "right": "It's",
+          "explanation": "It's is short for it is, so it needs an apostrophe.",
+          "altCategory": "spelling"
+        },
+        {
+          "category": "grammar",
+          "wrong": "want",
+          "right": "wants",
+          "explanation": "Use wants with one person, like Hugo."
+        },
+        {
+          "category": "spelling",
+          "wrong": "dinosore",
+          "right": "dinosaur",
+          "explanation": "Dinosaur is spelled d-i-n-o-s-a-u-r."
+        },
+        {
+          "category": "punctuation",
+          "wrong": "first",
+          "right": "first.",
+          "explanation": "A telling sentence ends with a period."
+        }
+      ],
+      "hints": [
+        "Look for two punctuation mistakes (an apostrophe and an end mark), a grammar mistake with a verb, and a spelling mistake.",
+        "Look at the first word, the word after \"Hugo,\" the animal he is drawing, and the end.",
+        "The first word means \"it is.\" One boy needs a verb with s. Fix the end of the animal word and end the sentence."
+      ],
+      "tags": [
+        "possessives-contractions",
+        "subject-verb",
+        "spelling",
+        "ending-punctuation"
+      ]
+    }
+  ]
+}

@@ -1,12 +1,30 @@
 # Word Workshop — build status (checkpoint log)
 
-Branches: `main` is live (v1 + four-step wizard, PR #1 and PR #2, deployed 2026-10-11 with owner approval) · `claude/parent-ux-v2` (Redesign 2.0 lesson workspace, awaiting owner approval). Never merge or deploy without owner approval.
+Branches: `main` is live (198640e: Redesign 2.0 + optional online photo reader, PR #4, deployed with owner approval) · `claude/student-first-v3` (Word Workshop 3.0, student-first; **awaiting owner review — not merged, not deployed**). Never merge or deploy without owner approval.
 Architecture: `docs/ARCHITECTURE-PROPOSAL.md` (vanilla JS ES modules, IndexedDB, hash routes, no build step).
 
 ## How to resume
-1. `git pull` on `claude/build-v1`; read this file top to bottom.
+1. `git pull` on the branch under review (now `claude/student-first-v3`); read this file top to bottom.
 2. `npm test` (Node unit tests) and `npm run test:browser` (headless Chrome, serves the repo under `/Word-Workshop/`).
 3. Continue with the first milestone not marked **Complete** below. Never rewrite completed milestones without a recorded reason.
+
+## Word Workshop 3.0 — student-first (branch `claude/student-first-v3`)
+Goal: a third grader uses the app alone. No parent approval step, accounts, cloud sync or paid services.
+- **Home:** "Who is learning today?" name cards → four area cards: Vocabulary (blue), Spelling (orange), Reading Passage (green), Sentence Fix (purple). The small Grown-ups link opens settings and backup only.
+- **Vocabulary / Spelling:** the child adds words (Upload photo / Paste / One word) → Check words → Start learning (saves an immutable snapshot; no approval screen). Vocabulary: study cards, Choose the meaning, Fill in the blank (Choose the word when the words have no example sentences), Matching, Crossword, Practice missed words, Test. Spelling: study cards with audio, Listen and spell, Build the word, Practice missed words, Spelling test (answers never shown or in accessible labels).
+- **Reading Passage:** PDF (vendored pdf.js 4.10.38), photo, or typed text; paragraphs kept; text size A−/A+; mark read / read again; reopen saved passages. No comprehension questions.
+- **Sentence Fix:** 150-item bank (`data/sentence-fix/bank.json`; curriculum in `docs/SENTENCE-FIX-CURRICULUM.md`). Learn → Practice (10, three progressive hints, try again, show the answer after 2 tries) → Thinking Lab (name the kind of mistake, then fix) → Test (15, no hints, saved, scores by skill, review, Practice my misses). Deterministic selection; "Start fresh" keeps test history. Grading (`js/sentencefix/engine.js`) is rule-based with a neutral "review" state; a real word (public-domain ENABLE list, `vendor/english-words/`) is never graded as a misspelling.
+- **Storage:** IndexedDB v2 adds the `passages` and `sentencefix` stores; the upgrade only adds stores (verified: old data kept byte-for-byte). Backups include the new data.
+- **Independent audit:** `docs/SENTENCE-FIX-AUDIT.md` — content bank **APPROVED** (all 150 items pass); grading engine **APPROVED** after seven re-audit rounds (more than 380 auditor-written answers; no valid answer graded incorrect, nothing invalid graded correct).
+- **QA (child's-eye, 320/390/768/1366 px):** Critical C1 (laptop Check words unreadable) and Major M1 (Fill in the blank dead end), M2 (Practice my misses after a reset) fixed in b37374b with regression checks.
+- **Tests:** `npm test` 886/893 pass, 0 fail, 7 todo (Minor grading cases that go to review instead of incorrect, recorded by the auditor); `npm run test:browser` 297/297; upgrade check (live release → 3.0 at the same address) 15/15.
+
+### Known limitations (3.0)
+- On a 320×640 phone the Sentence Fix "Check my sentence" button and the fourth home card need a scroll; the crossword scrolls sideways inside its own box on phones (44 px squares).
+- The test review lists the planted mistakes; it does not point at a brand-new typo the child introduced (the grade itself is right).
+- The child's Check words screen still uses some grown-up wording ("Teacher's exact definition", "Read as a table").
+- Grading sends uncertain answers to "review" (a grown-up can check), e.g. a comma before "and" plus two words, rewrites with different words, and rare misspellings that are also dictionary words.
+- On-device photo reading of vocabulary definitions remains unreliable (see docs/OCR.md); flagged words are shown to the child to check.
 
 ## Milestones
 

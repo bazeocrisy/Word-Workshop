@@ -42,7 +42,7 @@ export async function lessonWorkspace({ params = {}, query = {} }) {
   return new Workspace(week, students, stage, query).render();
 }
 
-class Workspace extends Editor {
+export class Workspace extends Editor {
   constructor(week, students, stage, query) {
     super(week || { id: '' }, null, []);
     this.w = week; this.students = students; this.stage = stage;
@@ -872,7 +872,7 @@ class Workspace extends Editor {
     let action;
     if (st === 'approved') {
       action = h('div', { class: 'card notice notice-ok ws-approved' }, h('p', null, h('strong', null, `Approved (version ${w.approvedVersion}). `), `${this.who} can study this lesson.`),
-        h('div', { class: 'row' }, link(`Open ${this.who}'s lesson`, `#/s/${w.studentId}/w/${w.id}`, 'btn btn-primary'), link('Parent area', '#/parent', 'btn btn-ghost')));
+        h('div', { class: 'row' }, link(`Open ${this.who}'s lesson`, `#/s/${w.studentId}/${w.vocab.length ? "vocab" : "spelling"}?w=${w.id}`, 'btn btn-primary'), link('Parent area', '#/parent', 'btn btn-ghost')));
     } else if (blockers.length) {
       action = h('section', { class: 'card notice notice-warn', 'aria-labelledby': 'fin-todo' }, h('h2', { id: 'fin-todo' }, 'Before you approve'), h('ul', { class: 'ws-todo' }, todo), other);
     } else {
@@ -883,7 +883,7 @@ class Workspace extends Editor {
           const done = await store.approveWeek(w.id);
           await store.setMeta(stageKey(w.id), null);
           toast(`Approved! ${this.who} can now study ${weekLabel(done)}.`);
-          go(`#/s/${w.studentId}/w/${w.id}`);
+          go(`#/s/${w.studentId}/${done.vocab.length ? "vocab" : "spelling"}?w=${w.id}`); // the new words, ready to study
         } catch (e) {
           approve.disabled = false;
           await alertDialog('Not approved yet', h('div', null, h('p', null, e.message), e.blockers ? h('ul', null, e.blockers.slice(0, 10).map((b) => h('li', null, b))) : null));
