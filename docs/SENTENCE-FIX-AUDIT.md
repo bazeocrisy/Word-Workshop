@@ -1,6 +1,6 @@
 # Sentence Fix — Independent Educational Audit (Agent 5)
 
-> **Status (latest):** **Content bank: APPROVED. All 150 items PASS** (section 12.7). **Grading engine: NOT APPROVED** (section 13). Commit 0913ea4 introduced a Critical regression (F-1): real words such as "racing", "benches" and "lively" are now marked incorrect as misspellings. Two older Critical cases are also open: F-2 (a real word 1–2 letters from a model word is graded as a misspelling) and F-3 (words dropped in a valid rewrite). Audit tests: 453 tests, 445 pass, 0 fail, 8 todo.
+> **FINAL status (section 14):** **Content bank: APPROVED. All 150 items PASS.** **Grading engine: NOT APPROVED.** After 82020b0, valid singular/plural rewrites with a matching verb (G-1), "bush" in the plural slot (G-3), "brothers'" (G-4) and "has just six" (G-5) are still marked incorrect. G-2 (a changed noun number) needs an owner decision. G-6 and G-7 are Major: clear real-word misspellings and two-item ", and" commas go to review. Audit tests: 520 tests, 500 pass, 0 fail, 20 todo.
 
 Branch `claude/student-first-v3`. Audited: `data/sentence-fix/bank.json` (all 150 items read one by one), `docs/SENTENCE-FIX-CURRICULUM.md`, `js/sentencefix/engine.js`. Independent grading tests: `tests/unit/sentencefix-grading-audit.test.mjs`. Nothing in the bank, the engine, or other app code was changed.
 
@@ -643,3 +643,75 @@ All 11 wrong answers are **incorrect** except one, a Minor leftover (see below).
 - F-2 and F-3 are older Critical cases of the same kind. My earlier tests did not exercise them.
 
 The rest of 0913ea4 is sound. The engine can be approved once F-1 to F-3 are fixed and these 7 todo tests pass. F-4 is optional polish.
+
+---
+
+## 14. Final engine re-check (commit 82020b0: word list, number, plural/possessive, apostrophe and comma rules)
+
+**This section supersedes the engine verdict in section 13.**
+
+**Method.** I wrote 52 fresh answers of my own, without reusing the engine agent's tests: 32 valid and 20 wrong. They are in the `FINAL` cases in `tests/unit/sentencefix-grading-audit.test.mjs`. To tell new behaviour from old, I compared every result with the engine as it was just before 82020b0.
+
+**F-1 to F-4 are fixed.** Real-word synonyms in a mistake's slot now go to review, both those from section 13 ("racing", "benches", "lively") and new ones ("hiked", "headed", "crayons", "eager … gifts", "lovely", "liquid", "new book"). So do synonyms elsewhere ("sticks", "trophy", "quiz", "truck", "pictures", "use"), a kept possessive or contraction with other words changed, ", and" before a second verb or a new clause, and a few small words added.
+
+Wrong answers that are still correctly graded incorrect:
+- homophones: buy/by, maid/made, eight/ate, hour/our, peace/piece;
+- "orange, and black";
+- "player have" and "two pencil";
+- "Mias";
+- "bike's".
+
+### Critical: valid answers marked incorrect
+None of these was caused by 82020b0. The new "number" and plural/possessive rules **keep** them incorrect on purpose, where a word-list check would have sent them to review.
+
+| Case | Answer (valid English) | Why it is valid |
+|---|---|---|
+| **G-1** | SVA-008 "…and the **dog barks** at her." / SVA-007 "…their **cows give** lots of milk." / SPL-012 "…the **stores close** in ten minutes." | The noun and verb change number together, so the sentence is a deliberate, grammatical rewrite. |
+| **G-2** | CAP-002 "…for the **neighbor**." / TEN-012 "…in the **tree**." / END-002 "…on the maple **trees**…" / POS-002 "…by the **doors**." | The number of a word the child was not asked to fix has changed. The sentence is still valid, and other real-word swaps already go to review. |
+| **G-3** | SPL-019 "…hiding under the **bush** near our tent." | This is the plural-spelling mistake's own slot. The child avoided the -es rule, but the sentence is valid. |
+| **G-4** | CAP-015 "My **brothers'** team, the Hilltop Hawks, …" | A valid plural possessive of a word that had no mistake (two brothers can share a team). |
+| **G-5** | SVA-006 "…an insect has **just** six." | A synonym swap that also moves a word. "only" is not in `SMALL_WORDS`, so dropping it counts as a clear mistake. This one is older behaviour. |
+
+**Fixes:**
+- **G-1:** if a changed noun number comes with the matching verb-agreement change in the same clause, or the changed noun has no verb that agrees with it, treat it as a rewrite (review).
+- **G-2:** this is an **owner decision**.
+  - If changing the number of an untouched noun counts as a copying mistake, keep "incorrect" and close G-2.
+  - If not, send it to review, as other real-word swaps already are.
+
+  Note that the engine is currently inconsistent here. "tree"→"trees" (1 letter, real word) is incorrect, but "dinner"→"diner" (1 letter, real word) is review.
+- **G-3:** in the slot, a real singular form of the key's noun should go to review.
+- **G-4:** apply the plural/possessive rule only to the mistake's own words, or when the possessive is not a real possessive of the same noun.
+- **G-5:** add "only" (and "just") to `SMALL_WORDS`, and treat a hunk that both drops and adds words as a rewrite.
+
+### Major: clearly wrong answers now sent to review
+- **G-6, a trade-off of the word-list rule:** real-word misspellings were incorrect before 82020b0 and are now review. Examples: "for **diner**" (dinner), "My **fiend** Jamal" (friend), "really **tied**" (tired), "birthday **presence**" (presents), "We **waked**" (walked), "on the **bored**" (board).
+
+  Fix: a short list of common confusable real-word misspellings, treated like `KNOWN_MISSPELLINGS`, with pairs such as dinner/diner, friend/fiend, tired/tied, presents/presence, board/bored and walked/waked. Alternatively, merge these into the confusable groups.
+- **G-7:** a comma that joins just two nouns before "and" followed by a/the/two is read as starting a new clause, so the answer goes to review. Examples: "the tape, and the scissors" (COM-002, incorrect before 82020b0), "milk, and two loaves", "a starfish, and two tiny crabs".
+
+  Fix: after "and", require a verb within the next few words before calling it a clause.
+
+### Minor
+- **G-8, by design:** dropping "the" ungrammatically ("We walked to science museum") goes to review.
+
+### Tests
+`node --test tests/unit/sentencefix-grading-audit.test.mjs` gives `tests 520, pass 500, fail 0, todo 20`. I ran it on its own, one suite at a time. The 20 todos are:
+- G-1: 3 cases
+- G-2: 4 cases
+- G-3, G-4, G-5: 1 case each
+- G-6: 6 cases
+- G-7: 3 cases
+- G-8: 1 case
+
+Every todo currently fails, so each one is a real finding. I did not change `engine.js` or `bank.json`.
+
+### FINAL VERDICTS
+- **Content bank: APPROVED.** All 150 items pass, with no Critical or Major findings (section 12.7). Nothing in this engine round changes the content verdict.
+- **Grading engine: NOT APPROVED.** Valid answers are still marked incorrect:
+  - **G-1:** a deliberate singular/plural rewrite with the matching verb;
+  - **G-3:** "bush" in the plural mistake's slot;
+  - **G-4:** "brothers'";
+  - **G-5:** "has just six".
+  - **G-2 is an owner decision:** either confirm that a changed noun number is a copying mistake, or send it to review.
+
+  The engine can be approved once G-1, G-3, G-4 and G-5 are fixed and G-2 is either decided by the owner or fixed. G-6 and G-7 (Major) should also be fixed, because they reverse correct "incorrect" results that worked before. Nothing grades an invalid answer as correct, because "correct" still requires an exact match with the key or an accepted answer.

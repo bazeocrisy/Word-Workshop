@@ -513,3 +513,85 @@ test('follow-up: 25+ valid and 10+ wrong fresh answers', () => {
   assert.ok(FOLLOWUP.filter((c) => c[2] !== 'incorrect').length >= 25);
   assert.ok(FOLLOWUP.filter((c) => c[2] === 'incorrect').length >= 10);
 });
+
+// ================================================================ FINAL ENGINE RE-CHECK (commit 82020b0)
+// Fresh answers (not the engine agent's) that stress the new rules: word list (real words never count as
+// misspellings), KNOWN_MISSPELLINGS, "number" (one/more than one), plural/possessive, apostrophe, British
+// spelling, dropped small words and the ", and" rule. VALID answers must never be 'incorrect'.
+
+const G = {
+  numberCoordinated: 'engine defect (Critical, kept by design in 82020b0): a deliberate number change WITH a matching verb ("the dog barks", "their cows give", "the stores close") is a valid rewrite, but the "number" rule marks it incorrect',
+  numberIsolated: 'engine defect (Critical unless the owner rules otherwise): changing an untouched noun\'s number ("the neighbor", "the tree", "maple trees", "doors") still gives a valid sentence, and other real-word swaps go to review, but "number" marks it incorrect',
+  numberSlot: 'engine defect (Critical): "bush" in the plural mistake\'s spot makes a valid sentence ("hiding under the bush"), but it is marked incorrect',
+  pluralPossessive: 'engine defect (Critical): a valid plural possessive of an untouched word ("My brothers\' team") is marked incorrect by the plural/possessive rule',
+  swapWords: 'engine defect (Critical, pre-existing): a synonym swap that moves a word ("has just six" for "only has six") counts as a clear "dropped" word ("only" is not a small word)',
+  realWordTypo: 'engine (Major, trade-off of the word-list rule): a clear real-word misspelling of an untouched or fixed word ("diner", "fiend", "tied", "presence", "waked", "bored") now goes to review; before 82020b0 it was incorrect',
+  twoItemComma: 'engine (Major): a comma joining just two noun phrases before "and" + "a/the/two" ("tape, and the scissors", "milk, and two loaves") is read as a compound sentence → review',
+  droppedThe: 'engine (minor, by design): dropping "the" ungrammatically ("to science museum") goes to review',
+};
+
+const FINAL = [
+  // VALID: real-word synonyms in a mistake's spot or elsewhere → review
+  ['SF-TEN-001', 'We hiked to the science museum last Friday.', 'ok'],
+  ['SF-TEN-016', 'Last Tuesday, our class headed outside at noon, and we traced our shadows with chalk while Mr. Ross took pictures.', 'ok'],
+  ['SF-MIX-001', 'My sister Ava used bright crayons in art class.', 'ok'],
+  ['SF-SPL-018', 'I was so eager to open my birthday gifts.', 'ok'],
+  ['SF-SPL-003', 'The butterfly had lovely orange and black wings.', 'ok'],
+  ['SF-SPL-020', 'Our class did an experiment to see which paper towel could hold the most liquid.', 'ok'],
+  ['SF-SPL-008', 'Ms. Diaz said we could choose a new book to read.', 'ok'],
+  ['SF-SPL-016', 'The two birds carried sticks and grass together to build a nest.', 'ok'],
+  ['SF-TEN-019', 'Last weekend, Grandpa taught me to fish, and I caught a big fish that we cooked for dinner.', 'ok'],
+  ['SF-HOM-013', 'Jamal knew he could win the race, so he trained hard for two weeks and won the gold trophy.', 'ok'],
+  ['SF-SVA-012', 'Every Friday, Mr. Park\'s students take a spelling quiz, and Ravi always gets every word right because he studies hard.', 'ok'],
+  // VALID: possessives and contractions kept, other words changed
+  ['SF-POS-005', 'Owen\'s new soccer ball rolled under Aunt Rosa\'s red truck.', 'ok'],
+  ['SF-POS-014', 'I\'m sure Grandpa\'s old pictures are in the attic, but it\'s too dark to look today.', 'ok'],
+  ['SF-POS-010', 'You\'re welcome to use Grace\'s umbrella if it starts to rain.', 'ok'],
+  ['SF-SVA-010', 'Jin and his brother play tennis, and Jin wins most of their games.', 'ok'],
+  // VALID: ", and" + a second verb or a clause; small words added
+  ['SF-TEN-015', 'When the bell rang, Sofia grabbed her lunch, and sat with her friends.', 'ok'],
+  ['SF-TEN-010', 'In the last game, Carlos ran fast, and he threw the ball to first base.', 'ok'],
+  ['SF-HOM-008', 'Please write your full name at the top of the paper and hand it in by noon.', 'ok'],
+  ['SF-COM-007', 'Ms. Lee smiled and said, "Yes, we can have extra recess today."', 'correct'],
+  // VALID: one / more than one changed on purpose
+  ['SF-HOM-001', 'We walked over there to see the new puppies.', 'ok'],
+  ['SF-TEN-008', 'Last week, we planted seeds in a cup and watched them sprout.', 'ok'],
+  ['SF-MIX-011', 'At the beach, Elena found a starfish and two tiny crabs under the rocks.', 'ok'],
+  ['SF-SVA-008', 'The mail carrier comes to our street every day, and the dog barks at her.', 'ok', G.numberCoordinated],
+  ['SF-SVA-007', 'My grandparents live on a farm, and their cows give lots of milk.', 'ok', G.numberCoordinated],
+  ['SF-SPL-012', 'Dad and I believe the stores close in ten minutes.', 'ok', G.numberCoordinated],
+  ['SF-CAP-002', 'My grandma and I baked bread for the neighbor.', 'ok', G.numberIsolated],
+  ['SF-TEN-012', 'Last Sunday morning, the sun came up, and the birds sang in the tree.', 'ok', G.numberIsolated],
+  ['SF-END-002', 'The leaves on the maple trees turn red in the fall.', 'ok', G.numberIsolated],
+  ['SF-POS-002', 'Mia\'s backpack is hanging on the hook by the doors.', 'ok', G.numberIsolated],
+  ['SF-SPL-019', 'Two baby foxes were hiding under the bush near our tent.', 'ok', G.numberSlot],
+  ['SF-CAP-015', 'My brothers\' team, the Hilltop Hawks, won the big game against the Lakeview Lions on Saturday.', 'ok', G.pluralPossessive],
+  ['SF-SVA-006', 'A spider has eight legs, but an insect has just six.', 'ok', G.swapWords],
+  // WRONG: must be incorrect
+  ['SF-SPL-015', 'The firefighters stopped buy our school to talk about safety.', 'incorrect'],
+  ['SF-SPL-004', 'Grandma maid my favorite soup for dinner tonight.', 'incorrect'],
+  ['SF-HOM-010', 'Our family eight a whole pizza in less than an hour.', 'incorrect'],
+  ['SF-SPL-019', 'Two baby foxes were hiding under the bushes near hour tent.', 'incorrect'],
+  ['SF-SPL-010', 'We found a peace of shell and a little crab in the sand.', 'incorrect'],
+  ['SF-SPL-003', 'The butterfly had beautiful orange, and black wings.', 'incorrect'],
+  ['SF-SVA-004', 'Our player have new jerseys this year.', 'incorrect'],
+  ['SF-POS-002', 'Mias backpack is hanging on the hook by the door.', 'incorrect'],
+  ['SF-POS-008', 'My two brothers bike\'s are in the garage, but Dad\'s car isn\'t.', 'incorrect'],
+  ['SF-HOM-002', 'I have two pencil and an eraser in my desk.', 'incorrect'],
+  ['SF-SPL-004', 'Grandma made my favorite soup for diner tonight.', 'incorrect', G.realWordTypo],
+  ['SF-SPL-001', 'My fiend Jamal sits next to me in class.', 'incorrect', G.realWordTypo],
+  ['SF-SPL-007', 'Our team was really tied after the long game.', 'incorrect', G.realWordTypo],
+  ['SF-SPL-018', 'I was so excited to open my birthday presence.', 'incorrect', G.realWordTypo],
+  ['SF-TEN-001', 'We waked to the science museum last Friday.', 'incorrect', G.realWordTypo],
+  ['SF-SPL-022', 'Every morning, our teacher writes a question on the bored, and we write our answers in our journals.', 'incorrect', G.realWordTypo],
+  ['SF-HOM-007', 'Dad and I rode to the store to buy milk, and two loaves of bread.', 'incorrect', G.twoItemComma],
+  ['SF-MIX-011', 'At the beach, Elena found a starfish, and two tiny crabs under a rock.', 'incorrect', G.twoItemComma],
+  ['SF-COM-002', 'Priya, please hand me the tape, and the scissors.', 'incorrect', G.twoItemComma],
+  ['SF-TEN-001', 'We walked to science museum last Friday.', 'incorrect', G.droppedThe],
+];
+
+for (const [id, answer, expect, todo] of FINAL) {
+  test(`final ${id}: ${JSON.stringify(answer)} → ${expect}`, todo ? { todo } : {}, () => check(id, answer, expect));
+}
+
+test('final re-check: 30+ fresh answers', () => assert.ok(FINAL.length >= 30));
