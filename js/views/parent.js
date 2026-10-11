@@ -140,17 +140,18 @@ function onlineReaderSettings() {
   const on = h('input', { type: 'checkbox', checked: !!cfg.enabled, id: 'online-reader-on' });
   const msg = h('p', { class: 'hint', 'aria-live': 'polite' }, cfg.enabled ? 'On: worksheet photos are read online.' : 'Off: worksheet photos are read on this device.');
   const read = () => ({ url: url.value.trim(), passphrase: pass.value, enabled: on.checked });
-  const valid = (c) => /^https:\/\/[^\s/]+/.test(c.url) && c.passphrase;
+  // The site's security policy only lets the app connect to Cloudflare Workers addresses (see index.html).
+  const valid = (c) => /^https:\/\/[^\s/]+\.workers\.dev(\/|$)/i.test(c.url) && c.passphrase;
   return h('section', { class: 'online-reader' },
     h('h2', null, 'Online photo reader (optional)'),
     h('p', { class: 'hint' }, 'Reads worksheet photos much more accurately than the reader on this device, especially vocabulary tables. When it is on, each photo you upload is sent to your own reader server, which sends it to Anthropic\'s Claude to read. Each photo costs a few cents on your Anthropic account. Words still arrive as drafts for you to check.'),
-    field('Reader address', url),
+    field('Reader address', url, 'The address your reader server printed when it was deployed; it ends in .workers.dev.'),
     field('Passphrase', pass, 'Stored only in this browser. It is not included in backups.'),
     h('label', { class: 'check' }, on, h('span', null, 'Read worksheet photos online')),
     h('div', { class: 'row' },
       btn('Save', () => {
         const c = read();
-        if (c.enabled && !valid(c)) { toast('Enter an https address and the passphrase first.', 'error'); return; }
+        if (c.enabled && !valid(c)) { toast('Enter the reader\'s .workers.dev address and the passphrase first.', 'error'); return; }
         if (!c.url && !c.passphrase) { cloud.setConfig(null); msg.textContent = 'Removed. Photos are read on this device.'; toast('Saved.'); return; }
         if (!cloud.setConfig(c)) { toast('This browser would not save the setting.', 'error'); return; }
         msg.textContent = c.enabled ? 'On: worksheet photos are read online.' : 'Off: worksheet photos are read on this device.';
@@ -158,7 +159,7 @@ function onlineReaderSettings() {
       }, 'btn-primary'),
       btn('Test connection', async () => {
         const c = read();
-        if (!valid(c)) { msg.textContent = 'Enter an https address and the passphrase first.'; return; }
+        if (!valid(c)) { msg.textContent = 'Enter the reader\'s .workers.dev address and the passphrase first.'; return; }
         msg.textContent = 'Testing…';
         try { const r = await cloud.ping(c); msg.textContent = `Connected${r.model ? ` (${r.model})` : ''}. Remember to Save.`; } catch (e) { msg.textContent = e.message || 'Could not connect.'; }
       }, 'btn-ghost')),

@@ -9,12 +9,12 @@ const lessonId = 'return location.hash.split("/")[3].split("?")[0];';
 const upload = (target, kind) => `const f = await window.__makeSynthetic('${kind}');
   const input = document.querySelector('input[type=file][data-target="${target}"]');
   const dt = new DataTransfer(); dt.items.add(f); input.files = dt.files; input.dispatchEvent(new Event('change'));
-  await new Promise((r) => setTimeout(r, 300));
+  for (let i = 0; i < 500 && !document.querySelector('.ws-reading, .ws-read-error'); i++) await new Promise((r) => setTimeout(r, 20));
   for (let i = 0; i < 600 && (document.querySelector('.ws-reading')); i++) await new Promise((r) => setTimeout(r, 200));
   await new Promise((r) => setTimeout(r, 300));
   return { stage: document.querySelector('.ws-tab.is-current .ws-tab-label')?.textContent, error: document.querySelector('.ws-read-error')?.innerText || null };`;
 
-const READER = 'https://reader.test/';
+const READER = 'https://reader.example.workers.dev/';
 // Stub server: answers like server/ocr-worker/worker.js. status 200 with the reply, or an error status.
 const stub = (status, reply) => `window.__readerCalls = [];
   const realFetch = window.__realFetch || (window.__realFetch = window.fetch);
@@ -51,7 +51,11 @@ export default {
     const cfg = await b.js(`return JSON.parse(localStorage.getItem('ww-online-reader'));`);
     check('settings: saved in this browser', cfg && cfg.url === READER && cfg.passphrase === 'family-pass' && cfg.enabled);
     const backupText = await b.js(`const m = await import(new URL('js/backup.js', location.href).href); return JSON.stringify(await m.buildBackup());`);
-    check('settings: the passphrase is not in backups', backupText.length > 100 && !backupText.includes('family-pass') && !backupText.includes('reader.test'));
+    const csp = await b.js(`const seen = []; const on = (e) => seen.push(e.violatedDirective); document.addEventListener('securitypolicyviolation', on);
+      try { await (window.__realFetch || fetch)('https://word-workshop-reader.example.workers.dev/', { method: 'POST', body: '{}' }); } catch { /* no such server: fine */ }
+      await new Promise((r) => setTimeout(r, 300)); document.removeEventListener('securitypolicyviolation', on); return seen;`);
+    check('the page may contact a Cloudflare Workers reader (not blocked by its security policy)', csp.length === 0, csp);
+    check('settings: the passphrase is not in backups', backupText.length > 100 && !backupText.includes('family-pass') && !backupText.includes('reader.example'));
 
     // Reading a vocabulary photo online.
     await b.js(SYNTHETIC + ' return 1;');

@@ -15,7 +15,7 @@ const stage = 'return document.querySelector(".ws-tab.is-current .ws-tab-label")
 const upload = (target, kind) => `const f = await window.__makeSynthetic('${kind}');
   const input = document.querySelector('input[type=file][data-target="${target}"]');
   const dt = new DataTransfer(); dt.items.add(f); input.files = dt.files; input.dispatchEvent(new Event('change'));
-  await new Promise((r) => setTimeout(r, 300));
+  for (let i = 0; i < 500 && !document.querySelector('.ws-reading, .ws-read-error'); i++) await new Promise((r) => setTimeout(r, 20));
   for (let i = 0; i < 600 && (document.querySelector('.ws-reading')); i++) await new Promise((r) => setTimeout(r, 200));
   await new Promise((r) => setTimeout(r, 300));
   return { stage: document.querySelector('.ws-tab.is-current .ws-tab-label')?.textContent, error: document.querySelector('.ws-read-error')?.innerText || null };`;
