@@ -1,0 +1,85 @@
+{
+  "weekStart": "2026-10-12",
+  "weekEnd": "2026-10-16",
+  "student": "Chris II",
+  "source": "Photograph of weekly newsletter; human transcription, NOT OCR verified",
+  "status": "needs_review",
+  "focus": "-ed endings",
+  "words": [
+    {
+      "order": 1,
+      "word": "rushed",
+      "status": "needs_review"
+    },
+    {
+      "order": 2,
+      "word": "blasted",
+      "status": "needs_review"
+    },
+    {
+      "order": 3,
+      "word": "washed",
+      "status": "needs_review"
+    },
+    {
+      "order": 4,
+      "word": "winked",
+      "status": "needs_review"
+    },
+    {
+      "order": 5,
+      "word": "opened",
+      "status": "needs_review"
+    },
+    {
+      "order": 6,
+      "word": "buzzed",
+      "status": "needs_review"
+    },
+    {
+      "order": 7,
+      "word": "asked",
+      "status": "needs_review"
+    },
+    {
+      "order": 8,
+      "word": "called",
+      "status": "needs_review"
+    },
+    {
+      "order": 9,
+      "word": "lifted",
+      "status": "needs_review"
+    },
+    {
+      "order": 10,
+      "word": "landed",
+      "status": "needs_review"
+    },
+    {
+      "order": 11,
+      "word": "hunted",
+      "status": "needs_review"
+    },
+    {
+      "order": 12,
+      "word": "screamed",
+      "status": "needs_review"
+    },
+    {
+      "order": 13,
+      "word": "stepped",
+      "status": "needs_review"
+    },
+    {
+      "order": 14,
+      "word": "handed",
+      "status": "needs_review"
+    },
+    {
+      "order": 15,
+      "word": "crashed",
+      "status": "needs_review"
+    }
+  ]
+}
