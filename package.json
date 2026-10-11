@@ -1,0 +1,12 @@
+{
+  "name": "word-workshop",
+  "private": true,
+  "description": "Word Workshop: weekly spelling and vocabulary study (static site for GitHub Pages). No runtime or test dependencies.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"tests/unit/*.test.mjs\"",
+    "test:browser": "node tests/browser.test.mjs",
+    "test:ocr": "node tests/ocr.eval.mjs",
+    "test:all": "npm test && npm run test:browser"
+  }
+}

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-labelledby="t">
+  <title id="t">A happy child with a new bike, paying for it one equal coin each month, with three months paid and one to go</title>
+  <rect x="8" y="8" width="304" height="224" rx="28" fill="#eef4ff"/>
+  <defs>
+    <g id="cal">
+      <rect x="0" y="0" width="40" height="54" rx="7" fill="#ffffff" stroke="#5b6b8c" stroke-width="3"/>
+      <path d="M1.5 7 Q1.5 1.5 7 1.5 H33 Q38.5 1.5 38.5 7 V14 H1.5 Z" fill="#e5484d"/>
+      <rect x="9" y="-6" width="5" height="12" rx="2.5" fill="#5b6b8c"/>
+      <rect x="26" y="-6" width="5" height="12" rx="2.5" fill="#5b6b8c"/>
+    </g>
+    <g id="coin">
+      <circle r="13" fill="#f5b915" stroke="#c98500" stroke-width="3"/>
+      <path d="M4.5 -4.5 Q4 -7 0 -7 Q-5 -7 -5 -3.5 Q-5 -0.5 0 0 Q5 0.5 5 3.5 Q5 7 0 7 Q-4 7 -4.5 4.5 M0 -10 V10" fill="none" stroke="#c98500" stroke-width="2.6" stroke-linecap="round"/>
+    </g>
+    <g id="chk">
+      <circle r="11" fill="#3fae5a"/>
+      <path d="M-5 0 L-1.5 4 L5.5 -4" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </defs>
+  <!-- month pages, one equal coin each -->
+  <use href="#cal" x="134" y="30"/>
+  <use href="#cal" x="178" y="30"/>
+  <use href="#cal" x="222" y="30"/>
+  <use href="#cal" x="266" y="30"/>
+  <use href="#coin" x="154" y="66"/>
+  <use href="#coin" x="198" y="66"/>
+  <use href="#coin" x="242" y="66"/>
+  <circle cx="286" cy="66" r="13" fill="#f3f5fa" stroke="#9aa8c7" stroke-width="3" stroke-dasharray="5 4"/>
+  <!-- paid checks, last month still to pay -->
+  <use href="#chk" x="154" y="106"/>
+  <use href="#chk" x="198" y="106"/>
+  <use href="#chk" x="242" y="106"/>
+  <circle cx="286" cy="106" r="10" fill="none" stroke="#9aa8c7" stroke-width="3"/>
+  <!-- payments go to the bike -->
+  <path d="M290 126 Q290 148 266 148 H170 V138 L150 154 L170 170 V160 H266 Q302 160 302 126 Z" fill="#9aa8c7"/>
+  <!-- ground -->
+  <ellipse cx="82" cy="216" rx="72" ry="7" fill="#d5def0"/>
+  <!-- child -->
+  <path d="M68 214 V176 M92 214 V176" stroke="#3b5ba5" stroke-width="14" stroke-linecap="round"/>
+  <path d="M56 178 V132 Q56 112 76 110 H88 Q108 112 108 132 V178 Z" fill="#f28c38"/>
+  <path d="M60 124 Q40 108 42 84" stroke="#f28c38" stroke-width="12" stroke-linecap="round" fill="none"/>
+  <circle cx="42" cy="80" r="7" fill="#8d5a35"/>
+  <path d="M104 126 Q116 136 118 146" stroke="#f28c38" stroke-width="12" stroke-linecap="round" fill="none"/>
+  <circle cx="82" cy="72" r="30" fill="#2a1a12"/>
+  <rect x="76" y="94" width="12" height="16" rx="4" fill="#8d5a35"/>
+  <circle cx="82" cy="80" r="23" fill="#8d5a35"/>
+  <path d="M60 72 Q82 52 104 72 Q96 58 82 57 Q68 58 60 72 Z" fill="#2a1a12"/>
+  <path d="M71 78 Q74 73 77 78 M87 78 Q90 73 93 78" stroke="#2a1a12" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M71 86 Q82 102 93 86 Z" fill="#ffffff" stroke="#2a1a12" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="66" cy="88" r="4" fill="#b8704a"/><circle cx="98" cy="88" r="4" fill="#b8704a"/>
+  <!-- new bike in front -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="36" cy="192" r="21" stroke="#33415c" stroke-width="5"/>
+    <circle cx="124" cy="192" r="21" stroke="#33415c" stroke-width="5"/>
+    <path d="M36 192 L66 160 L110 160 L124 192 M36 192 L76 192 L66 160 M76 192 L110 160" stroke="#e5484d" stroke-width="6"/>
+    <path d="M56 152 H74" stroke="#33415c" stroke-width="7"/>
+    <path d="M110 160 L114 144 H126" stroke="#33415c" stroke-width="5"/>
+  </g>
+  <circle cx="118" cy="148" r="6" fill="#8d5a35"/>
+  <circle cx="36" cy="192" r="4" fill="#33415c"/>
+  <circle cx="124" cy="192" r="4" fill="#33415c"/>
+  <!-- new-bike sparkle -->
+  <path d="M138 106 L141 115 L150 118 L141 121 L138 130 L135 121 L126 118 L135 115 Z" fill="#f5b915"/>
+</svg>

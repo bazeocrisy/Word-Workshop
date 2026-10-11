@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-labelledby="t">
+  <title id="t">A happy child holding up a lucky four-leaf clover in the sunshine, with a shiny coin in the grass</title>
+  <rect x="8" y="8" width="304" height="224" rx="28" fill="#fff7d6"/>
+  <!-- sun -->
+  <circle cx="58" cy="56" r="24" fill="#ffc93c"/>
+  <g stroke="#ffb703" stroke-width="5" stroke-linecap="round">
+    <path d="M58 18 V24 M58 88 V94 M20 56 H26 M90 56 H96 M31 29 L35 33 M81 79 L85 83 M85 29 L81 33 M35 79 L31 83"/>
+  </g>
+  <!-- grass hill -->
+  <path d="M8 186 Q90 160 170 176 Q250 190 312 168 V204 Q312 232 284 232 H36 Q8 232 8 204 Z" fill="#7cc957"/>
+  <!-- coin in grass -->
+  <circle cx="76" cy="200" r="13" fill="#f5b915" stroke="#c98500" stroke-width="3"/>
+  <circle cx="76" cy="200" r="6" fill="#ffd95a"/>
+  <path d="M60 182 L62 188 L68 190 L62 192 L60 198 L58 192 L52 190 L58 188 Z" fill="#ffffff"/>
+  <path d="M60 210 L66 196 M86 212 L90 198 M96 212 L98 202" stroke="#4e9f3a" stroke-width="3" stroke-linecap="round"/>
+  <!-- child body -->
+  <path d="M120 200 V160 Q120 136 146 134 H174 Q200 136 200 160 V200 Z" fill="#f28c38"/>
+  <path d="M136 200 V214 M184 200 V214" stroke="#3b5ba5" stroke-width="18"/>
+  <!-- raised arm with clover -->
+  <path d="M194 148 Q214 128 218 98" stroke="#f28c38" stroke-width="16" stroke-linecap="round" fill="none"/>
+  <circle cx="219" cy="92" r="9" fill="#8d5a35"/>
+  <path d="M220 88 Q226 70 232 58" stroke="#2f8f3a" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <g fill="#3fae4a">
+    <circle cx="232" cy="44" r="10"/><circle cx="246" cy="58" r="10"/>
+    <circle cx="232" cy="72" r="10"/><circle cx="218" cy="58" r="10"/>
+  </g>
+  <circle cx="232" cy="58" r="5" fill="#2f8f3a"/>
+  <!-- sparkles -->
+  <g fill="#ffb703">
+    <path d="M266 34 L270 46 L282 50 L270 54 L266 66 L262 54 L250 50 L262 46 Z"/>
+    <path d="M200 30 L202 36 L208 38 L202 40 L200 46 L198 40 L192 38 L198 36 Z"/>
+    <path d="M270 86 L272 92 L278 94 L272 96 L270 102 L268 96 L262 94 L268 92 Z"/>
+  </g>
+  <!-- other arm -->
+  <path d="M126 150 Q112 168 118 184" stroke="#f28c38" stroke-width="16" stroke-linecap="round" fill="none"/>
+  <circle cx="119" cy="188" r="9" fill="#8d5a35"/>
+  <!-- head -->
+  <circle cx="160" cy="90" r="40" fill="#2a1a12"/>
+  <rect x="152" y="118" width="16" height="18" rx="5" fill="#8d5a35"/>
+  <circle cx="160" cy="100" r="30" fill="#8d5a35"/>
+  <path d="M132 86 Q160 62 188 86 Q178 70 160 68 Q142 70 132 86 Z" fill="#2a1a12"/>
+  <path d="M146 96 Q150 90 154 96 M166 96 Q170 90 174 96" stroke="#2a1a12" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M146 106 Q160 126 174 106 Z" fill="#ffffff" stroke="#2a1a12" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="140" cy="108" r="5" fill="#b8704a"/><circle cx="180" cy="108" r="5" fill="#b8704a"/>
+</svg>

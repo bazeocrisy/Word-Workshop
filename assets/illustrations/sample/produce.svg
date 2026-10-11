@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-labelledby="t">
+  <title id="t">A basket full of fresh fruits and vegetables</title>
+  <rect x="8" y="8" width="304" height="224" rx="28" fill="#eaf7e4"/>
+  <ellipse cx="160" cy="210" rx="128" ry="12" fill="#cde6c1"/>
+  <!-- carrot -->
+  <path d="M74 52 Q66 36 58 30 M78 50 Q80 32 76 22 M82 52 Q94 38 100 34" stroke="#3f9b3a" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M62 62 Q78 46 96 58 L124 140 L108 146 Z" fill="#f47c20"/>
+  <path d="M76 78 L86 76 M84 98 L94 96 M92 118 L102 116" stroke="#c95a0c" stroke-width="3" stroke-linecap="round"/>
+  <!-- broccoli -->
+  <rect x="222" y="92" width="16" height="50" rx="6" fill="#7fbf4d"/>
+  <circle cx="212" cy="84" r="20" fill="#2f8f3a"/>
+  <circle cx="236" cy="72" r="22" fill="#3aa346"/>
+  <circle cx="256" cy="90" r="18" fill="#2f8f3a"/>
+  <circle cx="232" cy="96" r="16" fill="#47b453"/>
+  <!-- grapes -->
+  <g fill="#7b3fa0">
+    <circle cx="112" cy="104" r="10"/><circle cx="130" cy="100" r="10"/>
+    <circle cx="120" cy="118" r="10"/><circle cx="104" cy="122" r="10"/>
+  </g>
+  <!-- apple -->
+  <circle cx="148" cy="110" r="26" fill="#e23b3b"/>
+  <path d="M148 86 Q150 76 156 72" stroke="#6b3e1d" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <path d="M154 80 Q166 70 172 80 Q162 86 154 80 Z" fill="#3f9b3a"/>
+  <circle cx="138" cy="102" r="6" fill="#f37c7c"/>
+  <!-- orange -->
+  <circle cx="190" cy="114" r="24" fill="#f6a21a"/>
+  <circle cx="190" cy="92" r="3" fill="#6b8e23"/>
+  <circle cx="182" cy="106" r="5" fill="#fbc65c"/>
+  <!-- pear -->
+  <path d="M214 140 Q196 140 198 122 Q202 110 212 106 Q214 92 222 94 Q230 98 228 110 Q240 120 234 134 Q228 142 214 140 Z" fill="#9bcd3c"/>
+  <!-- basket -->
+  <path d="M58 134 H262 L240 204 H80 Z" fill="#c9853f"/>
+  <path d="M74 156 H246 M80 178 H240" stroke="#a8672a" stroke-width="4"/>
+  <path d="M110 136 L114 202 M160 136 V202 M210 136 L206 202" stroke="#a8672a" stroke-width="4"/>
+  <rect x="50" y="126" width="220" height="18" rx="9" fill="#a8672a"/>
+  <!-- tomato and pepper in front -->
+  <circle cx="270" cy="196" r="16" fill="#e8442e"/>
+  <path d="M262 182 L270 186 L278 182 L274 190 H266 Z" fill="#3f9b3a"/>
+  <path d="M40 188 Q38 206 54 208 Q70 208 68 192 Q64 180 54 182 Q44 180 40 188 Z" fill="#f2c614"/>
+  <rect x="51" y="174" width="5" height="10" rx="2" fill="#3f9b3a"/>
+</svg>

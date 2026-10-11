@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-labelledby="t">
+  <title id="t">A row of green apples with one red apple that is different</title>
+  <rect x="8" y="8" width="304" height="224" rx="28" fill="#fff4e0"/>
+  <defs>
+    <g id="apple">
+      <path d="M0 -18 Q-12 -28 -22 -16 Q-30 -2 -22 14 Q-12 28 0 22 Q12 28 22 14 Q30 -2 22 -16 Q12 -28 0 -18 Z"/>
+      <path d="M0 -18 Q1 -28 6 -32" stroke="#6b3e1d" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <path d="M4 -26 Q14 -36 22 -28 Q12 -20 4 -26 Z" fill="#3f9b3a"/>
+    </g>
+  </defs>
+  <!-- shelf -->
+  <rect x="24" y="166" width="272" height="14" rx="7" fill="#c98b4e"/>
+  <rect x="36" y="180" width="12" height="30" rx="4" fill="#a8672a"/>
+  <rect x="272" y="180" width="12" height="30" rx="4" fill="#a8672a"/>
+  <!-- spotlight on the different one -->
+  <circle cx="214" cy="140" r="42" fill="#ffe27a"/>
+  <circle cx="214" cy="140" r="42" fill="none" stroke="#f5b915" stroke-width="5" stroke-dasharray="10 8"/>
+  <g fill="#7cc243">
+    <use href="#apple" x="52" y="142"/>
+    <use href="#apple" x="106" y="142"/>
+    <use href="#apple" x="160" y="142"/>
+    <use href="#apple" x="268" y="142"/>
+  </g>
+  <use href="#apple" x="214" y="142" fill="#e5383b"/>
+  <!-- shine dots -->
+  <g fill="#ffffff" opacity="0.7">
+    <circle cx="44" cy="134" r="5"/><circle cx="98" cy="134" r="5"/>
+    <circle cx="152" cy="134" r="5"/><circle cx="206" cy="134" r="5"/><circle cx="260" cy="134" r="5"/>
+  </g>
+  <!-- sparkles -->
+  <g fill="#f08a00">
+    <path d="M214 52 L218 64 L230 68 L218 72 L214 84 L210 72 L198 68 L210 64 Z"/>
+    <path d="M266 76 L268 82 L274 84 L268 86 L266 92 L264 86 L258 84 L264 82 Z"/>
+    <path d="M164 80 L166 86 L172 88 L166 90 L164 96 L162 90 L156 88 L162 86 Z"/>
+  </g>
+</svg>

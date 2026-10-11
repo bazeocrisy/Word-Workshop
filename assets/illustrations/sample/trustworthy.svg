@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-labelledby="t">
+  <title id="t">Two smiling friends making a pinky promise under a big heart</title>
+  <rect x="8" y="8" width="304" height="224" rx="28" fill="#ffeef2"/>
+  <!-- heart -->
+  <path d="M160 74 Q136 56 136 40 Q136 24 150 24 Q158 24 160 34 Q162 24 170 24 Q184 24 184 40 Q184 56 160 74 Z" fill="#e5384b"/>
+  <path d="M146 34 Q144 40 148 44" stroke="#ff9aa6" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <g fill="#f5b915">
+    <path d="M118 30 L120 36 L126 38 L120 40 L118 46 L116 40 L110 38 L116 36 Z"/>
+    <path d="M204 30 L206 36 L212 38 L206 40 L204 46 L202 40 L196 38 L202 36 Z"/>
+  </g>
+  <!-- left friend -->
+  <path d="M40 232 V170 Q40 142 72 140 H100 Q130 142 130 170 V232 Z" fill="#2fa4a0"/>
+  <rect x="78" y="124" width="16" height="20" rx="5" fill="#6b4226"/>
+  <circle cx="86" cy="100" r="30" fill="#6b4226"/>
+  <path d="M56 100 Q54 66 86 66 Q118 66 116 100 Q108 80 86 80 Q64 80 56 100 Z" fill="#1c120c"/>
+  <path d="M58 96 Q48 110 52 130" stroke="#1c120c" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <path d="M114 96 Q124 110 120 130" stroke="#1c120c" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <circle cx="52" cy="132" r="5" fill="#e5384b"/><circle cx="120" cy="132" r="5" fill="#e5384b"/>
+  <circle cx="76" cy="100" r="3.5" fill="#1c120c"/><circle cx="98" cy="100" r="3.5" fill="#1c120c"/>
+  <path d="M76 112 Q87 122 98 112" stroke="#1c120c" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- right friend -->
+  <path d="M190 232 V170 Q190 142 220 140 H248 Q280 142 280 170 V232 Z" fill="#f28c38"/>
+  <rect x="226" y="124" width="16" height="20" rx="5" fill="#f6d2b0"/>
+  <circle cx="234" cy="100" r="30" fill="#f6d2b0"/>
+  <path d="M204 104 Q200 68 234 68 Q266 68 264 102 Q258 84 244 82 Q236 92 214 90 Q206 94 204 104 Z" fill="#f2c94c"/>
+  <circle cx="223" cy="100" r="3.5" fill="#2b2b3a"/><circle cx="245" cy="100" r="3.5" fill="#2b2b3a"/>
+  <path d="M223 112 Q234 122 245 112" stroke="#2b2b3a" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <circle cx="216" cy="110" r="4" fill="#f2a8a0"/><circle cx="252" cy="110" r="4" fill="#f2a8a0"/>
+  <!-- arms meeting -->
+  <path d="M118 168 Q134 150 146 134" stroke="#2fa4a0" stroke-width="16" stroke-linecap="round" fill="none"/>
+  <path d="M202 168 Q186 150 174 134" stroke="#f28c38" stroke-width="16" stroke-linecap="round" fill="none"/>
+  <circle cx="148" cy="128" r="12" fill="#6b4226"/>
+  <circle cx="172" cy="128" r="12" fill="#f6d2b0"/>
+  <!-- hooked pinkies -->
+  <path d="M154 118 Q160 104 166 110" stroke="#6b4226" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M166 118 Q160 104 154 110" stroke="#f6d2b0" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M152 92 L156 98 M160 88 V96 M168 92 L164 98" stroke="#e5384b" stroke-width="3" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-labelledby="t">
+  <title id="t">A puzzled child holding a map with a big question mark in a thought bubble, not knowing which way to go</title>
+  <rect x="8" y="8" width="304" height="224" rx="28" fill="#eaf1fb"/>
+  <!-- thought bubble -->
+  <circle cx="186" cy="62" r="6" fill="#ffffff" stroke="#9fb3d1" stroke-width="3"/>
+  <circle cx="200" cy="46" r="9" fill="#ffffff" stroke="#9fb3d1" stroke-width="3"/>
+  <ellipse cx="250" cy="56" rx="44" ry="40" fill="#ffffff" stroke="#9fb3d1" stroke-width="3"/>
+  <path d="M234 46 Q234 28 251 28 Q268 28 268 44 Q268 54 258 59 Q251 63 251 72 V76" stroke="#6a4cc2" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <circle cx="251" cy="90" r="6" fill="#6a4cc2"/>
+  <!-- body -->
+  <path d="M80 224 V176 Q80 150 108 148 H140 Q168 150 168 176 V224 Z" fill="#4aa3a2"/>
+  <!-- head -->
+  <rect x="116" y="130" width="16" height="20" rx="5" fill="#f6d2b0"/>
+  <circle cx="124" cy="104" r="34" fill="#f6d2b0"/>
+  <path d="M90 102 Q88 66 124 66 Q160 66 158 100 Q150 82 132 80 Q116 90 96 92 Z" fill="#d9662b"/>
+  <!-- puzzled face -->
+  <path d="M106 94 L118 90 M132 88 Q138 82 146 86" stroke="#7a3a14" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <circle cx="112" cy="104" r="4" fill="#2b2b3a"/>
+  <circle cx="138" cy="102" r="4" fill="#2b2b3a"/>
+  <path d="M112 122 Q118 118 124 122 Q130 126 136 121" stroke="#2b2b3a" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <circle cx="102" cy="114" r="4" fill="#f2a8a0"/><circle cx="146" cy="113" r="4" fill="#f2a8a0"/>
+  <!-- hand scratching head -->
+  <path d="M86 166 Q70 132 84 100" stroke="#4aa3a2" stroke-width="15" stroke-linecap="round" fill="none"/>
+  <circle cx="88" cy="94" r="9" fill="#f6d2b0"/>
+  <!-- map held out -->
+  <path d="M156 168 Q176 172 186 164" stroke="#4aa3a2" stroke-width="15" stroke-linecap="round" fill="none"/>
+  <path d="M176 140 L208 132 L240 140 L272 132 V196 L240 204 L208 196 L176 204 Z" fill="#fff3c4" stroke="#c9a54a" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M208 132 V196 M240 140 V204" stroke="#e3cf8a" stroke-width="3"/>
+  <path d="M186 186 Q200 170 214 178 T246 164 T264 150" stroke="#e5484d" stroke-width="3" stroke-dasharray="6 5" fill="none"/>
+  <path d="M190 150 Q198 146 202 152 M248 182 Q256 176 262 184" stroke="#3fae4a" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M258 144 L270 156 M270 144 L258 156" stroke="#e5484d" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="186" cy="166" r="9" fill="#f6d2b0"/>
+</svg>

@@ -1,0 +1,110 @@
+{
+  "weekStart": "2026-10-12",
+  "weekEnd": "2026-10-16",
+  "student": "Chris II",
+  "source": "Photograph of teacher vocabulary worksheet; human transcription, NOT OCR verified",
+  "status": "needs_review",
+  "notice": "All definitions require parent verification against photo before approval. Preserve wording, flag suspected mismatch without correcting.",
+  "items": [
+    {
+      "order": 1,
+      "word": "Produce",
+      "sourceDefinition": "Fresh fruits and vegetables",
+      "approvedDefinition": null,
+      "status": "needs_review",
+      "reviewFlags": []
+    },
+    {
+      "order": 2,
+      "word": "Exception",
+      "sourceDefinition": "A case where a rule does not apply",
+      "approvedDefinition": null,
+      "status": "needs_review",
+      "reviewFlags": []
+    },
+    {
+      "order": 3,
+      "word": "Installment",
+      "sourceDefinition": "When money is paid over a length of time",
+      "approvedDefinition": null,
+      "status": "needs_review",
+      "reviewFlags": []
+    },
+    {
+      "order": 4,
+      "word": "Peculiar",
+      "sourceDefinition": "strange or unusual",
+      "approvedDefinition": null,
+      "status": "needs_review",
+      "reviewFlags": []
+    },
+    {
+      "order": 5,
+      "word": "Employee",
+      "sourceDefinition": "Someone who works for money",
+      "approvedDefinition": null,
+      "status": "needs_review",
+      "reviewFlags": []
+    },
+    {
+      "order": 6,
+      "word": "Fortunate",
+      "sourceDefinition": "favored by or involving good luck or fortune",
+      "approvedDefinition": null,
+      "status": "needs_review",
+      "reviewFlags": []
+    },
+    {
+      "order": 7,
+      "word": "Ignorant",
+      "sourceDefinition": "lacking knowledge or awareness in general",
+      "approvedDefinition": null,
+      "status": "needs_review",
+      "reviewFlags": []
+    },
+    {
+      "order": 8,
+      "word": "Melancholy",
+      "sourceDefinition": "A sad or gloomy condition",
+      "approvedDefinition": null,
+      "status": "needs_review",
+      "reviewFlags": []
+    },
+    {
+      "order": 9,
+      "word": "Trustworthy",
+      "sourceDefinition": "The ability to keep promises",
+      "approvedDefinition": null,
+      "status": "needs_review",
+      "reviewFlags": [
+        "Check word-definition match against teacher sheet; do not auto-correct"
+      ]
+    },
+    {
+      "order": 10,
+      "word": "Constellations",
+      "sourceDefinition": "A group of stars in the night sky that make up a picture or a pattern",
+      "approvedDefinition": null,
+      "status": "needs_review",
+      "reviewFlags": []
+    },
+    {
+      "order": 11,
+      "word": "Irritating",
+      "sourceDefinition": "To anger or bother",
+      "approvedDefinition": null,
+      "status": "needs_review",
+      "reviewFlags": []
+    },
+    {
+      "order": 12,
+      "word": "Distracted",
+      "sourceDefinition": "To prevent something from continuing as usual",
+      "approvedDefinition": null,
+      "status": "needs_review",
+      "reviewFlags": [
+        "Check word-definition match against teacher sheet; do not auto-correct"
+      ]
+    }
+  ]
+}

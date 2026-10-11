@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-labelledby="t">
+  <title id="t">A child on a hill looking up at stars joined by lines into the Big Dipper shape in the night sky</title>
+  <rect x="8" y="8" width="304" height="224" rx="28" fill="#1d2a5c"/>
+  <defs>
+    <path id="st" d="M0 -9 L2.2 -3.1 8.6 -2.8 3.6 1.2 5.3 7.3 0 3.8 -5.3 7.3 -3.6 1.2 -8.6 -2.8 -2.2 -3.1 Z"/>
+  </defs>
+  <!-- tiny background stars -->
+  <g fill="#8fa3d9">
+    <circle cx="40" cy="40" r="1.8"/><circle cx="96" cy="30" r="1.5"/><circle cx="140" cy="44" r="1.8"/>
+    <circle cx="212" cy="30" r="1.5"/><circle cx="292" cy="96" r="1.8"/><circle cx="30" cy="120" r="1.5"/>
+    <circle cx="120" cy="130" r="1.8"/><circle cx="228" cy="196" r="1.5"/><circle cx="76" cy="150" r="1.5"/>
+    <circle cx="176" cy="60" r="1.5"/><circle cx="290" cy="150" r="1.5"/>
+  </g>
+  <!-- moon -->
+  <path d="M276 30 A22 22 0 1 0 296 64 A18 18 0 1 1 276 30 Z" fill="#fff1b8"/>
+  <!-- Big Dipper lines -->
+  <path d="M46 70 L96 62 L140 80 L176 104 L186 150 L246 156 L254 110 L176 104" stroke="#bcd0ff" stroke-width="2.5" stroke-linejoin="round" fill="none" opacity="0.85"/>
+  <g fill="#ffe066">
+    <use href="#st" x="46" y="70"/>
+    <use href="#st" x="96" y="62"/>
+    <use href="#st" x="140" y="80"/>
+    <use href="#st" x="176" y="104"/>
+    <use href="#st" x="186" y="150"/>
+    <use href="#st" x="246" y="156"/>
+    <use href="#st" x="254" y="110"/>
+  </g>
+  <!-- hill with child -->
+  <path d="M10 214 Q90 176 170 206 Q240 230 310 202 V206 Q310 230 284 230 H36 Q10 230 10 206 Z" fill="#2f5d43"/>
+  <g fill="#0f1d3a">
+    <circle cx="86" cy="176" r="9"/>
+    <path d="M78 186 H94 L98 206 H74 Z"/>
+    <path d="M92 188 L110 166" stroke="#0f1d3a" stroke-width="6" stroke-linecap="round"/>
+  </g>
+  <rect x="8" y="8" width="304" height="224" rx="28" fill="none" stroke="#c9d5f5" stroke-width="4"/>
+</svg>
