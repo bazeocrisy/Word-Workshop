@@ -8,4 +8,4 @@ Kept in the repository and served from this site (no third-party CDN), so photos
 | `tesseract/core/*.wasm.js` | tesseract.js-core | 5.1.1 | Apache-2.0 (`core/LICENSE`) | npm `tesseract.js-core@5.1.1` (LSTM-only builds, SIMD and non-SIMD) |
 | `tesseract/lang/eng.traineddata.gz` | @tesseract.js-data/eng | 1.0.0 (`4.0.0_best_int`) | MIT (package); Tesseract data Apache-2.0 | npm `@tesseract.js-data/eng@1.0.0` |
 
-Files are unmodified. Total about 11 MB, downloaded by the browser only when the parent first uses "Upload photos".
+Files are unmodified. About 11 MB in the repository; a browser downloads about 7 MB of it (one engine build plus the English data), only when the parent first uses "Upload photos".
