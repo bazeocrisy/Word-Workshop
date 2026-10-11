@@ -73,6 +73,7 @@ class SpellSession {
       : h('div', { class: 'card notice notice-warn' },
         h('p', null, h('strong', null, 'Sound is not available on this device.')),
         h('p', null, 'Ask a grown-up to read each word and its sentence aloud. The words go in the teacher\'s order, so the grown-up can read from the printed list.'),
+        h('p', { class: 'hint' }, 'Grown-up: print the list or open it on your own phone before starting, so the words are not on this screen.'),
         link('Open the grown-up\'s word list', `#/print/${this.snap.weekId}?only=spelling&readaloud=1`, 'btn btn-ghost btn-small'));
     fill(this.body, h('div', { class: 'card' }, notice,
       h('div', { class: 'row' }, btn(this.mode === 'test' ? 'Start the test' : 'Start practice', () => { this.started = true; this.show(true); }, 'btn-primary btn-big start-btn'))));
@@ -102,8 +103,9 @@ class SpellSession {
       ? h('div', { class: 'row listen' },
         speakButton('Hear the word', () => w.word, { cls: 'btn-primary', ariaLabel: 'Hear the word' }),
         speakButton('Slowly', () => w.word, { rate: RATES.slow, ariaLabel: 'Hear the word slowly' }),
-        w.sentence ? speakButton('Hear it in a sentence', () => w.sentence, { ariaLabel: 'Hear the word in a sentence' }) : null)
-      : h('p', { class: 'notice-inline' }, `Grown-up: read word number ${this.idx + 1} and its sentence.`);
+        w.sentence ? speakButton('Hear it in a sentence', () => w.sentence, { ariaLabel: 'Hear the word in a sentence' }) : null,
+        w.sentence ? speakButton('Sentence slowly', () => w.sentence, { rate: RATES.slow, ariaLabel: 'Hear the sentence slowly' }) : null)
+      : h('p', { class: 'notice-inline' }, `Grown-up: read word number ${this.snap.spelling.findIndex((s) => s.id === w.id) + 1} from the list, and its sentence.`);
     const form = h('form', { class: 'question card', onsubmit: (e) => { e.preventDefault(); this.mode === 'practice' ? this.check() : this.next(1, true); } },
       audioRow,
       shown ? h('p', { class: 'q-sentence', id: 'spell-sentence' }, shown) : h('p', { class: 'hint' }, 'No sentence for this word.'),

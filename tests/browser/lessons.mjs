@@ -148,6 +148,21 @@ export default {
     const nextBtn = await b.js(`return !!document.querySelector('.next-check');`);
     check('approve panel offers "Go to the next word to check"', nextBtn);
 
+    // Final audit polish: rename prompt, archive, paste picks "Both" when both headings are present.
+    await b.go('#/parent');
+    check('parent dashboard suggests renaming the demo profiles', /start with demo names/.test(await b.text()) || !(await b.js(`return (await WW.store.listStudents()).some((s) => ['Alex', 'Jordan'].includes(s.displayName));`)));
+    await b.go(`#/parent/week/${wid}`);
+    await b.click('.archive-btn'); await b.wait(400); await b.settle();
+    const archivedList = await b.js(`return (await WW.store.listApprovedWeeks(${JSON.stringify(alex)})).length;`);
+    const stillApproved = await b.js(`return WW.model.weekStatus(await WW.store.getWeek(${W}));`);
+    check('archiving hides a week from the student list but keeps it approved', archivedList === 0 && stillApproved === 'approved', { archivedList, stillApproved });
+    await b.click('.archive-btn'); await b.wait(400); await b.settle();
+    check('an archived week can be shown again', (await b.js(`return (await WW.store.listApprovedWeeks(${JSON.stringify(alex)})).length;`)) === 1);
+    await b.click('.paste-btn'); await b.wait(100);
+    const auto = await b.js(`const ta = document.querySelector('.dialog textarea'); ta.value = 'Spelling\\nrushed\\nVocabulary\\nProduce - Fresh fruits'; ta.dispatchEvent(new Event('input')); return document.querySelector('.dialog select').value;`);
+    check('paste switches to "Both" when the text has Spelling and Vocabulary headings', auto === 'both', auto);
+    await b.click('.dialog .btn-ghost', '/Cancel/'); await b.wait(100);
+
     // Backup round trip with a real picture blob.
     const rt = await b.js(`
       const c = document.createElement('canvas'); c.width = 40; c.height = 30; const x = c.getContext('2d'); x.fillStyle = '#f00'; x.fillRect(0, 0, 20, 30);

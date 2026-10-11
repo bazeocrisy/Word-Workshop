@@ -2,6 +2,7 @@
 import { h, page, link, btn, field, dialog, toast, badge, confirmDialog, emptyState } from '../ui.js';
 import { listStudents, listWeeks, createWeek, addStudent, updateStudent, removeStudent, getMeta, COLORS, deleteWeek, getWeek } from '../store.js';
 import { weekStatus, STATUS_LABELS, weekLabel, schoolWeekOf } from '../model.js';
+import { DEMO_STUDENTS } from '../store.js';
 import { avatar, deviceNotice, pinEnabled, setPin, askPinDialog, lockParent } from './common.js';
 import { go } from '../router.js';
 
@@ -52,7 +53,7 @@ export async function parentDashboard() {
     cards.push(h('section', { class: 'card student-card', 'aria-labelledby': `ps-${st.id}` },
       h('div', { class: 'card-head' }, avatar(st), h('h2', { id: `ps-${st.id}` }, st.displayName, st.grade ? h('span', { class: 'muted' }, ` · Grade ${st.grade}`) : null)),
       weeks.length ? h('ul', { class: 'admin-weeks', role: 'list' }, weeks.map((w) => h('li', null,
-        h('a', { href: `#/parent/week/${w.id}`, class: 'admin-week' }, h('span', null, weekLabel(w)), statusBadge(w)))))
+        h('a', { href: `#/parent/week/${w.id}`, class: 'admin-week' }, h('span', null, weekLabel(w), w.archived ? h('span', { class: 'muted' }, ' (archived)') : null), statusBadge(w)))))
         : h('p', { class: 'hint' }, 'No weeks yet.'),
       h('div', { class: 'row' },
         btn('New week', () => newWeekDialog(st.id, students), 'btn-primary'),
@@ -60,6 +61,7 @@ export async function parentDashboard() {
   }
   return page({ title: 'Parent area', back: '#/', backLabel: 'Students', cls: 'parent',
     subtitle: 'Upload or type this week\'s words, check them, then approve the week so your child can study it.' },
+  students.some((s) => DEMO_STUDENTS.some((d) => d.displayName === s.displayName)) ? h('div', { class: 'card notice' }, h('p', null, 'The profiles start with demo names. Change them to your children\'s names in Settings (names stay on this device).'), link('Rename in Settings', '#/parent/settings', 'btn btn-ghost btn-small')) : null,
   await backupReminder(),
   students.length ? cards : emptyState('Add a student in Settings to get started.', link('Settings', '#/parent/settings', 'btn btn-primary')),
   h('nav', { class: 'row parent-nav', 'aria-label': 'Parent tools' },

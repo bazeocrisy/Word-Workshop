@@ -72,8 +72,10 @@ export async function printResults({ params, query }) {
   let attempts = await listAttempts({ studentId: st.id });
   if (query.week) attempts = attempts.filter((a) => a.weekId === query.week);
   const weeks = new Map((await listWeeks(st.id)).map((w) => [w.id, w]));
+  // Missed-word practice: the most recent week only (or the chosen week), so the sheet does not grow all term.
+  const practiceWeek = query.week || (attempts[0] && attempts[0].weekId);
   const missed = new Map();
-  for (const a of attempts) for (const m of a.missed || []) missed.set(m.word, (missed.get(m.word) || 0) + 1);
+  for (const a of attempts.filter((x) => x.weekId === practiceWeek)) for (const m of a.missed || []) missed.set(m.word, (missed.get(m.word) || 0) + 1);
   const missedList = [...missed.entries()].sort((x, y) => y[1] - x[1]);
   return h('div', { class: 'print-page' }, controls(),
     h('div', { class: 'sheet' },
@@ -86,7 +88,7 @@ export async function printResults({ params, query }) {
             h('td', null, `${SUBJECT_LABEL[a.subject]}: ${a.activityLabel}`), h('td', null, a.mode === 'test' ? 'Test' : 'Practice'),
             h('td', null, `${a.score}/${a.total} (${pct(a.score, a.total)}%)`), h('td', null, [...new Set((a.missed || []).map((m) => m.word))].join(', ') || '—'), h('td', null, `v${a.snapshotVersion}`))))) : h('p', null, 'No results yet.')),
       missedList.length ? h('section', { class: 'print-section' },
-        h('h2', null, 'Missed-word practice'),
+        h('header', { class: 'sheet-head' }, h('h1', null, `Missed-word practice — ${st.displayName}`), h('p', null, weeks.get(practiceWeek) ? weekLabel(weeks.get(practiceWeek)) : '')),
         h('p', { class: 'print-note' }, 'Write each word three times. Say each letter as you write it.'),
         h('table', { class: 'practice-grid' }, h('tbody', null, missedList.map(([w, n]) => h('tr', null, h('td', { class: 'pg-word' }, w, n > 1 ? h('span', { class: 'print-tag' }, ` (missed ${n}×)`) : null), h('td', { class: 'pg-line' }), h('td', { class: 'pg-line' }), h('td', { class: 'pg-line' })))))) : null));
 }

@@ -23,8 +23,9 @@ export function getVoice() {
       const en = voices.filter((v) => /^en[-_]?/i.test(v.lang));
       const pref = ['en-US', 'en-GB', 'en-AU', 'en-CA'];
       const byLang = (l) => en.filter((v) => v.lang.replace('_', '-') === l);
-      const local = (list) => list.find((v) => v.localService) || list[0];
-      cachedVoice = pref.map(byLang).map(local).find(Boolean) || local(en) || null;
+      // Prefer voices that run on the device; an online voice would send the words to the voice provider.
+      const local = (list) => list.find((v) => v.localService) || null;
+      cachedVoice = pref.map(byLang).map(local).find(Boolean) || local(en) || null; // null → the browser's default voice
       resolve(cachedVoice);
       return true;
     };

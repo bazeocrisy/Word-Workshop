@@ -103,3 +103,8 @@ test('review fixes: table header and non-word sections are not imported', () => 
   const s = splitSections(['Vocabulary', 'Produce - Fresh fruits and vegetables', 'Reminders', 'Picture day is Tuesday.'].map((text) => ({ text, conf: null })));
   assert.equal(s.vocab.length, 1);
 });
+
+test('stray numbers and marks from photos are not spelling words', () => {
+  const r = parseSpellingText('rushed\tn]\t4\nblasted');
+  assert.deepEqual(r.words.map((w) => w.word), ['rushed', 'blasted']);
+});

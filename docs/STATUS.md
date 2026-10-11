@@ -16,9 +16,9 @@ Architecture: `docs/ARCHITECTURE-PROPOSAL.md` (vanilla JS ES modules, IndexedDB,
 | 2 | Weekly lesson editor and approval | **Complete** — reviewed; 4 Major + 6 Minor findings fixed (see below) |
 | 3 | Vocabulary learning and assessment | **Complete** — reviewed; 4 Major + 6 Minor findings fixed (see below) |
 | 4 | Spelling learning and assessment | **Complete** — reviewed; 1 Critical + 1 Major + 6 Minor findings fixed (see below) |
-| 5 | Photograph extraction and verification | Built and tested on synthetic pages; **real-photo accuracy BLOCKED** (photos not supplied); review pending |
-| 6 | Illustrated-card workflow and printable materials | Built, tests passing; independent review (with Milestone 5) in progress |
-| 7 | Full-system testing and final audit | Not started |
+| 5 | Photograph extraction and verification | **Complete except real-photo measurement, which is BLOCKED** (photos not supplied) — reviewed; 3 Major + 6 Minor fixed |
+| 6 | Illustrated-card workflow and printable materials | **Complete** — reviewed with Milestone 5 |
+| 7 | Full-system testing and final audit | **Complete** — final audit: no Critical/Major; Minor items fixed or listed below |
 
 ## Milestone 1 — Core application, profiles, storage
 - App shell, hash router, accessible dialog/toast helpers, colourful mobile-first CSS.
@@ -81,8 +81,27 @@ Critical fixed: a spelling word appearing twice in its sentence ("I washed my ha
 ## Milestone 6 — Illustrated cards and printable materials
 - Pictures: bundled sample illustrations (12 hand-drawn SVGs for the sample words, labelled "Sample illustration"; installment redrawn after review), parent uploads (resized on device, describable alt text), "Picture idea" text, honest "Picture coming soon" placeholder. Every picture is approved with the week. Future generation: disabled integration point in js/illustrations.js; design and costs in docs/ILLUSTRATIONS.md. No keys, no network calls.
 - Printables (approved content only): weekly spelling list (teacher order or grouped by pattern) with write-it-twice practice grid; read-aloud list for a grown-up (no-speech fallback); vocabulary study guide (word, teacher definition, sentence; pictures optional to save ink); results with missed-word practice sheet. Print CSS hides app chrome and starts each sheet on a new page.
-- Tests: 13 print/picture browser checks. Totals: 48 unit, 151 browser.
+- Tests: 13 print/picture browser checks.
+
+### Milestones 5–6 review — resolution
+No Critical findings. Major fixed: (1) text corrected on the photo review screen erased the reader's original reading and confidence → edited rows are matched back to what the reader read: that text stays as the original transcription, the change is logged as a correction, unchanged words keep their confidence, and the raw reader text is shown under each source page; (2) no-sound missed-word practice told the grown-up the wrong word number → the prompt uses the teacher's number from the printed list; (3) accuracy fell sharply beyond ~4° tilt and docs/OCR.md overstated tolerance → automatic straightening (projection-profile skew estimate, exact on synthetic tilts −9…9°) for tilts ≥ 2.5°, re-measured and documented. Minor fixed: short shadow fragments after a tab removed; stray numbers/marks not imported as words; specific message when the reader cannot load; offline/size wording corrected; practice sheets have boxed cells and room to write; missed-word sheet has a heading and covers the latest week only; more silent-e bases (guided, quoted, ached, clothed…). Flaky "unnamed link"/focus checks fixed (test used innerText inside a closed details; autofocus applied to every question type).
+
+## Milestone 7 — Full-system testing and final audit
+- Responsive/accessibility suite: 13 key screens × 5 viewports (iPhone SE, iPhone, iPad portrait/landscape, desktop) — no sideways scrolling, tap targets ≥ 44 px, every control named; keyboard focus starts on each quiz question.
+- Content-Security-Policy (self-only scripts, styles, images, connections; no third-party hosts), with a test that fails on any violation and proves blocking works; no-referrer.
+- Final independent audit: ~140 requirements traced, 133 met; end-to-end parent→student journey including edit/re-approve, backup, wipe and restore (byte-identical); XSS payloads in every text field and in a hostile backup — no execution; no secrets; no third-party requests; definition integrity, version linkage and isolation confirmed. No Critical or Major findings.
+- Audit Minor items fixed: slow playback for sentences (not only words); paste picks "Both" when both headings are present; dashboard prompts renaming demo profiles; on-device voices preferred (an online voice would send words to its provider); a failed save now shows a dialog and reloads what is actually stored; weeks can be archived (hidden from the student's list, results kept); the architecture proposal no longer names the children.
+- Docs: README, MANUAL-TESTS.md (real-device checklist), DEPLOYMENT.md (not performed), OCR.md, ILLUSTRATIONS.md, GRADING.md.
+- Totals: 50 unit tests, 166 browser checks, OCR evaluation (synthetic only; real photos blocked).
 
 ## Known limitations / decisions log
 - Data lives in one browser on one device; no sync (by design, documented in the UI).
-- Demo names only in code; the pre-existing `docs/REQUIREMENTS.md` and `sample-data/*.json` (written by the planning phase) still contain the children's first names. Left untouched to preserve existing work; owner may wish to edit them.
+- Demo names only in code; the pre-existing `docs/REQUIREMENTS.md` and `sample-data/*.json` (planning files, already on `main`) still contain the children's first names, and git history keeps earlier versions. Owner decision.
+- **Real-photo OCR accuracy is not measured** (photos not supplied). Synthetic results are in docs/OCR.md and are not evidence of real-photo accuracy.
+- **Example sentences:** generated only for the bundled sample list. For other weeks the parent types them, pastes them from any writing tool via the sentence helper, or acknowledges "No example sentence" (spelling test then says the word only; fill-in-the-blank skips the word). Automatic generation would need a paid, owner-approved service.
+- **Pictures:** only the 12 sample words have bundled illustrations; others need a parent upload or show "Picture coming soon". Automatic generation is not built (integration point only).
+- **Speech** depends on the device's voices; a muted device cannot be detected. If no on-device English voice exists, the browser's default voice is used, which on some browsers is an online voice.
+- Not an offline app (no service worker); the reader download is cached by the browser.
+- Answers live in the browser; a determined child with developer tools could find them. Acceptable for a family study app.
+- Two parent tabs editing the same week at once could overwrite each other (very unlikely; not handled).
+- Real iPhone/iPad/Android behaviour (speech, camera photos, Safari storage, printing) is verified only through the manual checklist (docs/MANUAL-TESTS.md), not automatically.

@@ -183,6 +183,8 @@ export function parseSpellingLines(lines) {
     for (const p of parts) {
       const word = p.replace(/[.,;:!?)"]+$/, '').replace(/^["(]+/, '');
       if (!word) continue;
+      // "4", "n]": stray numbers or marks from a photo are not words.
+      if (!/\p{L}/u.test(word) || (word.length <= 2 && !WORD_RE.test(word))) { ignored.push(word); continue; }
       const ws = word.split(/\s+/);
       if (ws.length > 1) {
         // Words separated by single spaces (a word bank, or how photo-text tools return a row) are separate

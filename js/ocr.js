@@ -105,7 +105,8 @@ export function linesFromResult(data, pageWidth) {
     // A line is only as trustworthy as its least certain real word, so one misread letter still gets flagged.
     const wordConfs = words.filter((x) => !isJunk(x.text)).map((x) => x.confidence);
     const conf = Math.round(Math.min(line.confidence, ...(wordConfs.length ? wordConfs : [line.confidence])));
-    out.push({ text, conf, unsure, bbox: line.bbox });
+    const kept = words.filter((x) => !isJunk(x.text) && text.includes(x.text)).map((x) => ({ text: x.text, conf: Math.round(x.confidence) }));
+    out.push({ text, conf, unsure, words: kept, bbox: line.bbox });
   }
   return out;
 }
@@ -115,8 +116,52 @@ export const isJunk = (t) => { const s = String(t).trim(); return s.length <= 1 
 
 /** Remove noise fragments separated from the text by a wide gap (borders, binder holes, shadows). */
 export function cleanEdges(text) {
-  const out = String(text).split('\t').map((s) => s.trim()).filter((s) => !isJunk(s)).join('\t');
+  const segs = String(text).split('\t').map((s) => s.trim()).filter((s) => !isJunk(s));
+  // Short fragments at either end of a row ("Ca", "Sa a") are shadow or margin noise, not a column of text.
+  while (segs.length > 1 && isShortNoise(segs[segs.length - 1])) segs.pop();
+  while (segs.length > 1 && isShortNoise(segs[0]) && !/^\d{1,2}[.)]/.test(segs[0])) segs.shift();
+  const out = segs.join('\t');
   return /^[^\p{L}]*$/u.test(out) ? '' : out; // nothing but numbers/marks left
+}
+
+const isShortNoise = (s) => s.replace(/\s/g, '').length <= 3 && !/^\d{1,2}[.)]\s*\p{L}/u.test(s);
+
+/** Estimate how far the page is tilted (degrees), from the angle that lines up the dark pixels into the sharpest rows. */
+export function estimateSkew(canvas) {
+  const scale = Math.min(1, 1000 / Math.max(canvas.width, canvas.height));
+  const small = document.createElement('canvas');
+  small.width = Math.max(1, Math.round(canvas.width * scale)); small.height = Math.max(1, Math.round(canvas.height * scale));
+  small.getContext('2d').drawImage(canvas, 0, 0, small.width, small.height);
+  const bin = preprocess(small);
+  const { width: w, height: h } = bin;
+  const d = bin.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, w, h).data;
+  const xs = [], ys = [];
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (d[(y * w + x) * 4] === 0) { xs.push(x - w / 2); ys.push(y - h / 2); }
+  if (xs.length < 200) return 0;
+  const step = Math.max(1, Math.floor(xs.length / 60000));
+  const size = Math.ceil(Math.hypot(w, h)) + 2;
+  const score = (deg) => {
+    const t = (deg * Math.PI) / 180, s = Math.sin(t), c = Math.cos(t);
+    const hist = new Float64Array(size);
+    for (let i = 0; i < xs.length; i += step) { const r = Math.round(ys[i] * c - xs[i] * s + size / 2); if (r >= 0 && r < size) hist[r]++; }
+    let sum = 0; for (const v of hist) sum += v * v; return sum;
+  };
+  let best = 0, bestScore = -1;
+  for (let a = -12; a <= 12; a += 0.5) { const sc = score(a); if (sc > bestScore) { bestScore = sc; best = a; } }
+  const coarse = best;
+  for (let a = coarse - 0.5; a <= coarse + 0.5; a += 0.1) { const sc = score(a); if (sc > bestScore) { bestScore = sc; best = a; } }
+  return Math.round(best * 10) / 10;
+}
+
+/** Rotate a canvas by any angle (degrees), on a white background, keeping the whole page. */
+export function rotateCanvas(src, deg) {
+  const t = (deg * Math.PI) / 180, s = Math.abs(Math.sin(t)), c = Math.abs(Math.cos(t));
+  const w = Math.round(src.width * c + src.height * s), h = Math.round(src.width * s + src.height * c);
+  const out = document.createElement('canvas'); out.width = w; out.height = h;
+  const x = out.getContext('2d');
+  x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);
+  x.translate(w / 2, h / 2); x.rotate(t); x.drawImage(src, -src.width / 2, -src.height / 2);
+  return out;
 }
 
 const meanConf = (lines) => (lines.length ? lines.reduce((n, l) => n + l.conf, 0) / lines.length : 0);
@@ -125,8 +170,11 @@ const meanConf = (lines) => (lines.length ? lines.reduce((n, l) => n + l.conf, 0
  * Read one page. Tries the shadow-corrected image first; if the reader is unsure, also tries the plain image
  * and keeps whichever result it was more confident about.
  */
-export async function readPage(canvas, { onProgress } = {}) {
+export async function readPage(input, { onProgress } = {}) {
   const worker = await getWorker(onProgress);
+  // Straighten tilted photos first: the reader loses accuracy quickly beyond a few degrees.
+  const skew = estimateSkew(input);
+  const canvas = Math.abs(skew) >= 2.5 ? rotateCanvas(input, -skew) : input; // small tilts read fine; rotating blurs a little
   const attempt = async (c, label) => {
     const { data } = await worker.recognize(c);
     return { lines: linesFromResult(data, c.width), label };
@@ -136,5 +184,5 @@ export async function readPage(canvas, { onProgress } = {}) {
     const plain = await attempt(canvas, 'original');
     if (meanConf(plain.lines) > meanConf(best.lines) + 2) best = plain;
   }
-  return { ...best, confidence: Math.round(meanConf(best.lines)) };
+  return { ...best, skew, confidence: Math.round(meanConf(best.lines)) };
 }

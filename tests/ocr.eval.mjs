@@ -72,7 +72,8 @@ try {
   }
 
   // Synthetic pages (pipeline check only)
-  for (const [kind, opts] of [['spelling', {}], ['vocab', {}], ['vocab', { rotate: 5, shadow: 0.7, noise: 30, quality: 0.55 }]]) {
+  const CASES = [['spelling', {}], ['vocab', {}], ['spelling', { rotate: 5 }], ['spelling', { rotate: 7 }], ['spelling', { rotate: -9 }], ['vocab', { rotate: 5 }], ['vocab', { rotate: 8 }], ['vocab', { rotate: 5, shadow: 0.7, noise: 30, quality: 0.55 }], ['spelling', { rotate: 7, shadow: 0.7, noise: 30, quality: 0.4 }], ['vocab', { rotate: 2, shadow: 0.9 }]];
+  for (const [kind, opts] of CASES) {
     const out = await b.js(`const f = await window.__makeSynthetic(${JSON.stringify(kind)}, ${JSON.stringify(opts)}); return await window.__extract([f], 'auto');`);
     const label = `SYNTHETIC (not a real photo) — ${kind} ${JSON.stringify(opts)}`;
     summary.synthetic[label] = report(label, kind, out);

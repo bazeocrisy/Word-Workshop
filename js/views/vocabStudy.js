@@ -36,7 +36,8 @@ export async function vocabStudy({ params, query }) {
       it.sentence ? h('section', { class: 'fc-sentence' },
         h('h3', null, 'Example sentence'),
         h('p', null, it.sentence),
-        speakButton('Hear the sentence', () => it.sentence, { ariaLabel: 'Hear the example sentence' })) : null);
+        h('div', { class: 'row' }, speakButton('Hear the sentence', () => it.sentence, { ariaLabel: 'Hear the example sentence' }),
+          speakButton('Slowly', () => it.sentence, { rate: RATES.slow, ariaLabel: 'Hear the example sentence slowly' }))) : null);
   }
 
   async function show(n) {

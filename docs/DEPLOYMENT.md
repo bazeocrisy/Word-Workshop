@@ -4,7 +4,7 @@ Nothing here has been done. The owner must approve the merge and the deployment.
 
 ## Before deploying
 1. Read `docs/STATUS.md` (open items and limitations) and decide whether the photo-reading accuracy on real photos must be measured first (`npm run test:ocr` with photos in `local-fixtures/`).
-2. Optional privacy edit: `docs/REQUIREMENTS.md` and `sample-data/*.json` (from the planning phase) mention the children's first names. The app itself uses demo names. The repository and the site are public.
+2. Optional privacy edit: `docs/REQUIREMENTS.md` and `sample-data/*.json` (planning files) mention the children's first names, as did earlier versions of `docs/ARCHITECTURE-PROPOSAL.md` (now removed there). The app itself uses demo names. The repository and the site are public. Editing the files removes the names from the current version only; they remain in the git history of the public repository unless the history is rewritten.
 3. Run `npm test` and `npm run test:browser` on the branch; both must pass.
 
 ## Deploy

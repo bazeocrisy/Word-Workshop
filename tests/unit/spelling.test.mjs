@@ -87,3 +87,11 @@ test('M4 review: more silent-e words get a real base word', () => {
   }
   for (const w of ['rested', 'listed', 'posted', 'lasted', 'played', 'stayed', 'rained']) assert.equal(spellingChange(w).key, 'add-ed', w);
 });
+
+test('M5-6 review: qu/gu onsets and -the/-ache bases', () => {
+  const exp = { guided: 'guide', quoted: 'quote', quaked: 'quake', ached: 'ache', basted: 'baste', clothed: 'clothe', soothed: 'soothe' };
+  for (const [w, base] of Object.entries(exp)) assert.equal(spellingChange(w).base, base, w);
+  assert.equal(spellingChange('skied').base, 'ski');
+  assert.notEqual(spellingChange('biased').base, 'biase');
+  assert.equal(spellingChange('quizzed').base, 'quiz');
+});

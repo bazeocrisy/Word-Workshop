@@ -134,7 +134,7 @@ export async function getApprovedLesson(weekId) {
 
 /** Approved weeks for a student, newest first, as { week (summary only), snapshot }. */
 export async function listApprovedWeeks(studentId) {
-  const weeks = (await listWeeks(studentId)).filter((w) => w.approvedVersion);
+  const weeks = (await listWeeks(studentId)).filter((w) => w.approvedVersion && !w.archived);
   const out = [];
   for (const w of weeks) {
     const snap = await getSnapshot(w.id, w.approvedVersion);

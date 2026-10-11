@@ -2,7 +2,7 @@
 // Nothing here is ever approved automatically; every imported word lands in the week editor unchecked.
 import { h, fill, page, btn, link, field, toast, progressBar, confirmDialog } from '../ui.js';
 import * as store from '../store.js';
-import { newVocabItem, newSpellingItem, weekLabel, nowIso } from '../model.js';
+import { newVocabItem, newSpellingItem, weekLabel, nowIso, similarity, compareKey } from '../model.js';
 import { suggestGroups } from '../spelling.js';
 import { parseVocabLines, parseSpellingLines, splitSections, splitPair, isHeading, stripMarker } from '../parse.js';
 import { decode, toCanvas, canvasToBlob, checkFile, ImageError } from '../images.js';
@@ -125,6 +125,7 @@ class Importer {
         results.push({ page: p, ...res });
       } catch (e) {
         console.warn(e);
+        if (/could not be loaded/.test(e && e.message)) { this.failed('The photo reader could not be loaded. Check the internet connection and try again, or type or paste the words instead.'); return; }
         this.failed(navigator.onLine === false
           ? 'The photo reader needs an internet connection the first time it is used. Connect and try again, or type or paste the words instead.'
           : 'The photo reader stopped with an error. Try again, try a smaller or clearer photo, or type or paste the words instead.');
@@ -146,6 +147,8 @@ class Importer {
     this.confMap = new Map(allLines.map((l) => [l.text.trim(), l.conf]));
     const totalWords = allLines.reduce((n, l) => n + l.text.split(/\s+/).filter(Boolean).length, 0);
     const cls = classifyLines(allLines, this.target);
+    // What the reader actually read, before any edits on this screen (kept as the original transcription).
+    this.readRows = { vo: parseVocabLines(cls.vocab).rows, words: allLines.flatMap((l) => l.words || []) };
     const unsure = allLines.flatMap((l) => l.unsure || []);
     const spText = h('textarea', { rows: 10, id: 'ocr-spelling', class: 'ocr-text' }, cls.spelling.map((l) => l.text).join('\n'));
     const voText = h('textarea', { rows: 12, id: 'ocr-vocab', class: 'ocr-text' }, cls.vocab.map((l) => l.text).join('\n'));
@@ -163,7 +166,7 @@ class Importer {
     const photos = this.results.map((r, i) => {
       const url = this.pageCanvas(r.page).toDataURL('image/jpeg', 0.8);
       return h('figure', { class: 'ocr-photo' }, h('a', { href: url, target: '_blank', rel: 'noopener', 'aria-label': `Open page ${i + 1} full size` }, h('img', { src: url, alt: `Page ${i + 1} as uploaded` })),
-        h('figcaption', null, `Page ${i + 1} · reader confidence ${r.confidence}%`));
+        h('figcaption', null, `Page ${i + 1} · reader confidence ${r.confidence}%${Math.abs(r.skew || 0) >= 2.5 ? ` · straightened by ${Math.abs(r.skew)}°` : ''}`));
     });
     const nothing = totalWords === 0;
     fill(this.body,
@@ -195,6 +198,43 @@ class Importer {
     return { sp: parseSpellingLines(this.linesOf(spText)), vo: parseVocabLines(this.linesOf(voText)) };
   }
 
+  /**
+   * Turn reviewed rows into draft items, keeping what the photo reader actually read as the original transcription.
+   * A row the parent changed on the review screen is matched back to the reader's row; the reader's text becomes
+   * originalTranscription and the parent's change is logged as a correction. Rows typed from scratch are 'typed'.
+   */
+  buildItems(sp, vo) {
+    const at = nowIso();
+    let corrected = 0;
+    const words = this.readRows.words;
+    const spItems = sp.map((x) => {
+      let best = null, bestSim = 0;
+      for (const w of words) { const s = similarity(w.text.replace(/[.,;:]$/, ''), x.word); if (s > bestSim) { bestSim = s; best = w; } }
+      const read = best && bestSim >= 0.6 ? best : null;
+      const it = newSpellingItem({ word: x.word, origin: read ? 'ocr' : 'typed', ocrConfidence: read ? read.conf : null });
+      if (read) { it.originalTranscription = read.text.replace(/[.,;:]$/, ''); if (compareKey(it.originalTranscription) !== compareKey(x.word)) corrected++; }
+      it.groups = suggestGroups(x.word);
+      return it;
+    });
+    const used = new Set();
+    const voItems = vo.map((x, i) => {
+      const rows = this.readRows.vo;
+      let match = rows[i] && !used.has(i) && similarity(rows[i].word, x.word) >= 0.6 ? i : -1;
+      if (match < 0) { let bs = 0; rows.forEach((r, j) => { const s = similarity(r.word, x.word); if (!used.has(j) && s >= 0.6 && s > bs) { bs = s; match = j; } }); }
+      if (match < 0) return newVocabItem({ word: x.word, definition: x.definition, origin: 'typed', importedFlags: x.notes });
+      used.add(match);
+      const read = rows[match];
+      const it = newVocabItem({ word: x.word, definition: read.definition, origin: 'ocr', ocrConfidence: read.conf, importedFlags: x.notes });
+      if (x.definition !== read.definition) {
+        it.sourceDefinition = x.definition;
+        it.definitionLog.push({ field: 'sourceDefinition', from: read.definition, to: x.definition, at, reason: 'Corrected on the photo review screen' });
+        corrected++;
+      } else if (x.word !== read.word) corrected++;
+      return it;
+    });
+    return { spItems, voItems, corrected };
+  }
+
   async commit(spText, voText, replace) {
     const r = this.parse(spText, voText);
     const sp = r.sp.words.filter((x) => x.word);
@@ -209,13 +249,12 @@ class Importer {
       const ref = await store.saveImage(blob, { kind: 'source', name: res.page.name });
       sources.push({ kind: 'photo', imageRef: ref, name: res.page.name || `Page ${i + 1}`, at: nowIso(), confidence: res.confidence, ocrText: res.lines.map((l) => l.text).join('\n') });
     }
-    const spItems = sp.map((x) => { const it = newSpellingItem({ word: x.word, origin: 'ocr', ocrConfidence: x.conf }); it.groups = suggestGroups(x.word); return it; });
-    const voItems = vo.map((x) => newVocabItem({ word: x.word, definition: x.definition, origin: 'ocr', ocrConfidence: x.conf, importedFlags: x.notes }));
+    const { spItems, voItems, corrected } = this.buildItems(sp, vo);
     await store.editWeek(this.w.id, (w) => {
       if (replace) { if (spItems.length) w.spelling = []; if (voItems.length) w.vocab = []; }
       w.spelling.push(...spItems); w.vocab.push(...voItems);
       w.sources.push(...sources);
-    }, { action: 'photos read', detail: `${sources.length} page(s): ${spItems.length} spelling, ${voItems.length} vocabulary added as drafts. Raw reader text kept with the source pages (${rawText.length} characters).` });
+    }, { action: 'photos read', detail: `${sources.length} page(s): ${spItems.length} spelling, ${voItems.length} vocabulary added as drafts${corrected ? `; ${corrected} corrected on the review screen (recorded)` : ''}. Raw reader text kept with the source pages (${rawText.length} characters).` });
     toast(`Added ${spItems.length + voItems.length} words as drafts. Check each one against the photo.`);
     go(`#/parent/week/${this.w.id}`);
   }

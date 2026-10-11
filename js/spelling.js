@@ -30,7 +30,7 @@ const vowelGroups = (s) => (s.match(/[aeiouy]+/g) || []).length;
 // Unstressed endings that take plain -ed (open → opened, offer → offered, travel → traveled).
 const PLAIN_ENDINGS = /(en|er|on|el|om|um|ow)$/;
 // Common words whose base ends in silent e but whose letters look plain (create → created).
-const SILENT_E_BASES = new Set(['taste', 'waste', 'paste', 'haste', 'type', 'breathe', 'bathe', 'create', 'delete', 'complete', 'locate', 'donate', 'rotate', 'relate', 'translate', 'debate', 'operate', 'celebrate', 'decorate', 'educate', 'separate', 'update', 'invite', 'decide', 'provide', 'divide', 'explode', 'escape', 'ignore', 'explore', 'adore', 'compare', 'prepare', 'declare', 'inhale', 'exhale', 'change', 'arrange', 'exchange', 'range', 'surprise', 'excite', 'erase', 'admire', 'promise', 'practice', 'continue', 'behave', 'arrive', 'describe', 'imagine', 'examine', 'determine']);
+const SILENT_E_BASES = new Set(['ache', 'baste', 'clothe', 'soothe', 'loathe', 'teethe', 'guide', 'quote', 'quake', 'taste', 'waste', 'paste', 'haste', 'type', 'breathe', 'bathe', 'create', 'delete', 'complete', 'locate', 'donate', 'rotate', 'relate', 'translate', 'debate', 'operate', 'celebrate', 'decorate', 'educate', 'separate', 'update', 'invite', 'decide', 'provide', 'divide', 'explode', 'escape', 'ignore', 'explore', 'adore', 'compare', 'prepare', 'declare', 'inhale', 'exhale', 'change', 'arrange', 'exchange', 'range', 'surprise', 'excite', 'erase', 'admire', 'promise', 'practice', 'continue', 'behave', 'arrive', 'describe', 'imagine', 'examine', 'determine']);
 
 /** Work out the base word and spelling-change rule for an -ed word. */
 export function spellingChange(word) {
@@ -38,6 +38,7 @@ export function spellingChange(word) {
   if (!/^[a-z]+$/.test(w) || !w.endsWith('ed') || w.length < 4) return group('other', null);
   const stem = w.slice(0, -2);
   // cried → cry (consonant + ied). Short words like "tied"/"died" are ambiguous (tie/die), so ask.
+  if (w === 'skied') return group('add-ed', 'ski', 'ski + ed → skied');
   if (w.endsWith('ied')) {
     if (w.length > 4 && !VOWEL.test(w.at(-4))) { const base = w.slice(0, -3) + 'y'; return group('y-to-i', base, `${base} → ${w}`); }
     return group('check', null, null, w.slice(0, -2));
@@ -60,9 +61,11 @@ export function spellingChange(word) {
     return group('double', base, `${base} → ${w}: short vowel and one consonant, so double the ${last}.`);
   }
   // One-syllable consonant-vowel-consonant stem that did NOT double ⇒ the base ends in silent e (hope → hoped).
-  if (/^[^aeiouy]*[aeiouy][^aeiouwxy]$/.test(stem)) { const base = stem + 'e'; return group('drop-e', base, `${base} → ${w}`); } // hope, type
+  // "qu" and "gu" at the start act like consonants: quoted → quote, guided → guide.
+  const onset = stem.replace(/^(qu|gu)(?=[aeiouy])/, 'q');
+  if (/^[^aeiouy]*[aeiouy][^aeiouwxy]$/.test(onset)) { const base = stem + 'e'; return group('drop-e', base, `${base} → ${w}`); } // hope, type
   // caused, paused, raised, pleased, teased: a vowel pair + s ends in silent e.
-  if (/[aeiou]{2}s$/.test(stem)) { const base = stem + 'e'; return group('drop-e', base, `${base} → ${w}`); }
+  if (/(au|ai|ea|oi|ou)s$/.test(stem)) { const base = stem + 'e'; return group('drop-e', base, `${base} → ${w}`); }
   // English words don't end in these letter clusters, so the base must end in e: danced, judged, charged, solved, bubbled.
   if (/(nc|rc|dg|rg|v|[bpgktdfz]l)$/.test(stem)) { const base = stem + 'e'; return group('drop-e', base, `${base} → ${w}`); }
   // replaced, noticed, rescued, glued, sneezed: English words rarely end in a vowel + c, in u, or in a vowel + z.

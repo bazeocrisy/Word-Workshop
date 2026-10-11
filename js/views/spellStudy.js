@@ -25,7 +25,8 @@ export async function spellStudy({ params, query }) {
       h('div', { class: 'row spell-audio' },
         speakButton('Word', () => it.word, { ariaLabel: `Hear ${it.word}`, cls: 'btn-ghost btn-small' }),
         speakButton('Slowly', () => it.word, { rate: RATES.slow, ariaLabel: `Hear ${it.word} slowly`, cls: 'btn-ghost btn-small' }),
-        it.sentence ? speakButton('Sentence', () => it.sentence, { ariaLabel: `Hear the sentence for ${it.word}`, cls: 'btn-ghost btn-small' }) : null)));
+        it.sentence ? speakButton('Sentence', () => it.sentence, { ariaLabel: `Hear the sentence for ${it.word}`, cls: 'btn-ghost btn-small' }) : null,
+        it.sentence ? speakButton('Sentence slowly', () => it.sentence, { rate: RATES.slow, ariaLabel: `Hear the sentence for ${it.word} slowly`, cls: 'btn-ghost btn-small' }) : null)));
 
   function draw() {
     fill(tabs, views.map(([k, label]) => btn(label, () => { view = k; history.replaceState(null, '', `${base}/spell/study?view=${k}`); draw(); }, `btn-small ${view === k ? 'btn-primary' : 'btn-ghost'}`, { 'aria-pressed': String(view === k) })));

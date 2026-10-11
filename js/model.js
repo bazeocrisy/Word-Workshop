@@ -26,6 +26,22 @@ export function compareKey(s) {
   return normalizeAnswer(s).replace(/[^\p{L}\p{N} ]/gu, '').replace(/\s+/g, ' ').trim();
 }
 
+/** Edit distance and 0–1 similarity (used to match edited text back to what the photo reader read). */
+export function editDistance(a, b) {
+  a = String(a); b = String(b);
+  const dp = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    let prev = dp[0]; dp[0] = i;
+    for (let j = 1; j <= b.length; j++) { const t = dp[j]; dp[j] = Math.min(dp[j] + 1, dp[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = t; }
+  }
+  return dp[b.length];
+}
+export function similarity(a, b) {
+  const x = String(a).toLowerCase(), y = String(b).toLowerCase();
+  const m = Math.max(x.length, y.length);
+  return m ? 1 - editDistance(x, y) / m : 1;
+}
+
 export function isCorrectAnswer(given, expected) {
   const g = normalizeAnswer(given);
   return g !== '' && g === normalizeAnswer(expected);

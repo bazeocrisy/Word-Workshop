@@ -349,3 +349,7 @@ details > summary { cursor: pointer; min-height: 44px; display: flex; align-item
 details > summary::before { content: "▸"; display: inline-block; width: 1.1rem; color: var(--primary); }
 details[open] > summary::before { content: "▾"; }
 .groups > summary::before { content: none; }
+
+/* Practice sheets (review): one box per attempt, room to write */
+.practice-grid td { border: 1px solid #999; height: 12mm; }
+.practice-grid td.pg-line { width: 30%; }

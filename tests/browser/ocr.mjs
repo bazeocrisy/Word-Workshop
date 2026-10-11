@@ -41,18 +41,29 @@ export default {
     check('preview finds 15 spelling and 12 vocabulary words', /15 spelling words/.test(shown.preview) && /12 vocabulary words/.test(shown.preview), shown.preview);
 
     // Parent fixes a line before adding (correction workflow), then adds as drafts.
-    await b.js(`const ta = document.getElementById('ocr-vocab'); ta.value = ta.value.replace('Peculiar', 'Peculiar'); ta.dispatchEvent(new Event('input')); return 1;`);
+    await b.js(`const ta = document.getElementById('ocr-vocab'); ta.value = ta.value.replace('Fresh fruits and vegetables', 'Fresh fruit and vegetables'); ta.dispatchEvent(new Event('input'));
+      const sp = document.getElementById('ocr-spelling'); sp.value = sp.value.replace('hunted', 'hunnted'); sp.dispatchEvent(new Event('input')); return 1;`);
     await b.click('.commit-btn');
     await b.wait(800); await b.settle();
     const wk = await b.js(`return await WW.store.getWeek(${JSON.stringify(wid)});`);
     check('imported words land in the week as unchecked drafts', wk.spelling.length === 15 && wk.vocab.length === 12 && [...wk.spelling, ...wk.vocab].every((x) => !x.reviewed && x.origin === 'ocr'));
-    check('spelling words keep the teacher\'s numbered order', wk.spelling.map((s) => s.word).join(',') === 'rushed,blasted,washed,winked,opened,buzzed,asked,called,lifted,landed,hunted,screamed,stepped,handed,crashed', wk.spelling.map((s) => s.word));
+    check('spelling words keep the teacher\'s numbered order', wk.spelling.map((s) => s.word).join(',') === 'rushed,blasted,washed,winked,opened,buzzed,asked,called,lifted,landed,hunnted,screamed,stepped,handed,crashed', wk.spelling.map((s) => s.word));
     check('words and definitions are paired correctly', wk.vocab.find((v) => v.word === 'Trustworthy')?.sourceDefinition === 'The ability to keep promises' && wk.vocab.find((v) => v.word === 'Constellations')?.sourceDefinition.endsWith('a pattern'));
-    check('reader confidence is stored on each word', wk.vocab.every((v) => typeof v.ocrConfidence === 'number'));
+    check('reader confidence is stored on each word', wk.vocab.every((v) => typeof v.ocrConfidence === 'number') && wk.spelling.every((s) => typeof s.ocrConfidence === 'number'));
+    const produce = wk.vocab.find((v) => v.word === 'Produce');
+    check('a definition corrected on the review screen keeps what the reader read and logs the correction',
+      produce.originalTranscription === 'Fresh fruits and vegetables' && produce.sourceDefinition === 'Fresh fruit and vegetables'
+      && produce.definitionLog.length === 1 && produce.definitionLog[0].from === 'Fresh fruits and vegetables', produce);
+    const hun = wk.spelling.find((s) => s.word === 'hunnted');
+    const buz = wk.spelling.find((s) => s.word === 'buzzed');
+    check('a spelling word changed on the review screen remembers the reader\'s version; others on the same line keep their confidence',
+      hun && hun.originalTranscription === 'hunted' && typeof buz.ocrConfidence === 'number', { hun, buz: buz && buz.ocrConfidence });
     check('source pages are kept with the raw reader text', wk.sources.filter((s) => s.kind === 'photo').length === 2 && wk.sources.every((s) => s.kind !== 'photo' || (s.imageRef && s.ocrText.length > 50)));
     check('the week is not approved by importing', !wk.approvedVersion);
     t = await b.text();
     check('editor shows the source pages for comparison', /Source pages \(2\)/.test(t));
+    check('editor shows the raw text the photo reader found', (await b.js(`return document.querySelectorAll('.raw-ocr pre').length;`)) === 2);
+    check('editor shows "First captured as" for the corrected definition', /First captured as: "Fresh fruits and vegetables"/.test(t));
     await b.go(`#/s/${sid}/w/${wid}`);
     check('students cannot see imported words before approval', /not ready yet/.test(await b.text()));
 

@@ -6,7 +6,7 @@ Status: **proposal for owner approval. No app code written.** Builds on REQUIREM
 
 | Choice | Proposal | Why |
 |---|---|---|
-| Framework | None: plain HTML, CSS, JavaScript ES modules, no build step | Small app; nothing to compile or break; easy for an independent reviewer to audit. Same approach as Gabriella's Math Lab. |
+| Framework | None: plain HTML, CSS, JavaScript ES modules, no build step | Small app; nothing to compile or break; easy for an independent reviewer to audit. Same approach as the family's existing math study site. |
 | Routing | Hash routes (`#/student/:id`, `#/parent/week/:id`, …) | Works under the GitHub Pages base path `/Word-Workshop/` with no 404 tricks. |
 | Storage | IndexedDB via a small hand-written promise wrapper (no library) | Holds image blobs, larger quota than localStorage, transactional writes, so a failed save can't leave half a week. |
 | Offline / install | Web app manifest + small service worker (Phase 2 end) | Lets the parent "Add to Home Screen" on iPhone/iPad, which also protects data from Safari eviction (see risks). |
@@ -41,7 +41,7 @@ Definition integrity: answer keys and study cards read `approvedDefinition` from
 ## 3. Screens and workflow
 
 **Student side (no draft content ever reachable)**
-1. **Who's studying?** — big profile cards (Chris II, Gabriella) + small "Parent" link.
+1. **Who's studying?** — big profile cards (one per student) + small "Parent" link.
 2. **Student home** — current approved week; tiles: Vocabulary (Study / Practice / Test), Spelling (Study / Practice / Test), Review missed words, My results. Week switcher for past approved weeks.
 3. **Vocabulary study** — flashcard: illustration, word, 🔊 button; flip shows "Teacher's definition" (exact approved text) and example sentence (labelled if not from the teacher).
 4. **Vocabulary practice** — mixed multiple choice (word→definition, definition→word), fill in the blank, typed word, matching; immediate feedback with the right answer.

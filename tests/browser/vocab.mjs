@@ -24,7 +24,7 @@ export default {
     await b.js(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); await new Promise((r) => setTimeout(r, 200)); return 1;`);
     check('arrow keys move between cards', /Card 3 of 12/.test(await b.text()));
     const speakBtns = await b.js(`return [...document.querySelectorAll('.speak-btn')].map((x) => x.getAttribute('aria-label'));`);
-    check('card has word (normal + slow) and sentence audio buttons', speakBtns.length === 3, speakBtns);
+    check('card has word and sentence audio, each at normal and slow speed', speakBtns.length === 4, speakBtns);
     const noPicNote = await b.js(`
       const snap = await WW.store.getApprovedLesson(window.__W);
       const { fallbackLabel } = await import('./js/illustrations.js'); return fallbackLabel();`);

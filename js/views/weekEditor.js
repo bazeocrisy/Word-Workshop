@@ -46,7 +46,11 @@ class Editor {
       try {
         const saved = await store.editWeek(this.w.id, (w) => { Object.assign(w, data); }, log);
         this.w.revision = saved.revision; this.w.editLog = saved.editLog;
-      } catch (e) { toast('Could not save: ' + e.message, 'error'); }
+      } catch (e) {
+        await alertDialog('Your last change was not saved', `${e.message || 'The browser refused to save.'} The device may be out of storage space. The page will now show what is saved.`);
+        go(`#/parent/week/${this.w.id}`);
+        return;
+      }
       this.refreshSummary();
     });
     return this.queue;
@@ -67,7 +71,14 @@ class Editor {
       this.sourcesAside = h('aside', { class: 'editor-sources', 'aria-label': 'Source pages' })),
     this.approvePanel = h('section', { class: 'card approve-panel', 'aria-labelledby': 'sec-ap' }),
     this.historyPanel = h('section', { class: 'card' }),
-    h('div', { class: 'row' }, btn('Delete this week', () => confirmDeleteWeek(this.w.id), 'btn-ghost')));
+    h('div', { class: 'row' },
+      this.w.approvedVersion ? btn(this.w.archived ? 'Show this week to the student again' : 'Archive (hide from the student\'s list)', async () => {
+        this.w.archived = !this.w.archived;
+        await store.editWeek(this.w.id, (w) => { w.archived = this.w.archived; }, { action: this.w.archived ? 'archived' : 'unarchived' });
+        toast(this.w.archived ? 'Archived. Results are kept.' : 'Shown to the student again.');
+        go(`#/parent/week/${this.w.id}`);
+      }, 'btn-ghost archive-btn') : null,
+      btn('Delete this week', () => confirmDeleteWeek(this.w.id), 'btn-ghost')));
     this.renderSpelling(); this.renderVocab(); this.renderSources(); this.refreshSummary(); this.renderHistory();
     return this.root;
   }
@@ -172,7 +183,12 @@ class Editor {
       if (target.value === 'both' && !r.sp && !r.vo) parts.push(h('p', { class: 'warn-text' }, 'No "Spelling" or "Vocabulary" headings found.'));
       fill(preview, ...parts);
     };
-    text.addEventListener('input', update); target.addEventListener('change', update);
+    text.addEventListener('input', () => {
+      const both = /\bspelling\b/i.test(text.value) && /\bvocab(ulary)?\b/i.test(text.value);
+      if (both && target.value !== 'both' && !target.dataset.touched) target.value = 'both';
+      update();
+    });
+    target.addEventListener('change', () => { target.dataset.touched = '1'; update(); });
     const ok = await dialog({ title: 'Paste or type a list', body: h('div', null,
       field('What is in the text?', target), field('Words', text, 'Tip: on iPhone or iPad you can copy text straight from a photo (press and hold the text in Photos), then paste it here.'),
       h('label', { class: 'check' }, replace, h('span', null, 'Replace the words already in this week (instead of adding to them)')), preview),
@@ -502,7 +518,8 @@ class Editor {
     const figs = [];
     for (const p of pages) {
       const url = await store.imageUrl(p.imageRef);
-      if (url) figs.push(h('figure', null, h('a', { href: url, target: '_blank', rel: 'noopener', 'aria-label': `Open ${p.name || 'source page'} full size` }, h('img', { src: url, alt: `Source page: ${p.name || 'photo'}` })), h('figcaption', null, p.name || 'Photo')));
+      if (url) figs.push(h('figure', null, h('a', { href: url, target: '_blank', rel: 'noopener', 'aria-label': `Open ${p.name || 'source page'} full size` }, h('img', { src: url, alt: `Source page: ${p.name || 'photo'}` })), h('figcaption', null, p.name || 'Photo'),
+        p.ocrText ? h('details', { class: 'raw-ocr' }, h('summary', null, 'Text the photo reader found'), h('pre', null, p.ocrText)) : null));
     }
     fill(this.sourcesAside, h('details', { open: matchMedia('(min-width: 900px)').matches },
       h('summary', null, `Source pages (${figs.length})`), h('p', { class: 'hint' }, 'Compare each word with the original. Tap a page to open it full size.'), ...figs));
