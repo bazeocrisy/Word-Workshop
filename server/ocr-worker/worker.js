@@ -5,13 +5,19 @@
 // Secrets / variables (set with `wrangler secret put …` or in wrangler.toml [vars]):
 //   ANTHROPIC_API_KEY   (secret)  Anthropic API key. Set a monthly spend limit in the Anthropic Console.
 //   READER_PASSPHRASE   (secret)  Shared passphrase the parent enters once in the app's Settings.
-//   ALLOWED_ORIGINS     (var)     Comma-separated origins allowed to call this, e.g. https://bazeocrisy.github.io
+//   ALLOWED_ORIGINS     (var)     Comma-separated origins whose pages may call this from a browser (CORS). This only
+//                                 stops other websites from using a visitor's browser; it is NOT authentication
+//                                 (any program can send any Origin). The passphrase is the gate.
 //   MODEL               (var)     Optional. Defaults to claude-sonnet-5-5.
-//   DAILY_LIMIT         (var)     Optional. Photos per day per Worker instance (best-effort). Default 60.
+//   DAILY_LIMIT         (var)     Optional. Photos per day per Worker instance. Best-effort only: Cloudflare runs many
+//                                 instances and restarts them, so this is not a budget. The real cap is the monthly
+//                                 spend limit in the Anthropic Console.
 
 const DEFAULT_MODEL = 'claude-sonnet-5-5';
 const MAX_IMAGE_BYTES = 4.5 * 1024 * 1024; // decoded size; the Anthropic API accepts up to 5 MB per image
 const MEDIA_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const MAX_ITEMS = 100, MAX_CHARS = 500; // a worksheet never has more; protects the app from an oversized reply
+const MAX_TOKENS = 6000; // the transcription (~1k tokens) plus the model's short thinking at low effort
 
 export const PROMPT = `You are transcribing a school worksheet photo for a parent who will check every word against the sheet.
 
@@ -30,6 +36,7 @@ Call the record_worksheet tool with the result.`;
 
 export const TOOL = {
   name: 'record_worksheet',
+  strict: true,
   description: 'Record the spelling words and vocabulary words/definitions transcribed exactly from the worksheet photo.',
   input_schema: {
     type: 'object',
@@ -43,7 +50,8 @@ export const TOOL = {
             word: { type: 'string' },
             unsure: { type: 'boolean' },
           },
-          required: ['word', 'unsure'],
+          required: ['number', 'word', 'unsure'],
+          additionalProperties: false,
         },
       },
       vocabulary: {
@@ -56,11 +64,13 @@ export const TOOL = {
             unsure: { type: 'boolean' },
           },
           required: ['word', 'definition', 'unsure'],
+          additionalProperties: false,
         },
       },
       notes: { type: 'array', items: { type: 'string' } },
     },
     required: ['spelling', 'vocabulary', 'notes'],
+    additionalProperties: false,
   },
 };
 
@@ -99,11 +109,11 @@ function same(a, b) {
 
 /** Keep only well-formed fields from the model's tool input. */
 export function cleanResult(input) {
-  const str = (s) => (typeof s === 'string' ? s.replace(/\s+/g, ' ').trim() : '');
-  const spelling = (Array.isArray(input?.spelling) ? input.spelling : [])
+  const str = (s) => (typeof s === 'string' ? s.replace(/\s+/g, ' ').trim().slice(0, MAX_CHARS) : '');
+  const spelling = (Array.isArray(input?.spelling) ? input.spelling : []).slice(0, MAX_ITEMS)
     .map((x) => ({ number: Number.isInteger(x?.number) ? x.number : null, word: str(x?.word), unsure: !!x?.unsure }))
     .filter((x) => x.word);
-  const vocabulary = (Array.isArray(input?.vocabulary) ? input.vocabulary : [])
+  const vocabulary = (Array.isArray(input?.vocabulary) ? input.vocabulary : []).slice(0, MAX_ITEMS)
     .map((x) => ({ word: str(x?.word), definition: str(x?.definition), unsure: !!x?.unsure }))
     .filter((x) => x.word || x.definition);
   const notes = (Array.isArray(input?.notes) ? input.notes : []).map(str).filter(Boolean).slice(0, 20);
@@ -116,10 +126,11 @@ export async function readWorksheet({ image, mediaType, target }, env, fetchImpl
     headers: { 'content-type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
     body: JSON.stringify({
       model: env.MODEL || DEFAULT_MODEL,
-      max_tokens: 4096,
-      temperature: 0,
+      max_tokens: MAX_TOKENS,
+      // No temperature (rejected by current models) and no forced tool_choice (a 400 on Sonnet 5.5 / Opus 5.5): the
+      // prompt asks for the tool and strict: true keeps its arguments schema-valid. Low effort keeps thinking short.
+      output_config: { effort: 'low' },
       tools: [TOOL],
-      tool_choice: { type: 'tool', name: TOOL.name },
       messages: [{
         role: 'user',
         content: [
@@ -134,9 +145,19 @@ export async function readWorksheet({ image, mediaType, target }, env, fetchImpl
     throw Object.assign(new Error(`Anthropic API ${res.status}`), { status: res.status, detail: detail.slice(0, 300) });
   }
   const data = await res.json();
+  if (data.stop_reason === 'refusal') throw Object.assign(new Error('The model declined to read this photo.'), { status: 'refusal' });
   const call = (data.content || []).find((c) => c.type === 'tool_use' && c.name === TOOL.name);
-  if (!call) throw new Error('The model did not return a transcription.');
+  if (!call) throw Object.assign(new Error('The model did not return a transcription.'), { status: data.stop_reason || 'no_tool_call' });
   return { ...cleanResult(call.input), model: data.model, truncated: data.stop_reason === 'max_tokens' };
+}
+
+/** "Test connection": ask Anthropic about the configured model (free; no photo). Checks the key and the model name. */
+export async function checkModel(env, fetchImpl = fetch) {
+  const model = env.MODEL || DEFAULT_MODEL;
+  const res = await fetchImpl(`https://api.anthropic.com/v1/models/${encodeURIComponent(model)}`, {
+    headers: { 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+  });
+  return { ok: res.ok, model, status: res.status };
 }
 
 export default {
@@ -150,7 +171,10 @@ export default {
 
     let body;
     try { body = await request.json(); } catch { return json({ error: 'bad request' }, 400, headers); }
-    if (body && body.ping) return json({ ok: true, model: env.MODEL || DEFAULT_MODEL }, 200, headers); // "Test connection"
+    if (body && body.ping) { // "Test connection"
+      const r = await checkModel(env).catch(() => ({ ok: false, status: 'unreachable', model: env.MODEL || DEFAULT_MODEL }));
+      return r.ok ? json({ ok: true, model: r.model }, 200, headers) : json({ error: 'anthropic check failed', status: r.status, model: r.model }, 502, headers);
+    }
     const { image, mediaType = 'image/jpeg', target = 'auto' } = body || {};
     if (typeof image !== 'string' || !image || !MEDIA_TYPES.has(mediaType)) return json({ error: 'bad request' }, 400, headers);
     if (image.length * 0.75 > MAX_IMAGE_BYTES) return json({ error: 'photo too large' }, 413, headers);
@@ -162,7 +186,7 @@ export default {
     try {
       return json(await readWorksheet({ image, mediaType, target }, env), 200, headers);
     } catch (e) {
-      console.error(e.message, e.detail || '');
+      console.error(e.message); // status only; the upstream error body is not logged
       return json({ error: 'reader failed', status: e.status || null }, 502, headers);
     }
   },

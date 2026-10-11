@@ -128,40 +128,50 @@ export async function settingsView() {
       pinOn ? btn('Remove PIN', async () => { await setPin(null); toast('PIN removed.'); go('#/parent/settings'); }, 'btn-ghost') : null),
     h('h2', null, 'Speech'),
     h('p', null, link('Test the voice on this device', '#/parent/speech', 'btn btn-ghost')),
-    onlineReaderSettings(),
+    onlineReaderSettings(pinOn),
     deviceNotice());
 }
 
 /** Optional online photo reader: address + passphrase of the family's own reader server (see docs/OCR.md). */
-function onlineReaderSettings() {
+function onlineReaderSettings(pinOn) {
   const cfg = cloud.getConfig() || { url: '', passphrase: '', enabled: false };
   const url = h('input', { type: 'url', value: cfg.url, placeholder: 'https://word-workshop-reader.example.workers.dev', autocomplete: 'off', spellcheck: 'false' });
-  const pass = h('input', { type: 'password', value: cfg.passphrase, autocomplete: 'off' });
+  // The saved passphrase is never put back into the page; leaving the field empty keeps it.
+  const pass = h('input', { type: 'password', value: '', autocomplete: 'off', placeholder: cfg.passphrase ? 'Saved (leave empty to keep it)' : '' });
   const on = h('input', { type: 'checkbox', checked: !!cfg.enabled, id: 'online-reader-on' });
   const msg = h('p', { class: 'hint', 'aria-live': 'polite' }, cfg.enabled ? 'On: worksheet photos are read online.' : 'Off: worksheet photos are read on this device.');
-  const read = () => ({ url: url.value.trim(), passphrase: pass.value, enabled: on.checked });
+  const read = () => ({ url: url.value.trim(), passphrase: pass.value || cfg.passphrase, enabled: on.checked });
+  const MIN_PASS = 20; // long enough that it cannot be guessed by trying many (the reader server does not lock out)
   // The site's security policy only lets the app connect to Cloudflare Workers addresses (see index.html).
   const valid = (c) => /^https:\/\/[^\s/]+\.workers\.dev(\/|$)/i.test(c.url) && c.passphrase;
   return h('section', { class: 'online-reader' },
     h('h2', null, 'Online photo reader (optional)'),
-    h('p', { class: 'hint' }, 'Reads worksheet photos much more accurately than the reader on this device, especially vocabulary tables. When it is on, each photo you upload is sent to your own reader server, which sends it to Anthropic\'s Claude to read. Each photo costs a few cents on your Anthropic account. Words still arrive as drafts for you to check.'),
+    h('p', { class: 'hint' }, 'Reads worksheet photos much more accurately than the reader on this device, especially vocabulary tables. Words still arrive as drafts for you to check.'),
+    h('ul', { class: 'hint online-reader-terms' },
+      h('li', null, h('strong', null, 'Photos leave this device: '), 'when it is on, each worksheet photo you upload is sent to your own reader server and from there to Anthropic (the company that makes Claude) to be read. Anthropic says uploaded images are not stored after the request and are not used for training; check your account\'s terms in the Anthropic Console.'),
+      h('li', null, h('strong', null, 'Cost: '), 'about 2 to 5 cents per photo on your Anthropic account. Set a monthly spending limit there.'),
+      h('li', null, h('strong', null, 'Children: '), 'set a parent PIN (above) so children cannot use it.')),
     field('Reader address', url, 'The address your reader server printed when it was deployed; it ends in .workers.dev.'),
-    field('Passphrase', pass, 'Stored only in this browser. It is not included in backups.'),
+    field('Passphrase', pass, `At least ${MIN_PASS} characters, the same one you gave the reader server. Stored only in this browser; not included in backups.`),
     h('label', { class: 'check' }, on, h('span', null, 'Read worksheet photos online')),
     h('div', { class: 'row' },
       btn('Save', () => {
         const c = read();
         if (c.enabled && !valid(c)) { toast('Enter the reader\'s .workers.dev address and the passphrase first.', 'error'); return; }
+        if (pass.value && pass.value.length < MIN_PASS) { toast(`The passphrase must be at least ${MIN_PASS} characters.`, 'error'); return; }
         if (!c.url && !c.passphrase) { cloud.setConfig(null); msg.textContent = 'Removed. Photos are read on this device.'; toast('Saved.'); return; }
         if (!cloud.setConfig(c)) { toast('This browser would not save the setting.', 'error'); return; }
         msg.textContent = c.enabled ? 'On: worksheet photos are read online.' : 'Off: worksheet photos are read on this device.';
+        pass.value = ''; pass.placeholder = 'Saved (leave empty to keep it)'; cfg.passphrase = c.passphrase;
+        if (c.enabled && !pinOn) msg.textContent += ' Tip: set a parent PIN so children cannot use it.';
         toast('Saved.');
       }, 'btn-primary'),
       btn('Test connection', async () => {
         const c = read();
         if (!valid(c)) { msg.textContent = 'Enter the reader\'s .workers.dev address and the passphrase first.'; return; }
         msg.textContent = 'Testing…';
-        try { const r = await cloud.ping(c); msg.textContent = `Connected${r.model ? ` (${r.model})` : ''}. Remember to Save.`; } catch (e) { msg.textContent = e.message || 'Could not connect.'; }
+        try { const r = await cloud.ping(c); msg.textContent = `Connected: the reader server and Anthropic accepted it${r.model ? ` (${r.model})` : ''}. Remember to Save.`; }
+        catch (e) { msg.textContent = e.status === 502 ? 'The reader server answered, but Anthropic did not accept its API key or model name. Check the server\'s settings.' : (e.message || 'Could not connect.'); }
       }, 'btn-ghost')),
     msg);
 }

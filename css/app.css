@@ -599,3 +599,8 @@ details[open] > summary::before { content: "▾"; }
 @media print { .ws-bar, .ws-tabs { display: none !important; } }
 
 .ws-more-link { display: inline-flex; align-items: center; min-height: 44px; }
+
+.ws-read-warnings, .ws-photo-notes { margin: .25rem 0 .5rem; padding-left: 1.2rem; }
+.ws-photo-notes { font-size: .85rem; color: var(--warn); }
+.online-reader-terms { padding-left: 1.2rem; }
+.online-reader-terms li { margin: .25rem 0; }

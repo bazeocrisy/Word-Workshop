@@ -3,7 +3,9 @@ main = "worker.js"
 compatibility_date = "2026-10-01"
 
 [vars]
-# Only the published app may call the reader.
+# Pages from these origins may call the reader from a browser (CORS). This is not authentication: any program can
+# send any Origin. The passphrase is the gate. Note: https://bazeocrisy.github.io is shared by every GitHub Pages
+# site of this account.
 ALLOWED_ORIGINS = "https://bazeocrisy.github.io"
 MODEL = "claude-sonnet-5-5"
 DAILY_LIMIT = "60"
