@@ -418,7 +418,7 @@ const RULE_CASES = [
   ['SF-SPL-014', 'Long ago, many people travels across the country in covered wagons.', 'incorrect'],
   ['SF-HOM-007', 'Dad, and I rode to the store to buy milk and two loaves of bread.', 'ok'], // could be "Dad," + a new sentence
   ['SF-MIX-012', 'Isaac asked his dads, "Can we go to the library after lunch?"', 'ok'],
-  ['SF-END-006', 'Grandpa asked if we wanted pancakes for breakfasts.', 'incorrect'], // mark slot word, no "the/their" before it
+  ['SF-END-006', 'Grandpa asked if we wanted pancakes for breakfasts.', 'ok'], // mark-only spot made plural: a grown-up checks (L-1)
   ['SF-END-010', 'The library has a new reading room. When does it open, and?', 'incorrect'], // stray "and"
 ];
 
@@ -814,8 +814,8 @@ const VERIFY = [
   ['SF-MIX-014', 'On April 22, our class celebrated Earth Day by picking up trash in the parks.', 'ok'],
   ['SF-MIX-011', 'At the beach, Elena found a starfish and two tiny crabs under the rocks.', 'ok'],
   ['SF-HOM-002', 'I have a pencil and an eraser in my desk.', 'ok'],
-  ['SF-MIX-001', 'My sister Ava used bright colors in art classes.', 'ok', L.markSlotNoDet],
-  ['SF-HOM-002', 'I have one pencil and an eraser in my desk.', 'ok', L.numberWordSlot],
+  ['SF-MIX-001', 'My sister Ava used bright colors in art classes.', 'ok'],
+  ['SF-HOM-002', 'I have one pencil and an eraser in my desk.', 'ok'],
   // VALID: "a/an/one + plural", "number + describing word" with the noun kept plural
   ['SF-SPL-019', 'A pair of baby foxes were hiding under the bushes near our tent.', 'ok'],
   ['SF-SPL-019', 'A few baby foxes were hiding under the bushes near our tent.', 'ok'],
@@ -837,9 +837,9 @@ const VERIFY = [
   ['SF-TEN-004', 'The wind blew the leafs across the yard last night.', 'incorrect'],
   ['SF-SPL-024', 'Many years ago, the children walks to a small school and wrote their lessons on little chalkboards every day.', 'incorrect'],
   ['SF-MIX-011', 'At the beach, Elena found a starfish and three tiny crab under a rock.', 'incorrect'],
-  ['SF-SVA-015', 'Everyone are cleaning the garage, and Dad says we can go swimming when the job is done.', 'incorrect', L.indefSubject],
+  ['SF-SVA-015', 'Everyone are cleaning the garage, and Dad says we can go swimming when the job is done.', 'incorrect'],
   ['SF-SVA-002', 'Look! The robins family is building a nest in our tree.', 'incorrect', L.missingApostrophe],
-  ['SF-CAP-002', 'My grandma and I baked two loafs of bread for the neighbors.', 'incorrect', L.addedTypo],
+  ['SF-CAP-002', 'My grandma and I baked two loafs of bread for the neighbors.', 'incorrect'],
 ];
 
 for (const [id, answer, expect, todo] of VERIFY) {

@@ -287,6 +287,9 @@ const ADVERBS = new Set(('anywhere everywhere somewhere nowhere today tonight to
 const OBJECTS = new Set(['me', 'us', 'him', 'her', 'them', 'it', 'you']);
 const BARE_AFTER = new Set(['can', "can't", 'cannot', 'will', "won't", 'could', 'should', 'would', 'may', 'might', 'must',
   'do', 'does', 'did', "don't", "doesn't", "didn't", 'please', "let's"]);
+const BAD_PLURALS = new Set(['leafs', 'loafs', 'knifes', 'wolfs', 'shelfs', 'halfs']);
+const ONE_PERSON = new Set(['everyone', 'everybody', 'someone', 'somebody', 'anyone', 'anybody', 'nobody', 'everything',
+  'something', 'nothing', 'anything']);
 const SINGULAR_DET = new Set(['a', 'an', 'one', 'this', 'that', 'each', 'every', 'another']);
 const PLURAL_VERBS = new Set(['are', 'were', 'have', 'do', "aren't", "weren't", "haven't", "don't"]);
 const SINGULAR_VERBS = new Set(['is', 'was', 'has', 'does', "isn't", "wasn't", "hasn't", "doesn't"]);
@@ -314,6 +317,9 @@ function numberBreaks(g, typedPlural, prev, next, prev2, next2) {
     && (PREPOSITIONS.has(n) || DETERMINERS.has(n) || OBJECTS.has(n))) return true;
   // After "to" or a helper verb a verb has no -s ("to sees", "can't waits", "Please writes").
   if (typedPlural && BARE_AFTER.has(p)) return true;
+  if (typedPlural && SUBJECTS.has(p) && BARE_AFTER.has(pp)) return true; // "does it opens"
+  if (typedPlural && ['very', 'quite'].includes(p)) return true; // "very colds"
+  if (typedPlural && ['a', 'an'].includes(pp) && describing(p)) return true; // "a beautiful sights"
   if (typedPlural && p === 'to' && (DETERMINERS.has(n) || OBJECTS.has(n))) return true; // "to helps a friend", not "to schools"
   // A describing word with -s before a thing ("reds car", "news library"): the next word is a content word
   // that cannot be a verb, so this word is not a plural subject.
@@ -468,10 +474,9 @@ function wrongWord(exp, got, next, inSlot, planted, prev, prev2, next2) {
   // Another form of the key word typed where a SPELLING mistake was planted ("bush" where "bushs" → "bushes"):
   // judged like any other word. Where a word-form mistake was planted ("cooks" → "cooked"), any other form is wrong.
   // In a mistake's spot, a word that was already right (the mistake was a mark next to it: "poster" → "poster.")
-  // is judged like any other word when the child made it "more than one".
-  // Only toward "more than one" right after the/their/our… ("their posters"); "bean, peas" or "very colds" stay mistakes.
-  if (inSlot && pl && pl === e && numberDir(e, g) > 0
-    && ['the', 'their', 'our', 'my', 'your', 'his', 'her', 'these', 'those', 'some', 'many', 'all'].includes(lc(prev || ''))) inSlot = false;
+  // is judged like any other word when the child made it "more than one" ("their posters", "art classes");
+  // "bean, peas" for "beans, peas" stays a mistake.
+  if (inSlot && pl && pl === e && numberDir(e, g) > 0) inSlot = false;
   const spellingSlot = inSlot && pl && pl !== e && !pl.includes("'")
     && (!isRealWord(pl) || (HOMOPHONES.has(pl) && HOMOPHONES.has(e))); // "bushs" → "bushes", "see" → "sea"
   if (e === g) return exp === got ? null : 'capital';
@@ -484,6 +489,8 @@ function wrongWord(exp, got, next, inSlot, planted, prev, prev2, next2) {
     // One ↔ more than one: clear only when it breaks agreement ("two pencil", "player have").
     return numberBreaks(g, numberDir(e, g) > 0, prev, next, prev2, next2) ? 'number' : null;
   }
+  // "one pencil"/"a pencil" for "two pencils": fine when the thing after it is one too; "one pencils" is not.
+  if (PLURAL_DET.has(e) && ['one', 'a', 'an'].includes(g) && isWord(next || '')) return /[^s']s$/.test(lc(next)) ? 'number' : null;
   if (HOMOPHONES.has(e) && HOMOPHONES.has(g)) return 'homophone';
   // The same with an ending ("reeds" for "reads", "pairs" for "pears"), when the spellings are close.
   const homStem = (w) => [...stems(w)].some((x) => HOMOPHONES.has(x));
@@ -508,6 +515,8 @@ function wrongWord(exp, got, next, inSlot, planted, prev, prev2, next2) {
   if ((e.includes("'") || g.includes("'")) && [...stems(noApos(e))].some((x) => stems(noApos(g)).has(x))) return 'spelling';
   // A real word ("placed" for "planted", "hats" for "caps") may be a fair rewrite: never call it a misspelling,
   // unless it is one letter from both the fix and the planted mistake ("now" where "no" → "know").
+  // "Everyone are": a one-person word with a many-things verb right after it.
+  if (ONE_PERSON.has(g) && PLURAL_VERBS.has(lc(next || ''))) return 'agreement';
   // A one-thing verb after a plural pronoun or plural word ("children walks", "they runs") for the key's verb.
   if (/[^s']s$/.test(g) && [...stems(e)].some((x) => x !== e && stems(g).has(x)) && prev
     && (['they', 'we', 'you', 'i'].includes(lc(prev)) || IRREGULAR_PLURAL_SET.has(lc(prev)))) return 'agreement';
@@ -728,9 +737,13 @@ function classify(h, A, C, insBag, delBag) {
     if (inBag(delBag, got)) return ['moved', false];
     if (got.length === 1 && got[0] === ',') return ['comma', !commaAllowed(A, h.aStart)];
     const before = A[h.aStart - 1], after = A[h.aStart + got.length];
+    // "two loafs" in added words: a plural that is always misspelled.
+    if (got.some((t, i) => BAD_PLURALS.has(lc(t)) && PLURAL_DET.has(lc(got[i - 1] ?? before ?? '')))) return ['spelling', true];
     const repeated = got.length === 1 && [before, after].some((t) => t && lc(t) === lc(got[0]));
     return repeated ? ['repeated', true] : ['added', false];
   }
+  // "Everyone are": a one-person word typed as the subject, with a many-things verb right after it.
+  if (ONE_PERSON.has(lc(got[got.length - 1])) && PLURAL_VERBS.has(lc(A[h.aStart + got.length] || ''))) return ['agreement', true];
   if (exp.length === 1 && got.length === 1) {
     const [e] = exp, [g] = got;
     if (isWord(e) && isWord(g)) {
