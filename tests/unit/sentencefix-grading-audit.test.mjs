@@ -777,3 +777,73 @@ for (const [id, answer, expect, todo] of CLOSING) {
 }
 
 test('closing engine check: 30+ fresh answers', () => assert.ok(CLOSING.length >= 30));
+
+// ================================================================ VERIFICATION CHECK (commit ca3ca1d)
+// Fresh answers (not anyone else's) aimed at the newest rules: the subject look-back (titles, each/none … of,
+// collective nouns, compound subjects with "and"), number changes in a slot that only lacked a mark, "a/an/one + plural",
+// "number + describing word + one thing", "they/we/I/children + -s verb", "My X, and I", and the scoped
+// leafs/loafs typos. VALID answers must never be 'incorrect'.
+
+const L = {
+  markSlotNoDet: 'engine defect (Critical, pre-existing, narrow): a valid number change of the word that only lacked an end mark ("in art classes.") stays a wrong form when no determiner comes before it. The K-3 fix covers only the/their/our…; by the lead\'s G-2 decision it should be review.',
+  numberWordSlot: 'engine defect (Critical, pre-existing, narrow): in the "to"→"two" slot, "one pencil" is marked incorrect but "a pencil" goes to review. Both are valid, and the G-3 precedent ("bush" in the plural slot) says review.',
+  indefSubject: 'engine (minor): "Everyone are" (subject changed to a one-person pronoun with the plural verb kept) goes to review',
+  missingApostrophe: 'engine (minor): "The robins family is" (a possessive without its apostrophe in front of a new head noun) goes to review',
+  addedTypo: 'engine (minor): "two loafs" in words the child added (the key has no "loaves") is not covered by the scoped typo list → review',
+};
+
+const VERIFY = [
+  // VALID: subject look-back
+  ['SF-SVA-012', 'Every Friday, Mrs. Park\'s class takes a spelling test, and Ravi always gets every word right because he studies hard.', 'ok'],
+  ['SF-SVA-012', 'Every Friday, each one of Mr. Park\'s students takes a spelling test, and Ravi always gets every word right because he studies hard.', 'ok'],
+  ['SF-SVA-012', 'Every Friday, every student in Mr. Park\'s class takes a spelling test, and Ravi always gets every word right because he studies hard.', 'ok'],
+  ['SF-SVA-012', 'Every Friday, none of Mr. Park\'s students takes a spelling test early, and Ravi always gets every word right because he studies hard.', 'ok'],
+  ['SF-SVA-004', 'Our soccer team has new jerseys this year.', 'ok'],
+  ['SF-SVA-004', 'Our coach has new jerseys this year.', 'ok'],
+  ['SF-SVA-015', 'My big brother is cleaning the garage, and Dad says we can go swimming when the job is done.', 'ok'],
+  ['SF-SVA-015', 'My brother Sam is cleaning the garage, and Dad says we can go swimming when the job is done.', 'ok'],
+  ['SF-SVA-015', 'Everyone is cleaning the garage, and Dad says we can go swimming when the job is done.', 'ok'],
+  ['SF-SVA-002', 'Look! The mother robin is building a nest in our tree.', 'ok'],
+  ['SF-SVA-002', 'Look! A pair of robins is building a nest in our tree.', 'ok'],
+  ['SF-SVA-009', 'Honeybees make honey, and the bees have a special job in the hive.', 'ok'],
+  ['SF-SVA-010', 'Jin and his brother play tennis, and Jin and Sam win most of the games.', 'ok'],
+  ['SF-SVA-008', 'The mail carrier and her dog come to our street every day, and the dogs bark at her.', 'ok'],
+  ['SF-SVA-013', 'The old tools in our museum show how farmers worked, and each of them has a sign that tells about it.', 'ok'],
+  ['SF-SVA-014', 'Owls hunt at night, but hawks and eagles hunt during the day, and both birds have sharp claws.', 'ok'],
+  // VALID: number changes in a slot that only lacked a mark, and number words
+  ['SF-MIX-014', 'On April 22, our class celebrated Earth Day by picking up trash in the parks.', 'ok'],
+  ['SF-MIX-011', 'At the beach, Elena found a starfish and two tiny crabs under the rocks.', 'ok'],
+  ['SF-HOM-002', 'I have a pencil and an eraser in my desk.', 'ok'],
+  ['SF-MIX-001', 'My sister Ava used bright colors in art classes.', 'ok', L.markSlotNoDet],
+  ['SF-HOM-002', 'I have one pencil and an eraser in my desk.', 'ok', L.numberWordSlot],
+  // VALID: "a/an/one + plural", "number + describing word" with the noun kept plural
+  ['SF-SPL-019', 'A pair of baby foxes were hiding under the bushes near our tent.', 'ok'],
+  ['SF-SPL-019', 'A few baby foxes were hiding under the bushes near our tent.', 'ok'],
+  ['SF-MIX-011', 'At the beach, Elena found a starfish and two tiny hermit crabs under a rock.', 'ok'],
+  ['SF-COM-001', 'Yes, we can borrow two new books from the library today.', 'ok'],
+  ['SF-SPL-012', 'Dad and I think the store closes in ten minutes.', 'ok'],
+  ['SF-END-002', 'The leaves on the old maple tree turn red in the fall.', 'ok'],
+  ['SF-TEN-004', 'The wind blew the dry leaves across the yard last night.', 'ok'],
+  ['SF-CAP-002', 'My grandma and I baked two loaves of bread for the neighbors.', 'ok'],
+  // WRONG: must be incorrect
+  ['SF-SVA-010', 'Jin and his brother play tennis and Jin win most of the games.', 'incorrect'],
+  ['SF-SVA-007', 'My grandparents live on a farm and their cow give lots of milk.', 'incorrect'],
+  ['SF-SVA-002', 'Look! The two robins is building a nest in our tree.', 'incorrect'],
+  ['SF-SVA-004', 'Our players and coach has new jerseys this year.', 'incorrect'],
+  ['SF-SPL-019', 'A baby foxes was hiding under the bushes near our tent.', 'incorrect'],
+  ['SF-MIX-014', 'On April 22, our class celebrated Earth Day by picking up trash in the parks', 'incorrect'],
+  ['SF-SVA-005', 'Our teacher always says that the books in our library is for everyone.', 'incorrect'],
+  ['SF-END-002', 'The leafs on the maple tree turn red in the fall.', 'incorrect'],
+  ['SF-TEN-004', 'The wind blew the leafs across the yard last night.', 'incorrect'],
+  ['SF-SPL-024', 'Many years ago, the children walks to a small school and wrote their lessons on little chalkboards every day.', 'incorrect'],
+  ['SF-MIX-011', 'At the beach, Elena found a starfish and three tiny crab under a rock.', 'incorrect'],
+  ['SF-SVA-015', 'Everyone are cleaning the garage, and Dad says we can go swimming when the job is done.', 'incorrect', L.indefSubject],
+  ['SF-SVA-002', 'Look! The robins family is building a nest in our tree.', 'incorrect', L.missingApostrophe],
+  ['SF-CAP-002', 'My grandma and I baked two loafs of bread for the neighbors.', 'incorrect', L.addedTypo],
+];
+
+for (const [id, answer, expect, todo] of VERIFY) {
+  test(`verify ${id}: ${JSON.stringify(answer)} → ${expect}`, todo ? { todo } : {}, () => check(id, answer, expect));
+}
+
+test('verification check: 25+ fresh answers', () => assert.ok(VERIFY.length >= 25));

@@ -1,6 +1,6 @@
 # Sentence Fix — Independent Educational Audit (Agent 5)
 
-> **FINAL status (section 16):** **Content bank: APPROVED. All 150 items PASS.** **Grading engine: NOT APPROVED** at cd4c542. Critical: "or so" and "yet" at the end of a sentence are marked as stray words (K-1, new in cd4c542). A subject changed to a collective or singular noun, so the kept verb agrees, is still marked incorrect (K-2, such as "Our team has" and "Mr. Park's class takes"), and so is "their posters" (K-3). Major: "X and a friend is" now goes to review (K-4, new in cd4c542). H-1 to H-8 are fixed, and the compound-noun risk does not misfire. Audit tests: 637 tests, 618 pass, 0 fail, 19 todo.
+> **FINAL status (section 17):** **Content bank: APPROVED. All 150 items PASS.** **Grading engine: NOT APPROVED, but close** (ca3ca1d). K-1 to K-4 are verified fixed, and no Major issue remains. Two narrow, older Critical cases remain: "in art classes." (L-1) and "one pencil" (L-2). The engine is APPROVED once they are fixed, or once the lead rules that they can be graded incorrect. Audit tests: 687 tests, 680 pass, 0 fail, 7 todo.
 
 Branch `claude/student-first-v3`. Audited: `data/sentence-fix/bank.json` (all 150 items read one by one), `docs/SENTENCE-FIX-CURRICULUM.md`, `js/sentencefix/engine.js`. Independent grading tests: `tests/unit/sentencefix-grading-audit.test.mjs`. Nothing in the bank, the engine, or other app code was changed.
 
@@ -875,3 +875,55 @@ Every todo currently fails, so each one is a real finding. I did not change `eng
   - **Major:** K-4 ("X and a friend is" now goes to review; new in cd4c542).
 
   The fixes are small and local. Once K-1 to K-4 are resolved and these 11 todo tests pass, only Minor review-direction items will remain (K-5, K-6, K-7, G-8). That meets the approval bar.
+
+---
+
+## 17. Verification check (commit ca3ca1d: K-1 to K-7)
+
+**This section supersedes the engine verdict in section 16.**
+
+**K-1 to K-4 are confirmed fixed.** All 11 of my section 16 todo cases now pass as normal assertions:
+- "or so" and "yet" at the end of a sentence;
+- the collective and title subjects ("Our team has", "Mr. Park's class takes", "My family is", "each of Mr. Park's students takes");
+- "their posters";
+- "X and a friend is/plays".
+
+K-5 is 3 of 4 fixed, and K-6 and K-7 are fixed. "The old tool in our museum show…" stays a Minor todo, as the engine agent noted.
+
+**Method.** I wrote 44 fresh answers of my own, without reusing anyone else's tests: 29 valid and 15 wrong. They are in the `VERIFY` cases in `tests/unit/sentencefix-grading-audit.test.mjs`, and they target the newest rules. I compared every Critical case with the engine as it was just before ca3ca1d.
+
+**What works.** These valid answers go to review:
+- **Subject look-back:** "Mrs. Park's class takes", "each one of Mr. Park's students takes", "every student in Mr. Park's class takes", "none of … takes", "Our soccer team has", "Our coach has", "My big brother is", "My brother Sam is", "Everyone is", "The mother robin is", "A pair of robins is", "the bees have".
+- **Compound subjects with "and":** "Jin and Sam win", "The mail carrier and her dog come", "hawks and eagles hunt", "each of them has".
+- **"a/an/one + plural" and "number + describing word":** "A pair of baby foxes were", "A few baby foxes were", "two tiny hermit crabs", "two new books", "the old maple tree", "the dry leaves", "two loaves".
+- **Number changes after a determiner in a slot that only lacked an end mark:** "in the parks", "under the rocks".
+
+These wrong answers are incorrect: "Jin and his brother play tennis and Jin win" and "…a farm and their cow give" (both with the comma dropped), "The two robins is", "Our players and coach has", "A baby foxes was", "the parks" with no end mark, "the books … is", "leafs" (×2), "the children walks", "three tiny crab".
+
+**"wolfs" and other words in the scoped typo list.** That list is keyed to the key word, so "wolfs" is only flagged where the key itself says "wolves". No item has "wolves", so a valid "the dog wolfs his food" can never be flagged. The same applies to "leafs" and "loafs". Scoping protects the verb meanings.
+
+**K-7 rule ("My X, and I").** In theory it could also catch a valid "My brother runs, and I walk.", but no key in the bank has that shape. It is not reachable today. Note it in case new items are added.
+
+### Critical: valid answers marked incorrect (both are older behaviour and narrow)
+- **L-1.** MIX-001 "My sister Ava used bright colors in **art classes**." This is a valid number change of the word that only lacked its end mark. The K-3 fix applies only when the/their/our… comes right before the word, so here the word is still judged as a wrong form.
+
+  **Fix:** for a slot where `right` is `wrong` plus an end mark, judge a number change of the word with `numberBreaks`, whatever the word before it is. That follows the lead's G-2 decision.
+- **L-2.** HOM-002 "I have **one pencil** and an eraser in my desk." is marked incorrect, while "I have **a pencil**…" goes to review. Both are valid. This is the "to"→"two" slot, and the G-3 precedent ("bush" in the plural slot) says review.
+
+  **Fix:** treat "one" the same as "a/an" when the following noun becomes singular.
+
+### Minor (review direction only)
+- "**Everyone are** cleaning…"
+- "The **robins family** is…"
+- "two **loafs**" in words the child added
+- SVA-013 "tool … **show**"
+- G-8: a dropped "the" (by design)
+
+### Tests
+`node --test tests/unit/sentencefix-grading-audit.test.mjs` gives `tests 687, pass 680, fail 0, todo 7`. I ran it on its own. The 7 todos are L-1, L-2, the three Minor cases above, SVA-013 and G-8. Every todo currently fails, so each one is a real finding. I did not change `engine.js` or `bank.json`.
+
+### FINAL VERDICTS
+- **Content bank: APPROVED.** All 150 items pass, with no Critical or Major findings (section 12.7).
+- **Grading engine: NOT APPROVED, but close.** No Major issue remains, and none was introduced by ca3ca1d. Two narrow, older Critical cases remain: L-1 ("in art classes.") and L-2 ("one pencil"). Each is a one-line rule change.
+
+  Once L-1 and L-2 pass, only Minor review-direction items will remain, and the engine is **APPROVED** by the agreed bar. The lead may instead decide that these two answers can be graded incorrect, as an explicit decision like G-2. In that case the engine is **APPROVED** as it stands at ca3ca1d.
