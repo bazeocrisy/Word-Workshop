@@ -414,8 +414,10 @@ function verbNumber(w, r) {
   return d > 0 ? 'sg' : d < 0 ? 'pl' : null;
 }
 /**
- * The subject just before the verb at A[aV] (key verb at C[cV]), as typed: 'sg', 'pl', or null when the child
- * did not change it. Looks back a few words ("the book in our library is"), stopping at a mark, "and"/"but", "that".
+ * The subject just before the verb at A[aV] (key verb at C[cV]), as typed: { num: 'sg' | 'pl' | null, certain },
+ * or null when the child did not change it. Looks back a few words, stopping at a mark, "and"/"but", "that".
+ * The head is the word before the first of/in/on… ("the family of robins", "everything in our library").
+ * certain: a grammar fact ("they", "two", "X and Y", "dogs" for "dog", "everyone"), not a guess from a noun's ending.
  */
 function subjectNumber(A, aV, C, cV) {
   const back = (T, i) => {
@@ -433,21 +435,25 @@ function subjectNumber(A, aV, C, cV) {
   const { out: a, compound } = back(A, aV), c = back(C, cV).out;
   const typed = a.filter((t) => !c.includes(t)), key = c.filter((t) => !a.includes(t));
   if (!typed.length) return null;
-  if (compound) return 'pl'; // "Maya and a friend": two people
-  if (a.some((t, i) => ['each', 'one', 'every', 'none', 'either', 'neither'].includes(t) && a[i + 1] === 'of')) return 'sg'; // "each of the students"
-  for (const t of typed) {
-    if (['they', 'we', 'you', 'i'].includes(t)) return 'pl';
-    if (['he', 'she', 'it'].includes(t)) return 'sg';
-    for (const k of key) { const d = numberDir(k, t); if (d) return d > 0 ? 'pl' : 'sg'; }
-    if (PLURAL_DET.has(t) || t === 'all') return 'pl';
-    if (SINGULAR_DET.has(t)) return 'sg';
+  const sure = (num) => ({ num, certain: true });
+  if (compound) return sure('pl'); // "Maya and a friend": two people
+  // Only the words before the first of/in/on… phrase name the subject ("the family of robins").
+  const p = a.findIndex((t, i) => i > 0 && PREPOSITIONS.has(t));
+  const region = p > 0 ? a.slice(0, p) : a;
+  if (a.some((t, i) => ['each', 'one', 'every', 'none', 'either', 'neither'].includes(t) && a[i + 1] === 'of')) return sure('sg'); // "each of the students"
+  for (const t of typed.filter((x) => region.includes(x))) {
+    if (['they', 'we', 'you', 'i'].includes(t)) return sure('pl');
+    if (['he', 'she', 'it'].includes(t) || ONE_PERSON.has(t)) return sure('sg'); // "everything in our library"
+    for (const k of key) { const d = numberDir(k, t); if (d) return sure(d > 0 ? 'pl' : 'sg'); }
+    if (PLURAL_DET.has(t) || t === 'all') return sure('pl');
+    if (SINGULAR_DET.has(t)) return sure('sg');
   }
-  // A new head noun with no plural ending ("Our team", "Mr. Park's class", "My family"): fits a one-thing verb.
-  const head = a[a.length - 1];
+  // A new head noun with no plural ending ("Our team", "Mr. Park's class", "the collection in our library").
+  const head = region[region.length - 1];
   if (head && typed.includes(head) && isRealWord(head) && (!head.endsWith('s') || head.endsWith('ss')) && !head.includes("'")
     && !SUBJECTS.has(head) && !DETERMINERS.has(head) && !PREPOSITIONS.has(head) && !REAL_WORDS.has(head)
-    && !IRREGULAR_PLURAL_SET.has(head)) return 'sg';
-  return null;
+    && !IRREGULAR_PLURAL_SET.has(head)) return { num: 'sg', certain: false };
+  return { num: null, certain: false };
 }
 /**
  * A noun and the verb after it both switched number so they still agree ("the dog barks" for "the dogs bark",
@@ -490,7 +496,10 @@ function wrongWord(exp, got, next, inSlot, planted, prev, prev2, next2) {
     return numberBreaks(g, numberDir(e, g) > 0, prev, next, prev2, next2) ? 'number' : null;
   }
   // "one pencil"/"a pencil" for "two pencils": fine when the thing after it is one too; "one pencils" is not.
-  if (PLURAL_DET.has(e) && ['one', 'a', 'an'].includes(g) && isWord(next || '')) return /[^s']s$/.test(lc(next)) ? 'number' : null;
+  if (PLURAL_DET.has(e) && ['one', 'a', 'an'].includes(g) && isWord(next || '')) {
+    if (/[^s']s$/.test(lc(next))) return 'number'; // "one pencils"
+    return null;
+  }
   if (HOMOPHONES.has(e) && HOMOPHONES.has(g)) return 'homophone';
   // The same with an ending ("reeds" for "reads", "pairs" for "pears"), when the spellings are close.
   const homStem = (w) => [...stems(w)].some((x) => HOMOPHONES.has(x));
@@ -531,6 +540,8 @@ function wrongWord(exp, got, next, inSlot, planted, prev, prev2, next2) {
 function wordVerdict(exp, got, after, inSlot, planted, before, before2) {
   // The planted word at each position; when the mistake was only a mark ("poster" → "poster."), the words are the key's.
   const sameWords = planted && sameList(planted.filter(isWord).map(lc), exp.filter(isWord).map(lc));
+  // "three loafs": a plural that is always misspelled, right after a number word.
+  if (got.some((t, i) => BAD_PLURALS.has(lc(t)) && PLURAL_DET.has(lc(got[i - 1] ?? before ?? '')))) return 'spelling';
   const plantedAt = (i) => (planted?.length === exp.length ? planted[i] : sameWords && isWord(exp[i]) ? exp[i] : undefined);
   if (exp.length !== got.length) {
     const squash = (toks) => lc(toks.join('')).replace(/-/g, '');
@@ -883,7 +894,8 @@ export function grade(item, answer) {
     for (const o of order) if (indexOfRun(winA, o === 'fixed' ? r : w) >= 0) { status[sp.index] = o; break; }
   }
 
-  // Agreement fixed from the subject's side ("The robin is", "and they win"): the kept verb now agrees, so a
+  // The child changed the subject and kept the planted verb ("The robin is", "and they win", "the family of robins is"):
+  // unless the new subject CERTAINLY disagrees with that verb ("Maya and a friend is", "The two robins is"), a
   // grown-up checks it instead of calling the verb unfixed.
   for (const sp of spans) {
     if (status[sp.index] !== 'unfixed' || sp.wrongToks.length !== 1 || sp.rightToks.length !== 1) continue;
@@ -891,7 +903,8 @@ export function grade(item, answer) {
     if (!vN) continue;
     let aV = -1;
     for (let i = M[sp.kL][1] + 1; i < M[sp.kR][1]; i++) if (A[i] === sp.wrongToks[0]) { aV = i; break; }
-    if (aV >= 0 && subjectNumber(A, aV, C, sp.cTok[0]) === vN) { status[sp.index] = 'unknown'; settled.delete(sp.index); }
+    const subj = aV >= 0 ? subjectNumber(A, aV, C, sp.cTok[0]) : null;
+    if (subj && !(subj.certain && subj.num && subj.num !== vN)) { status[sp.index] = 'unknown'; settled.delete(sp.index); }
   }
 
   // Group errors whose windows overlap, then compare each group with what was expected given each status.

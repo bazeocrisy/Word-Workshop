@@ -418,7 +418,6 @@ const RULE_CASES = [
   ['SF-SPL-014', 'Long ago, many people travels across the country in covered wagons.', 'incorrect'],
   ['SF-HOM-007', 'Dad, and I rode to the store to buy milk and two loaves of bread.', 'ok'], // could be "Dad," + a new sentence
   ['SF-MIX-012', 'Isaac asked his dads, "Can we go to the library after lunch?"', 'ok'],
-  ['SF-END-006', 'Grandpa asked if we wanted pancakes for breakfasts.', 'ok'], // mark-only spot made plural: a grown-up checks (L-1)
   ['SF-END-010', 'The library has a new reading room. When does it open, and?', 'incorrect'], // stray "and"
 ];
 
@@ -887,15 +886,15 @@ const VERDICT = [
   ['SF-SPL-019', 'Two baby foxes were hiding under some bushes near our tent.', 'ok'],
   ['SF-MIX-014', 'On April 22, our class celebrated Earth Day by picking up trash in two parks.', 'ok'],
   ['SF-TEN-020', 'Yesterday, the power went out, so we found a few flashlights and told stories until the lights came back on.', 'ok'],
-  ['SF-SVA-005', 'Our teacher always says that everything in our library is for everyone.', 'ok', P.headBeforePhrase],
-  ['SF-SVA-005', 'Our teacher always says that the collection in our library is for everyone.', 'ok', P.headBeforePhrase],
-  ['SF-SVA-002', 'Look! The family of robins is building a nest in our tree.', 'ok', P.headBeforePhrase],
+  ['SF-SVA-005', 'Our teacher always says that everything in our library is for everyone.', 'ok'],
+  ['SF-SVA-005', 'Our teacher always says that the collection in our library is for everyone.', 'ok'],
+  ['SF-SVA-002', 'Look! The family of robins is building a nest in our tree.', 'ok'],
   // WRONG
   ['SF-END-010', 'The library has a new reading room. When does it opens?', 'incorrect'],
   ['SF-SVA-015', 'Everybody are cleaning the garage, and Dad says we can go swimming when the job is done.', 'incorrect'],
   ['SF-SVA-002', 'Look! Nobody are building a nest in our tree.', 'incorrect'],
   ['SF-MIX-011', 'At the beach, Elena found a starfish and a tiny crabs under a rock.', 'incorrect', P.aAdjPlural],
-  ['SF-HOM-007', 'Dad and I rode to the store to buy milk and three loafs of bread.', 'incorrect', P.numberLoafs],
+  ['SF-HOM-007', 'Dad and I rode to the store to buy milk and three loafs of bread.', 'incorrect'],
   ['SF-END-006', 'Grandpa asked if we wanted pancakes for breakfasts.', 'incorrect', P.markSlotPlural],
   ['SF-SPL-007', 'Our team was very tireds after the long game.', 'incorrect', P.veryPlural],
 ];
