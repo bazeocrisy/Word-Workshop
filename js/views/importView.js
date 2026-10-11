@@ -84,6 +84,108 @@ export function extractPages(pages, target) {
   return { spText: spText || '', voText: voText || '', conf, notes, rowNotes, spRows };
 }
 
+/**
+ * Turn reviewed rows into draft items, keeping what the photo reader actually read as the original transcription.
+ * A row changed before adding is matched back to the reader's row; the reader's text becomes originalTranscription and
+ * the change is logged as a correction. Rows typed from scratch are 'typed'. ctx = { readRows, spRows, rowNotes }.
+ */
+export function buildDraftItems(ctx, sp, vo) {
+  const at = nowIso();
+  let corrected = 0;
+  const clean = (t) => t.replace(/[.,;:]$/, '');
+  // Spelling: each reader word can back only one item. Exact matches first, then close misreadings (≥ 75%).
+  const words = ctx.readRows.words.map((w) => ({ ...w, text: clean(w.text), used: false }));
+  const readFor = sp.map(() => null);
+  // A word exactly as the reader produced it (main or extra readings) is the reader's, with the vote's confidence and notes.
+  sp.forEach((x, i) => {
+    const rr = ctx.spRows.get(compareKey(x.word));
+    if (!rr || rr.used) return;
+    rr.used = true; readFor[i] = { text: x.word, conf: rr.conf, notes: rr.notes };
+    const w = words.find((r) => !r.used && compareKey(r.text) === compareKey(x.word)); if (w) w.used = true; // claimed: not available for fuzzy matching
+  });
+  sp.forEach((x, i) => { if (readFor[i]) return; const w = words.find((r) => !r.used && compareKey(r.text) === compareKey(x.word)); if (w) { w.used = true; readFor[i] = w; } });
+  sp.forEach((x, i) => {
+    if (readFor[i]) return;
+    let best = null, bs = 0;
+    for (const r of words) { const sm = similarity(r.text, x.word); if (!r.used && sm >= 0.75 && sm > bs) { bs = sm; best = r; } }
+    if (best) { best.used = true; readFor[i] = best; }
+  });
+  const spItems = sp.map((x, i) => {
+    const read = readFor[i];
+    const it = newSpellingItem({ word: x.word, origin: read ? 'ocr' : 'typed', ocrConfidence: read ? read.conf : null, importedFlags: read && read.notes ? read.notes : [] });
+    if (read) { it.originalTranscription = read.text; if (compareKey(read.text) !== compareKey(x.word)) corrected++; }
+    it.groups = suggestGroups(x.word);
+    return it;
+  });
+  // Vocabulary: a row is the reader's row only if the word is nearly the same (≥ 75%), or fairly close AND the
+  // definition is recognisably the same. Otherwise it is a row the parent typed.
+  const rows = ctx.readRows.vo;
+  const used = new Set();
+  const sameRow = (r, x) => { const ws = similarity(r.word, x.word); return ws >= 0.75 || (ws >= 0.6 && similarity(r.definition, x.definition) >= 0.6); };
+  const voItems = vo.map((x, i) => {
+    let match = rows[i] && !used.has(i) && sameRow(rows[i], x) ? i : -1;
+    if (match < 0) { let bs = 0; rows.forEach((r, j) => { const sm = similarity(r.word, x.word); if (!used.has(j) && sameRow(r, x) && sm > bs) { bs = sm; match = j; } }); }
+    if (match < 0) return newVocabItem({ word: x.word, definition: x.definition, origin: 'typed', importedFlags: x.notes });
+    used.add(match);
+    const read = rows[match];
+    const it = newVocabItem({ word: x.word, definition: read.definition, origin: 'ocr', ocrConfidence: read.conf, importedFlags: [...new Set([...(ctx.rowNotes?.get(compareKey(read.word)) || []), ...x.notes])] });
+    if (x.definition !== read.definition) {
+      it.sourceDefinition = x.definition;
+      it.definitionLog.push({ field: 'sourceDefinition', from: read.definition, to: x.definition, at, reason: 'Corrected on the photo review screen' });
+      corrected++;
+    } else if (x.word !== read.word) corrected++;
+    return it;
+  });
+  return { spItems, voItems, corrected };
+}
+
+/**
+ * Corner tool for a vocabulary sheet laid out as a table of cards and photographed at an angle: the parent drags
+ * four handles onto the table's outer corners; the app straightens the table and reads each card on its own.
+ * Resolves { corners, cols, rows }, 'remove', or null (cancelled).
+ */
+export async function markTableCorners(c, prev = {}, label = 'Worksheet photo', okLabel = 'Use these corners') {
+  const { detectTable } = await import('../perspective.js');
+  let pts = prev.corners ? prev.corners.map((q) => ({ ...q })) : (detectTable(c)?.corners || [{ x: c.width * 0.1, y: c.height * 0.1 }, { x: c.width * 0.9, y: c.height * 0.1 }, { x: c.width * 0.9, y: c.height * 0.6 }, { x: c.width * 0.1, y: c.height * 0.6 }]);
+  const names = ['top-left', 'top-right', 'bottom-right', 'bottom-left'];
+  const img = h('img', { src: c.toDataURL('image/jpeg', 0.8), alt: label, class: 'corner-img', draggable: 'false' });
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg'); svg.setAttribute('class', 'corner-svg'); svg.setAttribute('viewBox', `0 0 ${c.width} ${c.height}`); svg.setAttribute('preserveAspectRatio', 'none'); svg.setAttribute('aria-hidden', 'true');
+  const poly = document.createElementNS(svgNS, 'polygon'); svg.append(poly);
+  const stage = h('div', { class: 'corner-stage' }, img, svg);
+  const handles = pts.map((q, k) => h('button', { type: 'button', class: 'corner-handle', 'data-autofocus': k === 0 ? '' : null, 'aria-label': `${names[k]} corner of the table. Drag, or use the arrow keys to move it.` }));
+  stage.append(...handles);
+  const place = () => {
+    handles.forEach((hd, k) => { hd.style.left = `${(pts[k].x / c.width) * 100}%`; hd.style.top = `${(pts[k].y / c.height) * 100}%`; });
+    poly.setAttribute('points', pts.map((q) => `${q.x},${q.y}`).join(' '));
+  };
+  handles.forEach((hd, k) => {
+    hd.addEventListener('pointerdown', (e) => {
+      e.preventDefault(); try { hd.setPointerCapture(e.pointerId); } catch { /* synthetic or lost pointer */ }
+      const move = (ev) => { const r = stage.getBoundingClientRect(); pts[k] = { x: Math.max(0, Math.min(c.width, ((ev.clientX - r.left) / r.width) * c.width)), y: Math.max(0, Math.min(c.height, ((ev.clientY - r.top) / r.height) * c.height)) }; place(); };
+      const up = () => { hd.removeEventListener('pointermove', move); hd.removeEventListener('pointerup', up); };
+      hd.addEventListener('pointermove', move); hd.addEventListener('pointerup', up);
+    });
+    hd.addEventListener('keydown', (e) => {
+      const step = (e.shiftKey ? 20 : 4) * (c.width / stage.getBoundingClientRect().width || 1);
+      const d = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
+      if (!d) return;
+      e.preventDefault(); pts[k] = { x: Math.max(0, Math.min(c.width, pts[k].x + d[0])), y: Math.max(0, Math.min(c.height, pts[k].y + d[1])) }; place();
+    });
+  });
+  place();
+  const count = (label, value) => h('select', { 'aria-label': label, class: 'grid-count' }, h('option', { value: '' }, 'Auto'), [1, 2, 3, 4, 5, 6, 7, 8].map((n) => h('option', { value: String(n), selected: value === n }, String(n))));
+  const colsSel = count('Cards across', prev.cols), rowsSel = count('Cards down', prev.rows);
+  const v = await dialog({ title: 'Mark the table corners', body: h('div', null,
+    h('p', { class: 'hint' }, 'Use this for a vocabulary sheet laid out as a table of word cards. Drag the four round handles onto the outside corners of the table (not the whole page). The app will straighten the table and read each card on its own.'),
+    stage,
+    h('div', { class: 'two-col' }, field('Cards across', colsSel), field('Cards down', rowsSel)),
+    h('p', { class: 'hint' }, 'Count the cards on the sheet, or leave Auto.')),
+  buttons: [...(prev.corners ? [{ label: 'Remove corners', value: 'remove', cls: 'btn-ghost' }] : []), { label: okLabel, value: 'use' }] });
+  if (v === 'use') return { corners: pts, cols: Number(colsSel.value) || null, rows: Number(rowsSel.value) || null };
+  return v === 'remove' ? 'remove' : null;
+}
+
 class Importer {
   constructor(week, student, query = {}) {
     this.w = week; this.student = student; this.pages = [];
@@ -168,45 +270,8 @@ class Importer {
    */
   async markCorners(p, i) {
     p.rotate = p.rotate || 0;
-    const c = this.pageCanvas(p);
-    const { detectTable } = await import('../perspective.js');
-    let pts = p.corners ? p.corners.map((q) => ({ ...q })) : (detectTable(c)?.corners || [{ x: c.width * 0.1, y: c.height * 0.1 }, { x: c.width * 0.9, y: c.height * 0.1 }, { x: c.width * 0.9, y: c.height * 0.6 }, { x: c.width * 0.1, y: c.height * 0.6 }]);
-    const names = ['top-left', 'top-right', 'bottom-right', 'bottom-left'];
-    const img = h('img', { src: c.toDataURL('image/jpeg', 0.8), alt: `Page ${i + 1}`, class: 'corner-img', draggable: 'false' });
-    const svgNS = 'http://www.w3.org/2000/svg';
-    const svg = document.createElementNS(svgNS, 'svg'); svg.setAttribute('class', 'corner-svg'); svg.setAttribute('viewBox', `0 0 ${c.width} ${c.height}`); svg.setAttribute('preserveAspectRatio', 'none'); svg.setAttribute('aria-hidden', 'true');
-    const poly = document.createElementNS(svgNS, 'polygon'); svg.append(poly);
-    const stage = h('div', { class: 'corner-stage' }, img, svg);
-    const handles = pts.map((q, k) => h('button', { type: 'button', class: 'corner-handle', 'data-autofocus': k === 0 ? '' : null, 'aria-label': `${names[k]} corner of the table. Drag, or use the arrow keys to move it.` }));
-    stage.append(...handles);
-    const place = () => {
-      handles.forEach((hd, k) => { hd.style.left = `${(pts[k].x / c.width) * 100}%`; hd.style.top = `${(pts[k].y / c.height) * 100}%`; });
-      poly.setAttribute('points', pts.map((q) => `${q.x},${q.y}`).join(' '));
-    };
-    handles.forEach((hd, k) => {
-      hd.addEventListener('pointerdown', (e) => {
-        e.preventDefault(); try { hd.setPointerCapture(e.pointerId); } catch { /* synthetic or lost pointer */ }
-        const move = (ev) => { const r = stage.getBoundingClientRect(); pts[k] = { x: Math.max(0, Math.min(c.width, ((ev.clientX - r.left) / r.width) * c.width)), y: Math.max(0, Math.min(c.height, ((ev.clientY - r.top) / r.height) * c.height)) }; place(); };
-        const up = () => { hd.removeEventListener('pointermove', move); hd.removeEventListener('pointerup', up); };
-        hd.addEventListener('pointermove', move); hd.addEventListener('pointerup', up);
-      });
-      hd.addEventListener('keydown', (e) => {
-        const step = (e.shiftKey ? 20 : 4) * (c.width / stage.getBoundingClientRect().width || 1);
-        const d = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
-        if (!d) return;
-        e.preventDefault(); pts[k] = { x: Math.max(0, Math.min(c.width, pts[k].x + d[0])), y: Math.max(0, Math.min(c.height, pts[k].y + d[1])) }; place();
-      });
-    });
-    place();
-    const count = (label, value) => h('select', { 'aria-label': label, class: 'grid-count' }, h('option', { value: '' }, 'Auto'), [1, 2, 3, 4, 5, 6, 7, 8].map((n) => h('option', { value: String(n), selected: value === n }, String(n))));
-    const colsSel = count('Cards across', p.cols), rowsSel = count('Cards down', p.rows);
-    const v = await dialog({ title: 'Mark the table corners', body: h('div', null,
-      h('p', { class: 'hint' }, 'Use this for a vocabulary sheet laid out as a table of word cards. Drag the four round handles onto the outside corners of the table (not the whole page). The app will straighten the table and read each card on its own.'),
-      stage,
-      h('div', { class: 'two-col' }, field('Cards across', colsSel), field('Cards down', rowsSel)),
-      h('p', { class: 'hint' }, 'Count the cards on the sheet, or leave Auto.')),
-    buttons: [...(p.corners ? [{ label: 'Remove corners', value: 'remove', cls: 'btn-ghost' }] : []), { label: 'Use these corners', value: 'use' }] });
-    if (v === 'use') { p.corners = pts; p.cols = Number(colsSel.value) || null; p.rows = Number(rowsSel.value) || null; }
+    const v = await markTableCorners(this.pageCanvas(p), p, `Page ${i + 1}`);
+    if (v && v !== 'remove') { p.corners = v.corners; p.cols = v.cols; p.rows = v.rows; }
     if (v === 'remove') { p.corners = null; p.cols = p.rows = null; }
     this.drawThumbs();
     this.thumbs.querySelectorAll('.corners-btn')[i]?.focus();
@@ -320,53 +385,7 @@ class Importer {
    * originalTranscription and the parent's change is logged as a correction. Rows typed from scratch are 'typed'.
    */
   buildItems(sp, vo) {
-    const at = nowIso();
-    let corrected = 0;
-    const clean = (t) => t.replace(/[.,;:]$/, '');
-    // Spelling: each reader word can back only one item. Exact matches first, then close misreadings (≥ 75%).
-    const words = this.readRows.words.map((w) => ({ ...w, text: clean(w.text), used: false }));
-    const readFor = sp.map(() => null);
-    // A word exactly as the reader produced it (main or extra readings) is the reader's, with the vote's confidence and notes.
-    sp.forEach((x, i) => {
-      const rr = this.spRows.get(compareKey(x.word));
-      if (!rr || rr.used) return;
-      rr.used = true; readFor[i] = { text: x.word, conf: rr.conf, notes: rr.notes };
-      const w = words.find((r) => !r.used && compareKey(r.text) === compareKey(x.word)); if (w) w.used = true; // claimed: not available for fuzzy matching
-    });
-    sp.forEach((x, i) => { if (readFor[i]) return; const w = words.find((r) => !r.used && compareKey(r.text) === compareKey(x.word)); if (w) { w.used = true; readFor[i] = w; } });
-    sp.forEach((x, i) => {
-      if (readFor[i]) return;
-      let best = null, bs = 0;
-      for (const r of words) { const sm = similarity(r.text, x.word); if (!r.used && sm >= 0.75 && sm > bs) { bs = sm; best = r; } }
-      if (best) { best.used = true; readFor[i] = best; }
-    });
-    const spItems = sp.map((x, i) => {
-      const read = readFor[i];
-      const it = newSpellingItem({ word: x.word, origin: read ? 'ocr' : 'typed', ocrConfidence: read ? read.conf : null, importedFlags: read && read.notes ? read.notes : [] });
-      if (read) { it.originalTranscription = read.text; if (compareKey(read.text) !== compareKey(x.word)) corrected++; }
-      it.groups = suggestGroups(x.word);
-      return it;
-    });
-    // Vocabulary: a row is the reader's row only if the word is nearly the same (≥ 75%), or fairly close AND the
-    // definition is recognisably the same. Otherwise it is a row the parent typed.
-    const rows = this.readRows.vo;
-    const used = new Set();
-    const sameRow = (r, x) => { const ws = similarity(r.word, x.word); return ws >= 0.75 || (ws >= 0.6 && similarity(r.definition, x.definition) >= 0.6); };
-    const voItems = vo.map((x, i) => {
-      let match = rows[i] && !used.has(i) && sameRow(rows[i], x) ? i : -1;
-      if (match < 0) { let bs = 0; rows.forEach((r, j) => { const sm = similarity(r.word, x.word); if (!used.has(j) && sameRow(r, x) && sm > bs) { bs = sm; match = j; } }); }
-      if (match < 0) return newVocabItem({ word: x.word, definition: x.definition, origin: 'typed', importedFlags: x.notes });
-      used.add(match);
-      const read = rows[match];
-      const it = newVocabItem({ word: x.word, definition: read.definition, origin: 'ocr', ocrConfidence: read.conf, importedFlags: [...new Set([...(this.rowNotes?.get(compareKey(read.word)) || []), ...x.notes])] });
-      if (x.definition !== read.definition) {
-        it.sourceDefinition = x.definition;
-        it.definitionLog.push({ field: 'sourceDefinition', from: read.definition, to: x.definition, at, reason: 'Corrected on the photo review screen' });
-        corrected++;
-      } else if (x.word !== read.word) corrected++;
-      return it;
-    });
-    return { spItems, voItems, corrected };
+    return buildDraftItems({ readRows: this.readRows, spRows: this.spRows, rowNotes: this.rowNotes }, sp, vo);
   }
 
   async commit(spText, voText, replace) {

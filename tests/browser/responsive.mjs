@@ -37,8 +37,8 @@ export default {
       ['vocab-match', `#/s/${sid}/w/${wid}/vocab/practice?type=match`], ['spell-study', `#/s/${sid}/w/${wid}/spell/study`],
       ['parent', '#/parent'], ['editor', `#/parent/week/${wid}`], ['import', `#/parent/week/${wid}/import`],
       ['backup', '#/parent/backup'], ['settings', '#/parent/settings'], ['print', `#/print/${wid}`],
-      ['wizard-start', '#/parent/new'], ['wizard-words', `#/parent/week/${draft}/words`], ['wizard-review', `#/parent/week/${draft}/review`],
-      ['wizard-approve', `#/parent/week/${draft}/approve`], ['results', '#/parent/results'],
+      ['lesson-new', '#/parent/new'], ['lesson-add', `#/parent/lesson/${draft}?stage=add`], ['lesson-check', `#/parent/lesson/${draft}?stage=check`],
+      ['lesson-finish', `#/parent/lesson/${draft}?stage=finish`], ['results', '#/parent/results'],
     ];
     for (const [vname, w, hgt] of VIEWPORTS) {
       await b.viewport(w, hgt);
