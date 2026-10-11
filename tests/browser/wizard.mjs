@@ -66,8 +66,19 @@ export default {
     const w1 = hash.split('/')[3];
     t = await b.text();
     check('Add words shows separate VOCABULARY and SPELLING sections with upload, paste and add-one actions',
-      /Vocabulary/.test(t) && /Spelling/.test(t) && /Upload vocabulary worksheet/.test(t) && /Upload spelling list or newsletter/.test(t)
+      /Vocabulary/.test(t) && /Spelling/.test(t) && (await b.js(`return document.querySelector('.quick-upload-vocab').getAttribute('aria-label') + '|' + document.querySelector('.quick-upload-spelling').getAttribute('aria-label');`)) === 'Upload vocabulary worksheet|Upload spelling list or newsletter'
       && (await b.js(`return document.querySelectorAll('.paste-vocab, .paste-spelling, .add-one-vocab, .add-one-spelling').length;`)) === 4, t.slice(0, 600));
+    // Both subjects' upload and paste buttons are on the first screen (above the sticky bottom bar) at every size.
+    const ABOVE_FOLD = `scrollTo(0, 0); await new Promise((r) => setTimeout(r, 50));
+      const navTop = document.querySelector('.wizard-nav').getBoundingClientRect().top;
+      const sel = matchMedia('(max-width: 899px)').matches ? ['.quick-upload-vocab', '.quick-paste-vocab', '.quick-upload-spelling', '.quick-paste-spelling'] : ['a.upload-vocab', '.paste-vocab', 'a.upload-spelling', '.paste-spelling'];
+      return sel.map((s) => { const r = document.querySelector(s).getBoundingClientRect(); return { s, ok: r.height > 0 && r.bottom <= Math.min(navTop, innerHeight) }; }).filter((x) => !x.ok).map((x) => x.s);`;
+    for (const [name, vw, vh] of [['phone', 390, 844], ['tablet', 768, 1024], ['desktop', 1366, 900]]) {
+      await b.viewport(vw, vh); await b.go('#/'); await b.go(`#/parent/week/${w1}/words`);
+      const hidden = await b.js(ABOVE_FOLD);
+      check(`${name}: Upload and Paste for both Vocabulary and Spelling are visible without scrolling in Add words`, hidden.length === 0, hidden);
+    }
+    await b.viewport(390, 844); await b.go('#/'); await b.go(`#/parent/week/${w1}/words`);
     await b.click('.wizard-next'); await b.wait(150);
     check('cannot continue with no words, with a clear message', /Add at least one vocabulary or spelling word/.test(await b.text()));
     await b.js(`${type('.subject-panel-vocab .new-word', 'Fortunate')} ${type('.subject-panel-vocab .new-def', 'Involving good luck or success')} return 1;`);

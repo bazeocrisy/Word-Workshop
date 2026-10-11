@@ -36,6 +36,8 @@ function wizardPage({ step, week, student, title, intro }, ...body) {
 }
 
 const wizardNav = (...children) => h('div', { class: 'wizard-nav' }, children);
+// A button label with a shorter visible form on phones (the long form stays the accessible name).
+const label = (long, short) => h('span', null, h('span', { class: 'lbl-long' }, long), h('span', { class: 'lbl-short', 'aria-hidden': 'true' }, short));
 
 // Steps that edit words: a visible saving state (every change is saved as it happens) and "Save and finish later".
 function saveControls(ed) {
@@ -47,14 +49,14 @@ function saveControls(ed) {
     p.then(() => { status.textContent = 'All changes saved'; });
     return p;
   };
-  const later = btn('Save and finish later', async () => {
+  const later = btn(label('Save and finish later', 'Finish later'), async () => {
     await ed.queue;
     toast('Saved. Continue this lesson from the first screen or the parent area.');
     go('#/parent');
   }, 'btn-ghost save-later');
   return h('span', { class: 'save-group' }, status, later);
 }
-const backLink = (href, label) => link(h('span', null, h('span', { 'aria-hidden': 'true' }, '‹ '), label), href, 'btn btn-ghost wizard-back');
+const backLink = (href, text) => link(h('span', null, h('span', { 'aria-hidden': 'true' }, '‹ '), label(text, text === 'Cancel' ? text : 'Back')), href, 'btn btn-ghost wizard-back');
 
 async function loadWeek(wid) {
   const week = await store.getWeek(wid);
@@ -82,7 +84,7 @@ export async function wizardStart({ params = {}, query = {} }) {
   start.addEventListener('change', () => { if (start.value) end.value = plusDays(start.value, 4); });
   const title = h('input', { type: 'text', maxlength: '60', value: week?.title || '', placeholder: 'For example: Unit 3 Week 2', id: 'wz-title' });
   const errors = h('div', { class: 'form-error', role: 'alert' });
-  const next = h('button', { type: 'submit', class: 'btn btn-primary btn-big wizard-next' }, 'Continue to Add words ›');
+  const next = h('button', { type: 'submit', class: 'btn btn-primary btn-big wizard-next' }, label('Continue to Add words ›', 'Continue ›'));
 
   let busy = false; // a double tap must not create two lessons (set before the first await)
   const submit = async (e) => {
@@ -169,12 +171,26 @@ class WordsStep extends Editor {
     const empty = !this.w.vocab.length && !this.w.spelling.length;
     this.root = wizardPage({ step: 'words', week: this.w, student: this.student, title: 'Add this week\'s words',
       intro: 'Add vocabulary, spelling, or both: upload a photo of the teacher\'s sheet, paste a list, or type one word at a time. Everything is saved as you go.' },
+    this.quickAdd(),
     h('div', { class: 'subject-grid' }, this.subjectPanel('vocab'), this.subjectPanel('spelling')),
     empty ? h('p', { class: 'hint' }, 'Just trying Word Workshop? ', btn('Fill in the sample week', () => this.loadSample(), 'btn-ghost btn-small sample-btn')) : null,
     this.navMsg,
-    wizardNav(backLink(stepHref(this.w.id, 'start'), 'Back'), saveControls(this), btn('Continue to Review ›', () => this.next(), 'btn-primary btn-big wizard-next')));
+    wizardNav(backLink(stepHref(this.w.id, 'start'), 'Back'), saveControls(this), btn(label('Continue to Review ›', 'Continue ›'), () => this.next(), 'btn-primary btn-big wizard-next')));
     this.renderVocab(); this.renderSpelling(); this.refreshSummary();
     return this.root;
+  }
+
+  // Phones and tablets (sections stacked): all four ways to add words in one block at the top of the step, so both
+  // subjects' upload and paste are visible without scrolling. Hidden on wide screens, where the sections sit side by side.
+  quickAdd() {
+    const up = (kind) => `#/parent/week/${this.w.id}/import?for=${kind}&from=wizard`;
+    return h('section', { class: 'quick-add', 'aria-label': 'Add words' },
+      h('div', { class: 'quick-row quick-row-vocab' }, h('span', { class: 'quick-subject' }, '💡 Vocabulary'),
+        link('📷 Upload worksheet', up('vocab'), 'btn btn-primary btn-small quick-upload-vocab', { 'aria-label': 'Upload vocabulary worksheet' }),
+        btn('📋 Paste or type', () => this.pasteDialog('vocab'), 'btn-ghost btn-small quick-paste-vocab', { 'aria-label': 'Paste or type a vocabulary list' })),
+      h('div', { class: 'quick-row quick-row-spelling' }, h('span', { class: 'quick-subject' }, '🔤 Spelling'),
+        link('📷 Upload list', up('spelling'), 'btn btn-primary btn-small quick-upload-spelling', { 'aria-label': 'Upload spelling list or newsletter' }),
+        btn('📋 Paste or type', () => this.pasteDialog('spelling'), 'btn-ghost btn-small quick-paste-spelling', { 'aria-label': 'Paste or type a spelling list' })));
   }
 
   subjectPanel(kind) {
@@ -218,13 +234,22 @@ class WordsStep extends Editor {
         link(h('span', null, h('span', { 'aria-hidden': 'true' }, '📷 '), vo ? 'Upload vocabulary worksheet' : 'Upload spelling list or newsletter'),
           `#/parent/week/${this.w.id}/import?for=${kind}&from=wizard`, `btn btn-primary upload-${kind}`),
         btn(h('span', null, h('span', { 'aria-hidden': 'true' }, '📋 '), 'Paste or type a list'), () => this.pasteDialog(kind), `btn-ghost paste-${kind}`)),
-      h('form', { class: 'add-one', onsubmit: (e) => { e.preventDefault(); add(); } },
+      this.addOneWrap(kind, h('form', { class: 'add-one', onsubmit: (e) => { e.preventDefault(); add(); } },
         h('h3', null, 'Add one word'),
         field(vo ? 'Word' : 'Spelling word', word),
         vo ? field('Definition, exactly as the teacher wrote it', def) : null,
         msg,
-        h('button', { type: 'submit', class: `btn btn-ghost add-one-btn add-one-${kind}` }, vo ? '+ Add vocabulary word' : '+ Add spelling word')),
+        h('button', { type: 'submit', class: `btn btn-ghost add-one-btn add-one-${kind}` }, vo ? '+ Add vocabulary word' : '+ Add spelling word')), !!(saved.word || saved.def)),
       list);
+  }
+
+  // Stacked layout: "Add one word" folds behind a button (open if something is half-typed) to keep the page short.
+  addOneWrap(kind, form, hasDraft) {
+    if (!matchMedia('(max-width: 899px)').matches) return form;
+    const d = h('details', { class: 'add-one-fold', open: hasDraft || !!this.open['add-' + kind] },
+      h('summary', null, `+ Type one ${kind === 'vocab' ? 'vocabulary' : 'spelling'} word at a time`), form);
+    d.addEventListener('toggle', () => { this.open['add-' + kind] = d.open; });
+    return d;
   }
 
   renderVocab() {
@@ -322,7 +347,7 @@ class ReviewStep extends Editor {
         this.vocabSection = h('section', { class: 'card', 'aria-labelledby': 'sec-vo' }),
         this.spellingSection = h('section', { class: 'card', 'aria-labelledby': 'sec-sp' })),
       this.sourcesAside = h('aside', { class: 'editor-sources', 'aria-label': 'Source pages' })),
-    wizardNav(backLink(stepHref(this.w.id, 'words'), 'Back to Add words'), saveControls(this), btn('Continue to Approve ›', async () => { await this.queue; go(stepHref(this.w.id, 'approve')); }, 'btn-primary btn-big wizard-next')));
+    wizardNav(backLink(stepHref(this.w.id, 'words'), 'Back to Add words'), saveControls(this), btn(label('Continue to Approve ›', 'Continue ›'), async () => { await this.queue; go(stepHref(this.w.id, 'approve')); }, 'btn-primary btn-big wizard-next')));
     this.renderVocab(); this.renderSpelling(); this.renderSources(); this.refreshSummary();
     return this.root;
   }
@@ -363,7 +388,8 @@ export async function wizardApprove({ params }) {
     h('div', null, h('dt', null, 'Spelling words'), h('dd', null, String(w.spelling.length))),
     h('div', { class: checked === all.length ? 'is-ok' : 'is-warn' }, h('dt', null, 'Checked'), h('dd', null, `${checked} of ${all.length}`)),
     h('div', { class: warnings ? 'is-warn' : 'is-ok' }, h('dt', null, 'Open warnings'), h('dd', null, String(warnings))));
-  const body = [h('section', { class: 'card', 'aria-labelledby': 'ap-sum' }, h('h2', { id: 'ap-sum' }, 'Summary'), summary)];
+  // The approve action (or what is left to do) comes first so it is on screen on a phone; the counts follow.
+  const body = [];
   if (st === 'approved') {
     body.push(h('div', { class: 'card notice notice-ok' }, h('p', null, `Approved (version ${w.approvedVersion}). ${who} can study this lesson.`),
       h('div', { class: 'row' }, link(`Open ${who}'s lessons`, `#/s/${w.studentId}`, 'btn btn-primary'), link('Parent area', '#/parent', 'btn btn-ghost'))));
@@ -397,6 +423,7 @@ export async function wizardApprove({ params }) {
       h('p', { class: 'hint' }, `Approving saves this lesson as version ${(w.approvedVersion || 0) + 1}. ${who} sees exactly this version; later changes need approving again.`),
       approveBtn));
   }
+  body.push(h('section', { class: 'card', 'aria-labelledby': 'ap-sum' }, h('h2', { id: 'ap-sum' }, 'Summary'), summary));
   return wizardPage({ step: 'approve', week: w, student, title: 'Approve the lesson' }, ...body,
     wizardNav(backLink(stepHref(w.id, 'review'), 'Back to Review')));
 }

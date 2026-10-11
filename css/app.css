@@ -422,13 +422,37 @@ details[open] > summary::before { content: "▾"; }
 .save-group { display: inline-flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
 .save-status { color: var(--ok); font-weight: 600; font-size: .95rem; }
 .save-status::before { content: "✓ "; }
+.lbl-short { display: none; }
+/* Phone and tablet: one block with all four ways to add words; the panels keep "Add one word" and the lists. */
+.quick-add { display: none; }
+@media (max-width: 899px) {
+  .quick-add { display: grid; gap: .5rem; margin: 0 0 1rem; padding: .75rem; background: var(--surface); border: 2px solid var(--primary); border-radius: var(--radius); }
+  .quick-row { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; align-items: center; }
+  .quick-subject { grid-column: 1 / -1; font-weight: 800; }
+  .subject-panel .add-actions { display: none; }
+  .add-one-fold > summary { border: 2px dashed #cfcae6; border-radius: 12px; padding: .4rem .8rem; margin: .75rem 0 .5rem; color: var(--primary); }
+  .add-one-fold .add-one { margin-top: 0; }
+}
+@media (min-width: 600px) and (max-width: 899px) { .quick-row { grid-template-columns: 9rem 1fr 1fr; } .quick-subject { grid-column: auto; } }
+/* Phone: the bottom bar is one row (short labels; the saving state is announced, not shown). */
+@media (max-width: 599px) {
+  .lbl-long { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .lbl-short { display: inline; }
+  .wizard-nav { flex-wrap: nowrap; gap: .4rem; padding-top: .5rem; padding-bottom: calc(.5rem + env(safe-area-inset-bottom)); }
+  .wizard-nav .btn { padding-left: .7rem; padding-right: .7rem; white-space: nowrap; }
+  .wizard-nav .btn-big { min-height: 48px; font-size: 1rem; }
+  .wizard-nav .save-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .wizard-nav .save-group { flex-wrap: nowrap; }
+  .wizard-intro { font-size: .95rem; }
+}
 .form-error:empty { display: none; }
 .form-error { color: var(--bad); font-weight: 600; background: var(--bad-soft); border-radius: 10px; padding: .5rem .8rem; margin: .5rem 0; }
 .form-error ul { margin: 0; padding-left: 1.1rem; }
 .form-error p { margin: 0; }
 .wizard-form fieldset { border: 0; padding: 0; margin: 0 0 1rem; min-width: 0; }
 .wizard-form legend { font-weight: 800; font-size: 1.15rem; margin-bottom: .5rem; padding: 0; }
-.choice-grid { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+.choice-grid { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.student-choice .muted { white-space: nowrap; margin-left: auto; }
 .student-choice { display: flex; align-items: center; gap: .6rem; padding: .75rem .9rem; border: 3px solid var(--line); border-radius: 16px; background: var(--accent-soft); cursor: pointer; min-height: 64px; }
 .student-choice input { width: 22px; height: 22px; accent-color: var(--accent); flex: none; }
 .student-choice:has(input:checked) { border-color: var(--accent); }
