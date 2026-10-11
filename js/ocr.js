@@ -184,7 +184,7 @@ const meanConf = (lines) => (lines.length ? lines.reduce((n, l) => n + l.conf, 0
  * Read one page. Tries the shadow-corrected image first; if the reader is unsure, also tries the plain image
  * and keeps whichever result it was more confident about.
  */
-export async function readPage(input, { onProgress } = {}) {
+export async function readPage(input, { onProgress, target } = {}) {
   const worker = await getWorker(onProgress);
   // Straighten tilted photos first: the reader loses accuracy quickly beyond a few degrees.
   const skew = estimateSkew(input);
@@ -204,7 +204,9 @@ export async function readPage(input, { onProgress } = {}) {
   const list = extractNumberedList(best.lines);
   const unsure = list ? list.items.filter((i) => (i.conf ?? 100) < 70).length : 0;
   const looksNumbered = best.lines.filter((l) => /(^|\s)\d{1,2}[.)]?\s+\p{L}/u.test(l.text)).length >= 3;
-  if (list ? (list.notes.some((n) => /not found|without a readable number/.test(n)) || unsure >= 2) : looksNumbered) {
+  // (Not for a page the parent said is vocabulary only: numbered steps on such a sheet are not a word list.)
+  if (target !== 'vocab' && (list ? (list.notes.some((n) => /not found|without a readable number/.test(n)) || unsure >= 2) : looksNumbered)) {
+    try {
     for (const v of EXTRA_READINGS) {
       if (onProgress) onProgress({ status: 'reading again', progress: alternatives.length / EXTRA_READINGS.length });
       await worker.setParameters({ tessedit_pageseg_mode: v.psm });
@@ -212,7 +214,9 @@ export async function readPage(input, { onProgress } = {}) {
       const { data } = await worker.recognize(v.clean ? preprocess(big) : big);
       alternatives.push(linesFromResult(data, big.width));
     }
-    await worker.setParameters({ tessedit_pageseg_mode: DEFAULT_PSM });
+    } finally {
+      await worker.setParameters({ tessedit_pageseg_mode: DEFAULT_PSM }); // always restore, even after an error
+    }
   }
   return { ...best, skew, alternatives, confidence: Math.round(meanConf(best.lines)) };
 }
@@ -232,7 +236,8 @@ export async function readTable(input, corners, { onProgress, cols, rows } = {})
   const grid = inferGrid(straightened, { x0: width * margin, y0: H * margin, x1: width * margin + width, y1: H * margin + H }, { cols, rows });
   const cards = await readCards(worker, straightened, grid, (p) => onProgress && onProgress({ status: 'reading cards', progress: p }));
   const confidence = cards.length ? Math.round(cards.reduce((s, c) => s + (c.conf || 0), 0) / cards.length) : 0;
-  return { cards, grid, straightened, lines: [], alternatives: [], skew: 0, confidence };
+  const lines = cards.map((c) => ({ text: `${c.word || '?'} – ${c.definition || ''}`.trim(), conf: c.conf || 0, words: [], segments: [] }));
+  return { cards, grid, straightened, lines, alternatives: [], skew: 0, confidence };
 }
 
 const EXTRA_READINGS = [
@@ -242,8 +247,12 @@ const EXTRA_READINGS = [
   { scale: 2, psm: '11', clean: false },
 ];
 
+// Phones (iPhone/iPad) refuse canvases above about 16.7 megapixels; stay well under that.
+const MAX_PIXELS = 12e6;
+
 export function scaleCanvas(src, k) {
-  if (k === 1) return src;
+  k = Math.min(k, Math.sqrt(MAX_PIXELS / (src.width * src.height)));
+  if (k <= 1) return src;
   const c = document.createElement('canvas');
   c.width = Math.round(src.width * k); c.height = Math.round(src.height * k);
   const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(src, 0, 0, c.width, c.height);

@@ -24,9 +24,9 @@ Supplied by the owner as `spelling-original.jpg` (Oct 12–16 newsletter) and `v
 | | Words exact | Wrong words | Order |
 |---|---|---|---|
 | Before today's fixes | 9/15 (60%) | 0 | 60% |
-| After | **14/15 (93%)** | 0 | 93% |
+| After | **14/15 (93%)** | 1, flagged ("opene" at #5) | 93% |
 
-Missing: **opened** (#5; the reader saw "Cpenea"). The app tells the parent "Number 5 was not found". Fixes: list numbers read without their period ("10 landed") or misread ("T rushed" = 1.) are recovered from the column position; when the list is incomplete the page is read four more ways (enlarged, and in sparse-text mode) and each number is voted on.
+Wrong: **opened** came out as "opene" at #5; it is flagged "Only some readings of the photo found this word here". Every word that not all readings agreed on (8 of 15 on this photo) carries a warning into the week editor that the parent must resolve before approval. Fixes: list numbers read without their period ("10 landed") or misread ("T rushed" = 1.) are recovered from the column position; when the list is incomplete the page is read four more ways (enlarged, and in sparse-text mode) and each number is voted on.
 
 **Vocabulary (12 cards in a table, photographed at an angle):**
 
@@ -53,7 +53,7 @@ Synthetic pages (generated from the sample data, then rotated, shadowed, noised 
 | Spelling list (3 numbered columns), 2° | 15/15 | — | — | 100% |
 | Spelling list, 5° / 7° | 15/15 / 15/15 | — | — | 100% |
 | Spelling list, 7° + heavy shadow, noise, JPEG 0.4 | 15/15 | — | — | 100% |
-| Spelling list, −9° | 13/15 | — | — | 47% |
+| Spelling list, −9° | 15/15 | — | — | 100% |
 | Vocabulary table, 2° | 12/12 | 100% | 100% | — |
 | Vocabulary table, 5° | 12/12 | 100% | 100% | — |
 | Vocabulary table, 8° | 11/12 | 92% | 92% | — |
@@ -62,16 +62,16 @@ Synthetic pages (generated from the sample data, then rotated, shadowed, noised 
 
 Before automatic straightening was added (Milestone 5 review), accuracy fell sharply beyond about 4° (e.g. spelling 7°: 4/15; vocabulary 8°: 5/12). The typical remaining failure is a small letter error ("Instaliment", "fryits"), which is why parent review is mandatory and why confidence warnings exist.
 
-Speed: 1.5–4.5 s per page on a desktop in headless Chrome. Phones are slower (expect roughly 5–20 s per page). First use downloads the reader.
+Speed (desktop, headless Chrome): clean pages 1–3 s; a real phone photo whose numbered list is incomplete about 20 s (it is read four more times); a table of 12 cards about 10–12 s. Phones are several times slower: expect up to 1–2 minutes for a difficult page (not measured on a device). Enlarged images are capped at 12 megapixels to stay within iPhone/iPad canvas limits. First use downloads the reader.
 
 ### Real teacher documents of other weeks (supplementary, 2026-10-11)
-The two original photographs behind `sample-data/` (week of Oct 12–16) were not found on the build computer, so that measurement is still **blocked**. Two of the teacher's real newsletters for other weeks were found in the parent's files and used as supplementary evidence. Neither is a camera photo: one is a clean digital rendering (Sept 28–Oct 2, two pages: newsletter + vocabulary page), the other a colourised redraw saved from ChatGPT (Sept 21–25). Ground truth was transcribed by eye. They stay in `local-fixtures/` (git-ignored) with `*.truth.json` files; `npm run test:ocr` scores them.
+Before the owner supplied the original photographs, two of the teacher's real newsletters for other weeks were found in the parent's files and used as supplementary evidence. Neither is a camera photo: one is a clean digital rendering (Sept 28–Oct 2, two pages: newsletter + vocabulary page), the other a colourised redraw saved from ChatGPT (Sept 21–25). Ground truth was transcribed by eye. They stay in `local-fixtures/` (git-ignored) with `*.truth.json` files; `npm run test:ocr` scores them.
 
 | Document | Before layout fix | After layout fix |
 |---|---|---|
 | Sept 28 newsletter: 15 spelling words | 1/15 | **15/15, teacher order 100%** (#7's number unreadable → placed as 7 and flagged; #15 read twice → flagged) |
 | Sept 28 vocabulary page: 7 quiz words in a grid of cards | 2/7 words, 0% pairing | **7/7 words, 100% pairing, 6/7 definitions exact** ("pleasant" read as "blaasant", flagged as unsure) |
-| Sept 21 newsletter (redraw, thin coloured fonts): 15 spelling words | 2/15 | **7/15, 0 wrong words**; the 8 missing numbers are listed for the parent |
+| Sept 21 newsletter (redraw, thin coloured fonts): 15 spelling words | 2/15 | **11/15**, 1 wrong ("HOMEWORK" read as #3, flagged); missing numbers listed for the parent |
 
 The layout fix (Oct 11): a numbered list is found anywhere on the page even when the spelling box shares lines with a neighbouring box; a "1." read apart from its word is re-joined; vocabulary card grids are paired by column position; headings and notes no longer reach the review boxes; the "unsure" list only names words that are in the boxes.
 

@@ -119,6 +119,7 @@ export async function readCards(worker, canvas, grid, onProgress) {
   const total = (grid.ys.length - 1) * (grid.xs.length - 1) * VARIANTS.length * CROPS.length;
   let done = 0;
   const readings = [];
+  try {
   for (const v of VARIANTS) {
     await worker.setParameters({ tessedit_pageseg_mode: v.psm });
     for (let r = 0; r < grid.ys.length - 1; r++) for (let c = 0; c < grid.xs.length - 1; c++) for (const crop of CROPS) {
@@ -127,7 +128,8 @@ export async function readCards(worker, canvas, grid, onProgress) {
       const sx = Math.max(0, grid.xs[c] + pad + crop.dx * W0 - crop.grow * W0), sy = Math.max(0, grid.ys[r] + pad + crop.dy * H0 - crop.grow * H0);
       const sw = Math.min(canvas.width - sx, W0 - 2 * pad + 2 * crop.grow * W0), sh = Math.min(canvas.height - sy, H0 - 2 * pad + 2 * crop.grow * H0);
       const cell = document.createElement('canvas');
-      cell.width = Math.round(sw * v.scale); cell.height = Math.round(sh * v.scale);
+      const k = Math.min(v.scale, Math.sqrt(12e6 / Math.max(1, sw * sh)));
+      cell.width = Math.round(sw * k); cell.height = Math.round(sh * k);
       const x = cell.getContext('2d'); x.imageSmoothingQuality = 'high'; x.fillStyle = '#fff'; x.fillRect(0, 0, cell.width, cell.height);
       x.drawImage(canvas, sx, sy, sw, sh, 0, 0, cell.width, cell.height);
       const img = v.mode === 'clean' ? preprocess(cell) : v.mode === 'contrast' ? contrast(cell) : cell;
@@ -137,7 +139,9 @@ export async function readCards(worker, canvas, grid, onProgress) {
       if (onProgress) onProgress(++done / total);
     }
   }
-  await worker.setParameters({ tessedit_pageseg_mode: DEFAULT_PSM });
+  } finally {
+    await worker.setParameters({ tessedit_pageseg_mode: DEFAULT_PSM }); // always restore, even after an error
+  }
   readings.forEach((cands, i) => {
     const all = cands.filter(Boolean);
     const ok = all.filter((k) => k.word);

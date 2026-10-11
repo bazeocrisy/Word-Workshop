@@ -46,11 +46,12 @@ export function extractPages(pages, target) {
   const conf = new Map();
   const notes = [];
   const rowNotes = new Map();
+  const spRows = new Map(); // word key → { conf, notes } as the reader produced it
   let spText = null, voText = null;
   if (target !== 'vocab') {
     const list = voteNumbered([extractNumberedList(all), ...pages.flatMap((p) => (p.alternatives || []).map((alt) => extractNumberedList(alt)))]);
     if (list) {
-      const lines = list.items.map((it) => { const t = `${it.number}. ${it.word}`; conf.set(t, it.conf); return t; });
+      const lines = list.items.map((it) => { const t = `${it.number}. ${it.word}`; conf.set(t, it.conf); spRows.set(compareKey(it.word), { conf: it.conf, notes: it.notes || [] }); return t; });
       spText = lines.join('\n');
       notes.push(...list.notes);
       list.items.filter((it) => it.notes.length).forEach((it) => notes.push(`${it.word}: ${it.notes.join(' ')}`));
@@ -78,9 +79,9 @@ export function extractPages(pages, target) {
   if (spText == null && voText == null) {
     const cls = classifyLines(all, target);
     for (const l of all) conf.set(l.text.trim(), l.conf);
-    return { spText: cls.spelling.map((l) => l.text).join('\n'), voText: cls.vocab.map((l) => l.text).join('\n'), conf, notes: cls.note ? [cls.note] : [], rowNotes };
+    return { spText: cls.spelling.map((l) => l.text).join('\n'), voText: cls.vocab.map((l) => l.text).join('\n'), conf, notes: cls.note ? [cls.note] : [], rowNotes, spRows };
   }
-  return { spText: spText || '', voText: voText || '', conf, notes, rowNotes };
+  return { spText: spText || '', voText: voText || '', conf, notes, rowNotes, spRows };
 }
 
 class Importer {
@@ -170,7 +171,7 @@ class Importer {
     const svg = document.createElementNS(svgNS, 'svg'); svg.setAttribute('class', 'corner-svg'); svg.setAttribute('viewBox', `0 0 ${c.width} ${c.height}`); svg.setAttribute('preserveAspectRatio', 'none'); svg.setAttribute('aria-hidden', 'true');
     const poly = document.createElementNS(svgNS, 'polygon'); svg.append(poly);
     const stage = h('div', { class: 'corner-stage' }, img, svg);
-    const handles = pts.map((q, k) => h('button', { type: 'button', class: 'corner-handle', 'aria-label': `${names[k]} corner of the table. Drag, or use the arrow keys to move it.` }));
+    const handles = pts.map((q, k) => h('button', { type: 'button', class: 'corner-handle', 'data-autofocus': k === 0 ? '' : null, 'aria-label': `${names[k]} corner of the table. Drag, or use the arrow keys to move it.` }));
     stage.append(...handles);
     const place = () => {
       handles.forEach((hd, k) => { hd.style.left = `${(pts[k].x / c.width) * 100}%`; hd.style.top = `${(pts[k].y / c.height) * 100}%`; });
@@ -202,6 +203,7 @@ class Importer {
     if (v === 'use') { p.corners = pts; p.cols = Number(colsSel.value) || null; p.rows = Number(rowsSel.value) || null; }
     if (v === 'remove') { p.corners = null; p.cols = p.rows = null; }
     this.drawThumbs();
+    this.thumbs.querySelectorAll('.corners-btn')[i]?.focus();
   }
 
   // ── Step 2: read ──
@@ -217,11 +219,11 @@ class Importer {
       const p = this.pages[i];
       const base = i / this.pages.length;
       try {
-        const read = p.corners ? (canvas, opts) => ocr.readTable(canvas, p.corners, { ...opts, cols: p.cols, rows: p.rows }) : (canvas, opts) => ocr.readPage(canvas, opts);
+        const read = p.corners ? (canvas, opts) => ocr.readTable(canvas, p.corners, { ...opts, cols: p.cols, rows: p.rows }) : (canvas, opts) => ocr.readPage(canvas, { ...opts, target: this.target });
         const res = await read(this.pageCanvas(p), {
           onProgress: (m) => {
             if (m.status === 'reading cards') setProgress(Math.round((base + m.progress / this.pages.length) * 100), 100, `Reading the word cards on page ${i + 1} of ${this.pages.length}… ${Math.round(m.progress * 100)}%`);
-            else if (m.status === 'reading again') setProgress(Math.round((base + 0.5 / this.pages.length) * 100), 100, `Reading page ${i + 1} again more carefully…`);
+            else if (m.status === 'reading again') setProgress(Math.round((base + (0.3 + 0.7 * m.progress) / this.pages.length) * 100), 100, `Some list numbers were hard to read. Reading page ${i + 1} again more carefully (${Math.round(m.progress * 100)}%)…`);
             else if (m.status === 'recognizing text') setProgress(Math.round((base + m.progress / this.pages.length) * 100), 100, `Reading page ${i + 1} of ${this.pages.length}… ${Math.round(m.progress * 100)}%`);
             else if (/loading|initializ/.test(m.status || '')) setProgress(Math.round(base * 100), 100, `Getting the photo reader ready (page ${i + 1} of ${this.pages.length})…`);
           },
@@ -251,6 +253,7 @@ class Importer {
     const ex = extractPages(this.results, this.target);
     this.confMap = ex.conf;
     this.rowNotes = ex.rowNotes;
+    this.spRows = ex.spRows || new Map();
     const totalWords = allLines.reduce((n, l) => n + l.text.split(/\s+/).filter(Boolean).length, 0);
     // What the reader actually read, before any edits on this screen (kept as the original transcription).
     this.readRows = { vo: parseVocabLines(this.linesOf(ex.voText)).rows, words: allLines.flatMap((l) => l.words || []) };
@@ -317,7 +320,14 @@ class Importer {
     // Spelling: each reader word can back only one item. Exact matches first, then close misreadings (≥ 75%).
     const words = this.readRows.words.map((w) => ({ ...w, text: clean(w.text), used: false }));
     const readFor = sp.map(() => null);
-    sp.forEach((x, i) => { const w = words.find((r) => !r.used && compareKey(r.text) === compareKey(x.word)); if (w) { w.used = true; readFor[i] = w; } });
+    // A word exactly as the reader produced it (main or extra readings) is the reader's, with the vote's confidence and notes.
+    sp.forEach((x, i) => {
+      const rr = this.spRows.get(compareKey(x.word));
+      if (!rr || rr.used) return;
+      rr.used = true; readFor[i] = { text: x.word, conf: rr.conf, notes: rr.notes };
+      const w = words.find((r) => !r.used && compareKey(r.text) === compareKey(x.word)); if (w) w.used = true; // claimed: not available for fuzzy matching
+    });
+    sp.forEach((x, i) => { if (readFor[i]) return; const w = words.find((r) => !r.used && compareKey(r.text) === compareKey(x.word)); if (w) { w.used = true; readFor[i] = w; } });
     sp.forEach((x, i) => {
       if (readFor[i]) return;
       let best = null, bs = 0;
@@ -326,7 +336,7 @@ class Importer {
     });
     const spItems = sp.map((x, i) => {
       const read = readFor[i];
-      const it = newSpellingItem({ word: x.word, origin: read ? 'ocr' : 'typed', ocrConfidence: read ? read.conf : null });
+      const it = newSpellingItem({ word: x.word, origin: read ? 'ocr' : 'typed', ocrConfidence: read ? read.conf : null, importedFlags: read && read.notes ? read.notes : [] });
       if (read) { it.originalTranscription = read.text; if (compareKey(read.text) !== compareKey(x.word)) corrected++; }
       it.groups = suggestGroups(x.word);
       return it;

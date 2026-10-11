@@ -99,7 +99,7 @@ export function dialog({ title, body, buttons = [{ label: 'OK', value: true, cls
     document.body.append(overlay);
     behind.forEach((el) => { el.inert = true; });
     document.addEventListener('keydown', onKey, true);
-    const first = box.querySelector('input, textarea, select') || box.querySelector('.dialog-buttons .btn:last-child');
+    const first = box.querySelector('[data-autofocus]') || box.querySelector('input, textarea, select') || box.querySelector('.dialog-buttons .btn:last-child');
     if (first) first.focus();
   });
 }

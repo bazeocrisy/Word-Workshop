@@ -41,7 +41,8 @@ export function extractNumberedList(lines) {
           const next = lines[li + 1]?.segments?.[0]?.text?.trim();
           if (next && WORD.test(cleanWord(next)) && !NUMBERED.test(next) && cleanWord(next).toLowerCase().startsWith(word.toLowerCase())) { word = cleanWord(next); orphans.push({ consumed: `${li + 1}:0` }); }
         }
-        if (word && WORD.test(word) && n >= 1 && n <= 40 && !/\s/.test(m[2].trim())) found.push({ number: n, word, conf: s.conf ?? ln.conf, line: li, x0: s.x0 });
+        const period = /^[•*»>·\-–]*\s*\(?\d{1,2}[.)]/u.test(t);
+        if (word && WORD.test(word) && n >= 1 && n <= 40 && !/\s/.test(m[2].trim())) found.push({ number: n, word, conf: s.conf ?? ln.conf, line: li, x0: s.x0, period });
         return;
       }
       const g = GARBLED.exec(t);
@@ -60,14 +61,14 @@ export function extractNumberedList(lines) {
     const prev = byNum.get(f.number);
     if (!prev) { byNum.set(f.number, f); continue; }
     if (prev.word.toLowerCase() === f.word.toLowerCase()) continue;
-    const keep = f.word.length > prev.word.length ? f : prev;
+    const keep = f.period !== prev.period ? (f.period ? f : prev) : (f.word.length > prev.word.length ? f : prev);
     notes.push(`Number ${f.number} was read twice ("${prev.word}" and "${f.word}"); "${keep.word}" was kept. Check it.`);
     byNum.set(f.number, keep);
   }
   const max = Math.max(...byNum.keys());
   const missing = [];
   for (let n = 1; n <= max; n++) if (!byNum.has(n)) missing.push(n);
-  const items = [...byNum.values()].sort((a, b) => a.number - b.number).map((f) => ({ number: f.number, word: f.word, conf: f.conf, notes: [] }));
+  const items = [...byNum.values()].sort((a, b) => a.number - b.number).map((f) => ({ number: f.number, word: f.word, conf: f.period ? f.conf : Math.min(f.conf ?? 100, 75), notes: f.period ? [] : ['Its number was read without a period; check the word and its place in the list.'] }));
   let strays = candidates.filter((c) => !items.some((i) => i.word.toLowerCase() === c.word.toLowerCase()));
   // A word whose number was unreadable sits in a column of numbered words: one row below "2. blasted" is 3.
   const width = Math.max(1, ...found.map((f) => f.x0 ?? 0)) || 1;
@@ -100,14 +101,17 @@ export function extractNumberedList(lines) {
  * word most readings agree on wins (ties → most confident). Disagreements and gaps are reported.
  */
 export function voteNumbered(lists) {
+  // lists[0] is the main reading (may be null); the rest are extra readings of the same page.
   const ok = lists.filter(Boolean);
   if (!ok.length) return null;
-  if (ok.length === 1) return ok[0];
+  const several = ok.length > 1;
+  const base = lists[0];
   const byNum = new Map();
   for (const l of ok) for (const it of l.items) {
     const m = byNum.get(it.number) || new Map();
     const key = it.word.toLowerCase();
-    const v = m.get(key) || { word: it.word, n: 0, conf: 0, notes: it.notes };
+    const v = m.get(key) || { word: it.word, n: 0, conf: 0, notes: it.notes, inBase: false };
+    if (l === base) v.inBase = true;
     const guessed = (it.notes || []).some((n) => /placed as number/.test(n));
     v.n += guessed ? 0.5 : 1; v.conf = Math.max(v.conf, it.conf ?? 0); m.set(key, v); byNum.set(it.number, m);
   }
@@ -121,8 +125,11 @@ export function voteNumbered(lists) {
     const c = [...m.values()].sort((a, b) => b.n - a.n || b.conf - a.conf);
     const n = [...m.values()].reduce((s, v) => s + v.n, 0);
     const itemNotes = [...(c[0].notes || [])];
-    if (c.length > 1) itemNotes.push(`Readings differed (${c.map((v) => v.word).join(' / ')}); "${c[0].word}" was chosen. Check it.`);
-    return { number, word: c[0].word, conf: c.length > 1 ? Math.min(c[0].conf, 70) : c[0].conf, notes: itemNotes, votes: n };
+    let conf = c[0].conf;
+    if (c.length > 1) { itemNotes.push(`Readings differed (${c.map((v) => v.word).join(' / ')}); "${c[0].word}" was chosen. Check it.`); conf = Math.min(conf, 70); }
+    // Found by only one of several readings, or not by the main reading: a guess the parent must look at.
+    if (several && (c[0].n < 2 || !c[0].inBase)) { itemNotes.push('Only some readings of the photo found this word here. Check it against the list.'); conf = Math.min(conf, 60); }
+    return { number, word: c[0].word, conf, notes: itemNotes, votes: n };
   });
   const max = Math.max(...items.map((i) => i.number));
   const missing = []; for (let k = 1; k <= max; k++) if (!items.some((i) => i.number === k)) missing.push(k);

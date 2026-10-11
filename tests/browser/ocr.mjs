@@ -105,9 +105,11 @@ export default {
     const tv = await b.js(`return document.getElementById('ocr-vocab').value;`);
     const pairs = tv.split('\n').filter(Boolean);
     const expected = { Produce: 'Fresh fruits and vegetables', Constellations: 'A group of stars in the night sky that make up a picture or a pattern', Distracted: 'To prevent something from continuing as usual', Trustworthy: 'The ability to keep promises' };
+    check('table mode does not claim "No words were found"', !(await b.js(`return /No words were found/.test(document.getElementById('app').innerText);`)));
     check('table mode reads all 12 cards, each word with its own definition', pairs.length === 12 && Object.entries(expected).every(([w, d]) => tv.includes(`${w} – ${d}`)), tv.slice(0, 400));
     await b.click('.commit-btn'); await b.wait(800); await b.settle();
     const w3d = await b.js(`return await WW.store.getWeek(${JSON.stringify(w3)});`);
+    check('the raw reader text of a table page is kept for the audit trail', w3d.sources.some((sx) => sx.kind === 'photo' && /Constellations/.test(sx.ocrText)));
     check('card words arrive as unchecked drafts with a "check each card" warning', w3d.vocab.length === 12 && w3d.vocab.every((v) => !v.reviewed && v.importedFlags.some((f) => /table of word cards/.test(f))));
     const refused = await b.js(`try { await WW.store.approveWeek(${JSON.stringify(w3)}); return 'approved'; } catch (e) { return (e.blockers || []).length; }`);
     check('approval stays blocked until the parent checks every imported card', typeof refused === 'number' && refused >= 12, refused);

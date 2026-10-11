@@ -25,7 +25,7 @@ window.__extract = async function (files, target, cornersList = [], gridList = [
   const pages = []; const confs = []; const t0 = performance.now();
   for (const [i, f] of files.entries()) {
     const canvas = toCanvas(await decode(f), 2200);
-    const res = cornersList[i] ? await ocr.readTable(canvas, cornersList[i], gridList[i] || {}) : await ocr.readPage(canvas);
+    const res = cornersList[i] ? await ocr.readTable(canvas, cornersList[i], gridList[i] || {}) : await ocr.readPage(canvas, { target });
     pages.push(res); confs.push(res.confidence);
   }
   const lines = pages.flatMap((p) => p.lines);

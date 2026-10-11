@@ -32,6 +32,7 @@ function checkSpellingItem(s, where, err) {
   for (const k of ['word', 'originalTranscription', 'sentence']) if (!isStr(s[k])) bad.push(k);
   if (!strOrNull(s.sentenceSource)) bad.push('sentenceSource');
   if (!isArr(s.ackKeys)) bad.push('ackKeys');
+  if (s.importedFlags != null && !isArr(s.importedFlags)) bad.push('importedFlags');
   if (typeof s.reviewed !== 'boolean') bad.push('reviewed');
   if (s.groups != null && !(isObj(s.groups) && isObj(s.groups.spelling))) bad.push('groups');
   if (bad.length) err(`${where}: spelling word "${isStr(s.word) ? s.word : '?'}" is missing or has bad fields (${bad.join(', ')}).`);

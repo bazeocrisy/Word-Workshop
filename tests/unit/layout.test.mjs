@@ -99,3 +99,18 @@ test('voting never gives one word to two numbers', async () => {
   const v = voteNumbered([a, b]);
   assert.deepEqual(v.items.map((i) => [i.number, i.word]), [[2, 'blasted']]);
 });
+
+test('M8 review: a word found by only one of several readings is flagged; "5." beats "5 minutes"', async () => {
+  const { voteNumbered, extractNumberedList } = await import('../../js/layout.js');
+  const base = { items: [{ number: 1, word: 'crawl', conf: 90, notes: [] }, { number: 2, word: 'yawn', conf: 90, notes: [] }], notes: [] };
+  const alt = { items: [{ number: 1, word: 'crawl', conf: 90, notes: [] }, { number: 3, word: 'HOMEWORK', conf: 88, notes: [] }], notes: [] };
+  const v = voteNumbered([base, alt, null]);
+  const hw = v.items.find((i) => i.number === 3);
+  assert.ok(hw.conf <= 60 && hw.notes.some((n) => /Only some readings/.test(n)), 'single-reading item is capped and flagged');
+  assert.ok(!v.items.find((i) => i.number === 1).notes.length, 'agreed item has no note');
+  const lines = [
+    line(seg('1. rushed', 500, 600)), line(seg('2. blasted', 500, 600)), line(seg('3. washed', 500, 600)), line(seg('4. winked', 500, 600)),
+    line(seg('5 minutes', 50, 200), seg('5. opened', 500, 600)),
+  ];
+  assert.equal(extractNumberedList(lines).items.find((i) => i.number === 5).word, 'opened');
+});

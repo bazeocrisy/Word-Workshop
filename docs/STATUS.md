@@ -100,11 +100,12 @@ See docs/ACCEPTANCE-REPORT.md. Original photos not available (BLOCKED). Testing 
 
 ## Real-photo OCR results (2026-10-11)
 The owner supplied the two original photos (kept in git-ignored local-fixtures/, never committed). `npm run test:ocr` against sample-data:
-- **Spelling newsletter:** 14/15 words exact, in order, no wrong words (before: 9/15). Missing "opened" (#5), reported to the parent as a missing number.
+- **Spelling newsletter:** 14/15 words exact, in order (before: 9/15). #5 "opened" came out as "opene" and is flagged; all 8 words that not every reading agreed on carry warnings into the editor.
 - **Vocabulary table:** photo as taken 3/12 words, 0/12 exact definitions, 0/12 pairs. With the new table mode (parent marks the table corners and enters 4 × 3): best 9/12 words, 4/12 exact definitions (33%), 7/12 correct pairs (58%), character accuracy 92%; careful corner placement gave 5/12. Unreliable: limited by the photo's resolution (1152 × 1536, apparently downscaled), curl and pale-on-green text.
 - Fixes made: tolerant list numbering (missing period, misread number → position), multi-reading vote for incomplete numbered lists, table mode (corner tool with keyboard support, perspective correction, grid inference, per-card reading with voting), default page mode restored after extra readings, unreadable-card placeholder.
 - Parent review is unchanged: every imported item is an unchecked draft; card rows carry a "check against the photo" warning; approval is blocked until all are checked; corrections are logged with the reader's original text (browser-tested).
-- Totals: 60 unit tests, 173 browser checks (Chrome and Edge).
+- Independent review (2026-10-11): no Critical; 3 Major fixed — (1) single-reading/position-guessed spelling words and missing-period numbers are now flagged (confidence capped), "5." beats "5 minutes", and these notes reach the week editor as spelling warnings; words found only by extra readings are recorded as photo-read with confidence; (2) table mode no longer shows a false "No words were found" alert and keeps the raw card text for the audit trail; (3) enlarged images capped at 12 MP for iPhone/iPad. Minor fixed: extra readings skipped for vocabulary-only pages and shown with progress; reading mode restored in finally blocks; corner tool focus (opens on the first handle, returns to the page button), see-through handles; stale OCR doc lines.
+- Totals: 61 unit tests, 175 browser checks (Chrome and Edge).
 - Unresolved: vocabulary photo extraction needs a better source (full-resolution photo or phone text recognition) or an owner-approved online reader.
 
 ## Known limitations / decisions log

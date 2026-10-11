@@ -64,12 +64,12 @@ export function newVocabItem({ word = '', definition = '', origin = 'typed', ocr
   };
 }
 
-export function newSpellingItem({ word = '', origin = 'typed', ocrConfidence = null, sentence = '', sentenceSource = null } = {}) {
+export function newSpellingItem({ word = '', origin = 'typed', ocrConfidence = null, sentence = '', sentenceSource = null, importedFlags = [] } = {}) {
   return {
     id: uid('s'), word: String(word ?? '').trim(), originalTranscription: String(word ?? ''),
     sentence: String(sentence ?? ''), sentenceSource: sentence ? (sentenceSource || 'parent') : null,
     groups: null,                      // { spelling: {key,label,reason}, sound: {key,label,reason}|null, source: 'auto'|'parent' }
-    ackKeys: [], reviewed: false, origin, ocrConfidence,
+    importedFlags: importedFlags.map(String), ackKeys: [], reviewed: false, origin, ocrConfidence,
   };
 }
 
@@ -158,6 +158,7 @@ export function spellingFlags(item, week) {
   if (!item.word.trim()) add('missing-word', 'warning', 'The word is missing.');
   else if (!/^[\p{L}][\p{L}'’-]*( [\p{L}'’-]+)*$/u.test(item.word.trim())) add('not-a-word', 'warning', 'Contains numbers or symbols. Check the spelling against the list.');
   if (unsuitableText(item.word, item.sentence)) add('unsuitable', 'warning', 'This contains a word that is not suitable for children. If it came from a photo, it is probably a misreading: compare it with the list.', S);
+  for (const f of item.importedFlags || []) add('imported:' + compareKey(f).slice(0, 40), 'warning', f);
   if (item.ocrConfidence != null && item.ocrConfidence < LOW_CONFIDENCE) add('ocr-low-confidence', 'warning', `The photo reader was unsure (${Math.round(item.ocrConfidence)}% confident). Compare with the photo.`);
   const others = (week?.spelling || []).filter((x) => x.id !== item.id);
   if (item.word.trim() && others.some((x) => compareKey(x.word) === compareKey(item.word))) add('duplicate-word', 'warning', 'This word appears more than once.');
