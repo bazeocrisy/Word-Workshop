@@ -37,7 +37,7 @@ export default {
     check('pages are read on the device and shown for checking', /Check the text against the photo/.test(t), t.slice(0, 300));
     const shown = await b.js(`return { photos: document.querySelectorAll('.ocr-photo img').length, sp: document.getElementById('ocr-spelling').value, vo: document.getElementById('ocr-vocab').value, preview: document.querySelector('.paste-preview').innerText };`);
     check('each source photo is displayed beside the extracted text', shown.photos === 2);
-    check('headings and notes are separated from the words (Reminders not imported)', !/Picture day/.test(shown.sp + shown.vo) && /Left out/.test(shown.preview), shown.preview);
+    check('headings and notes are separated from the words (Reminders not imported)', !/Picture day|Reminders|Weekly News|Name:/.test(shown.sp + shown.vo), { sp: shown.sp, vo: shown.vo.slice(0, 200) });
     check('preview finds 15 spelling and 12 vocabulary words', /15 spelling words/.test(shown.preview) && /12 vocabulary words/.test(shown.preview), shown.preview);
 
     // Parent fixes a line before adding (correction workflow), then adds as drafts.

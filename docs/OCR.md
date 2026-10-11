@@ -36,6 +36,17 @@ Before automatic straightening was added (Milestone 5 review), accuracy fell sha
 
 Speed: 1.5–4.5 s per page on a desktop in headless Chrome. Phones are slower (expect roughly 5–20 s per page). First use downloads the reader.
 
+### Real teacher documents of other weeks (supplementary, 2026-10-11)
+The two original photographs behind `sample-data/` (week of Oct 12–16) were not found on the build computer, so that measurement is still **blocked**. Two of the teacher's real newsletters for other weeks were found in the parent's files and used as supplementary evidence. Neither is a camera photo: one is a clean digital rendering (Sept 28–Oct 2, two pages: newsletter + vocabulary page), the other a colourised redraw saved from ChatGPT (Sept 21–25). Ground truth was transcribed by eye. They stay in `local-fixtures/` (git-ignored) with `*.truth.json` files; `npm run test:ocr` scores them.
+
+| Document | Before layout fix | After layout fix |
+|---|---|---|
+| Sept 28 newsletter: 15 spelling words | 1/15 | **15/15, teacher order 100%** (#7's number unreadable → placed as 7 and flagged; #15 read twice → flagged) |
+| Sept 28 vocabulary page: 7 quiz words in a grid of cards | 2/7 words, 0% pairing | **7/7 words, 100% pairing, 6/7 definitions exact** ("pleasant" read as "blaasant", flagged as unsure) |
+| Sept 21 newsletter (redraw, thin coloured fonts): 15 spelling words | 2/15 | **7/15, 0 wrong words**; the 8 missing numbers are listed for the parent |
+
+The layout fix (Oct 11): a numbered list is found anywhere on the page even when the spelling box shares lines with a neighbouring box; a "1." read apart from its word is re-joined; vocabulary card grids are paired by column position; headings and notes no longer reach the review boxes; the "unsure" list only names words that are in the boxes.
+
 ## Known limits
 - Handwriting is not supported reliably.
 - Tilts up to about 7° are straightened automatically on synthetic pages; beyond about 8°, curled pages, dark or blurry photos lose accuracy. Hold the phone flat above the page and retake if many words are wrong.

@@ -6,6 +6,7 @@ import { newVocabItem, newSpellingItem, weekLabel, nowIso, similarity, compareKe
 import { suggestGroups } from '../spelling.js';
 import { parseVocabLines, parseSpellingLines, splitSections, splitPair, isHeading, stripMarker } from '../parse.js';
 import { decode, toCanvas, canvasToBlob, checkFile, ImageError } from '../images.js';
+import { extractNumberedList, pairCardGrid, vocabStart } from '../layout.js';
 import { go } from '../router.js';
 
 const MAX_PAGES = 6;
@@ -30,6 +31,53 @@ export function classifyLines(lines, target) {
   const paired = body.filter((l) => splitPair(stripMarker(l.text).text)).length;
   const vocab = body.length && paired / body.length >= 0.4;
   return vocab ? { spelling: [], vocab: lines, note: 'This looks like a vocabulary sheet.' } : { spelling: lines, vocab: [], note: 'This looks like a spelling list.' };
+}
+
+/**
+ * Turn the reader's lines (per page) into the starting text for the two review boxes.
+ * 1. A numbered word list anywhere on the pages ("1. rings  9. boxes") is the spelling list, even when the
+ *    spelling box sits beside another box on the same lines.
+ * 2. After a "Vocabulary" heading, a grid of word cards is paired by column; otherwise lines are parsed as a list.
+ * 3. If neither is found, fall back to headings / "word – definition" detection (classifyLines).
+ * Returns { spText, voText, conf: Map(line → confidence), notes: [], rowNotes: Map(word key → notes) }.
+ */
+export function extractPages(pages, target) {
+  const all = pages.flatMap((p) => p.lines);
+  const conf = new Map();
+  const notes = [];
+  const rowNotes = new Map();
+  let spText = null, voText = null;
+  if (target !== 'vocab') {
+    const list = extractNumberedList(all);
+    if (list) {
+      const lines = list.items.map((it) => { const t = `${it.number}. ${it.word}`; conf.set(t, it.conf); return t; });
+      spText = lines.join('\n');
+      notes.push(...list.notes);
+      list.items.filter((it) => it.notes.length).forEach((it) => notes.push(`${it.word}: ${it.notes.join(' ')}`));
+    }
+  }
+  if (target !== 'spelling') {
+    const rows = [];
+    let headingFound = false;
+    for (const p of pages) {
+      const start = vocabStart(p.lines);
+      if (start < 0 && target !== 'vocab') continue;
+      headingFound = true;
+      const region = p.lines.slice(start + 1);
+      const grid = pairCardGrid(region);
+      if (grid) rows.push(...grid);
+      else rows.push(...parseVocabLines(region).rows);
+    }
+    if (rows.length) {
+      voText = rows.map((r) => { const t = `${r.word} – ${r.definition}`; conf.set(t, r.conf ?? null); if (r.notes?.length) rowNotes.set(compareKey(r.word), r.notes); return t; }).join('\n');
+    } else if (headingFound) notes.push('A "Vocabulary" heading was found, but no words under it could be read. Type or paste them.');
+  }
+  if (spText == null && voText == null) {
+    const cls = classifyLines(all, target);
+    for (const l of all) conf.set(l.text.trim(), l.conf);
+    return { spText: cls.spelling.map((l) => l.text).join('\n'), voText: cls.vocab.map((l) => l.text).join('\n'), conf, notes: cls.note ? [cls.note] : [], rowNotes };
+  }
+  return { spText: spText || '', voText: voText || '', conf, notes, rowNotes };
 }
 
 class Importer {
@@ -144,14 +192,17 @@ class Importer {
   // ── Step 3: check the text beside each photo, then add as drafts ──
   reviewStep() {
     const allLines = this.results.flatMap((r) => r.lines);
-    this.confMap = new Map(allLines.map((l) => [l.text.trim(), l.conf]));
+    const ex = extractPages(this.results, this.target);
+    this.confMap = ex.conf;
+    this.rowNotes = ex.rowNotes;
     const totalWords = allLines.reduce((n, l) => n + l.text.split(/\s+/).filter(Boolean).length, 0);
-    const cls = classifyLines(allLines, this.target);
     // What the reader actually read, before any edits on this screen (kept as the original transcription).
-    this.readRows = { vo: parseVocabLines(cls.vocab).rows, words: allLines.flatMap((l) => l.words || []) };
-    const unsure = allLines.flatMap((l) => l.unsure || []);
-    const spText = h('textarea', { rows: 10, id: 'ocr-spelling', class: 'ocr-text' }, cls.spelling.map((l) => l.text).join('\n'));
-    const voText = h('textarea', { rows: 12, id: 'ocr-vocab', class: 'ocr-text' }, cls.vocab.map((l) => l.text).join('\n'));
+    this.readRows = { vo: parseVocabLines(this.linesOf(ex.voText)).rows, words: allLines.flatMap((l) => l.words || []) };
+    // Only words that made it into the boxes matter to the parent (not headings or notes that were left out).
+    const inBoxes = new Set(`${ex.spText} ${ex.voText}`.toLowerCase().split(/[^\p{L}'’]+/u).filter(Boolean));
+    const unsure = allLines.flatMap((l) => l.unsure || []).filter((u) => inBoxes.has(u.text.toLowerCase().replace(/[^\p{L}'’]+/gu, '')));
+    const spText = h('textarea', { rows: 10, id: 'ocr-spelling', class: 'ocr-text' }, ex.spText);
+    const voText = h('textarea', { rows: 12, id: 'ocr-vocab', class: 'ocr-text' }, ex.voText);
     const replace = h('input', { type: 'checkbox' });
     const preview = h('div', { class: 'paste-preview', 'aria-live': 'polite' });
     const update = () => {
@@ -176,7 +227,7 @@ class Importer {
         h('div', { class: 'row' }, btn('Try other photos', () => { this.pages = []; this.choose(); }, 'btn-primary'), link('Type or paste instead', `#/parent/week/${this.w.id}`, 'btn btn-ghost'))) : null,
       h('div', { class: 'card notice notice-warn' },
         h('p', null, h('strong', null, 'Check the text against the photo. '), 'The photo reader makes mistakes, especially with shadows, slanted photos and handwriting. Fix anything here, or later in the week editor. Nothing is shown to students until you approve the week.'),
-        cls.note ? h('p', null, cls.note) : null,
+        ex.notes.length ? h('ul', { class: 'import-notes' }, ex.notes.map((n) => h('li', null, n))) : null,
         unsure.length ? h('p', null, h('strong', null, 'The reader was unsure about: '), unsure.slice(0, 30).map((u) => `"${u.text}" (${u.conf}%)`).join(', ')) : null),
       h('div', { class: 'ocr-layout' },
         h('div', { class: 'ocr-photos' }, photos),
@@ -235,7 +286,7 @@ class Importer {
       if (match < 0) return newVocabItem({ word: x.word, definition: x.definition, origin: 'typed', importedFlags: x.notes });
       used.add(match);
       const read = rows[match];
-      const it = newVocabItem({ word: x.word, definition: read.definition, origin: 'ocr', ocrConfidence: read.conf, importedFlags: x.notes });
+      const it = newVocabItem({ word: x.word, definition: read.definition, origin: 'ocr', ocrConfidence: read.conf, importedFlags: [...new Set([...(this.rowNotes?.get(compareKey(read.word)) || []), ...x.notes])] });
       if (x.definition !== read.definition) {
         it.sourceDefinition = x.definition;
         it.definitionLog.push({ field: 'sourceDefinition', from: read.definition, to: x.definition, at, reason: 'Corrected on the photo review screen' });

@@ -95,18 +95,26 @@ export function linesFromResult(data, pageWidth) {
     const charW = words.reduce((n, x) => n + (x.bbox.x1 - x.bbox.x0) / Math.max(1, x.text.length), 0) / words.length;
     const gapLimit = Math.max(charW * 3.2, pageWidth * 0.035);
     let text = words[0].text;
+    // Segments: runs of words separated by wide gaps, with their horizontal position (for column layouts).
+    const segs = [{ words: [words[0]] }];
     for (let i = 1; i < words.length; i++) {
       const gap = words[i].bbox.x0 - words[i - 1].bbox.x1;
       text += (gap > gapLimit ? '\t' : ' ') + words[i].text;
+      if (gap > gapLimit) segs.push({ words: [words[i]] }); else segs[segs.length - 1].words.push(words[i]);
     }
     text = cleanEdges(text);
     if (!text) continue;
+    const segments = segs.map((sg) => ({
+      text: sg.words.map((x) => x.text).join(' ').trim(),
+      x0: Math.min(...sg.words.map((x) => x.bbox.x0)), x1: Math.max(...sg.words.map((x) => x.bbox.x1)),
+      conf: Math.round(Math.min(...sg.words.map((x) => x.confidence))),
+    })).filter((sg) => !isJunk(sg.text) && !isShortNoise(sg.text));
     const unsure = words.filter((x) => x.confidence < 75 && text.includes(x.text) && !isJunk(x.text)).map((x) => ({ text: x.text, conf: Math.round(x.confidence) }));
     // A line is only as trustworthy as its least certain real word, so one misread letter still gets flagged.
     const wordConfs = words.filter((x) => !isJunk(x.text)).map((x) => x.confidence);
     const conf = Math.round(Math.min(line.confidence, ...(wordConfs.length ? wordConfs : [line.confidence])));
     const kept = words.filter((x) => !isJunk(x.text) && text.includes(x.text)).map((x) => ({ text: x.text, conf: Math.round(x.confidence) }));
-    out.push({ text, conf, unsure, words: kept, bbox: line.bbox });
+    out.push({ text, conf, unsure, words: kept, segments, bbox: line.bbox });
   }
   return out;
 }
@@ -124,7 +132,8 @@ export function cleanEdges(text) {
   return /^[^\p{L}]*$/u.test(out) ? '' : out; // nothing but numbers/marks left
 }
 
-const isShortNoise = (s) => s.replace(/\s/g, '').length <= 3 && !/^\d{1,2}[.)]\s*\p{L}/u.test(s);
+// (A bare list number such as "1." is kept: the word may be the next piece of the line.)
+const isShortNoise = (s) => s.replace(/\s/g, '').length <= 3 && !/^\d{1,2}[.)]\s*\p{L}/u.test(s) && !/^\d{1,2}[.)]$/.test(s.trim());
 
 /** Estimate how far the page is tilted (degrees), from the angle that lines up the dark pixels into the sharpest rows. */
 export function estimateSkew(canvas) {

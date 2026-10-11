@@ -20,13 +20,15 @@ const PIPELINE = `
 window.__extract = async function (files, target) {
   const { decode, toCanvas } = await import('./js/images.js');
   const ocr = await import('./js/ocr.js');
-  const { classifyLines } = await import('./js/views/importView.js');
+  const { extractPages } = await import('./js/views/importView.js');
   const { parseSpellingLines, parseVocabLines } = await import('./js/parse.js');
-  const lines = []; const confs = []; const t0 = performance.now();
-  for (const f of files) { const res = await ocr.readPage(toCanvas(await decode(f), 2200)); lines.push(...res.lines); confs.push(res.confidence); }
-  const cls = classifyLines(lines, target);
+  const pages = []; const confs = []; const t0 = performance.now();
+  for (const f of files) { const res = await ocr.readPage(toCanvas(await decode(f), 2200)); pages.push(res); confs.push(res.confidence); }
+  const lines = pages.flatMap((p) => p.lines);
+  const ex = extractPages(pages, target);
+  const toL = (t) => t.split(String.fromCharCode(10)).map((x) => ({ text: x, conf: ex.conf.get(x.trim()) ?? null }));
   return { ms: Math.round(performance.now() - t0), confidence: confs, rawLines: lines.map((l) => l.text),
-    spelling: parseSpellingLines(cls.spelling).words.map((w) => w.word), vocab: parseVocabLines(cls.vocab).rows.map((r) => ({ word: r.word, definition: r.definition, notes: r.notes })) };
+    notes: ex.notes, spelling: parseSpellingLines(toL(ex.spText)).words.map((w) => w.word), vocab: parseVocabLines(toL(ex.voText)).rows.map((r) => ({ word: r.word, definition: r.definition, notes: r.notes })) };
 };`;
 
 function report(label, kind, out) {
@@ -69,6 +71,33 @@ try {
       summary.real[kind] = report(`REAL PHOTOS — ${kind} (${mine.join(', ')})`, kind, out);
       if (process.env.VERBOSE) console.log(out.rawLines.join('\n'));
     }
+  }
+
+  // Any local-fixtures/<name>.truth.json: { label, files: [...], spelling: [...], vocab: [{word, definition}] }
+  // scores those images against that transcription (used for real documents of other weeks).
+  const truths = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith('.truth.json')) : [];
+  summary.truthFiles = {};
+  for (const tf of truths) {
+    const truth = JSON.parse(fs.readFileSync(path.join(dir, tf), 'utf8'));
+    const payload = truth.files.map((f) => ({ name: f, type: /png$/i.test(f) ? 'image/png' : 'image/jpeg', b64: fs.readFileSync(path.join(dir, f)).toString('base64') }));
+    const out = await b.js(`const files = ${JSON.stringify(payload)}.map((p) => new File([Uint8Array.from(atob(p.b64), (c) => c.charCodeAt(0))], p.name, { type: p.type }));
+      return await window.__extract(files, 'auto');`);
+    console.log(`\n=== ${truth.label} ===`);
+    console.log(`time ${out.ms} ms · reader confidence ${out.confidence.join(', ')}%`);
+    const sm = spellingMetrics(truth.spelling, out.spelling);
+    if (truth.spelling.length) {
+      console.log(`spelling words: ${sm.exactWords}/${sm.expected} exact (recall ${pct(sm.wordRecall)}, precision ${pct(sm.wordPrecision)}), order ${pct(sm.orderAccuracy)}`);
+      if (sm.missing.length) console.log('  missing:', sm.missing.join(', '));
+      if (sm.extra.length) console.log('  extra (non-words imported as spelling):', sm.extra.join(' | '));
+    }
+    let vm = null;
+    if (truth.vocab.length) {
+      vm = vocabMetrics(truth.vocab, out.vocab);
+      console.log(`vocabulary words: ${vm.wordsFound}/${vm.expected}; definitions exact ${pct(vm.definitionExact)}, character accuracy ${pct(vm.definitionCharAccuracy)}; pairing ${pct(vm.pairingAccuracy)}; extra rows ${vm.extraRows.length}`);
+      for (const p of vm.problems) console.log('  ' + p);
+    }
+    if (process.env.VERBOSE) { console.log('--- raw reader lines ---\n' + out.rawLines.join('\n')); console.log('--- vocab rows ---\n' + out.vocab.map((r) => r.word + ' :: ' + r.definition).join('\n')); }
+    summary.truthFiles[truth.label] = { spelling: sm, vocab: vm };
   }
 
   // Synthetic pages (pipeline check only)

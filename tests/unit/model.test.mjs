@@ -190,3 +190,13 @@ test('integrity: a logged transcription correction is accepted', async () => {
   it.definitionLog.push({ field: 'sourceDefinition', from: 'Fresh fruits and vegetables', to: 'Fresh fruits and vegetables.', at: 'x' });
   assert.equal(itemIntegrityErrors(w).length, 0);
 });
+
+test('a misread rude word in imported text raises a warning', async () => {
+  const { vocabFlags, newVocabItem, newWeek } = await import('../../js/model.js');
+  const w = newWeek({ studentId: 's', startDate: '2026-10-12' });
+  const bad = newVocabItem({ word: 'Fortunate', definition: 'favored by or involving good fuck or fortune', origin: 'ocr' });
+  const good = newVocabItem({ word: 'Class', definition: 'A group of students who learn together', origin: 'ocr' });
+  w.vocab = [bad, good];
+  assert.ok(vocabFlags(bad, w).some((f) => f.code === 'unsuitable' && f.level === 'warning'));
+  assert.ok(!vocabFlags(good, w).some((f) => f.code === 'unsuitable'), '"class" contains "ass" but is not a whole-word match');
+});

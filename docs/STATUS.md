@@ -95,6 +95,9 @@ No Critical findings. Major fixed: (1) text corrected on the photo review screen
 - Independent recheck of the Milestone 5–6 Major fixes: all three confirmed fixed, no new Critical/Major. Its two Minor notes were then fixed: rows typed fresh on the photo review screen are no longer mistaken for corrections of similar reader words (one-to-one, stricter matching), and a mostly numbered list keeps the teacher's order with unnumbered extras at the end.
 - Totals: 51 unit tests, 167 browser checks, OCR evaluation (synthetic only; real photos blocked).
 
+## Acceptance review (2026-10-11)
+See docs/ACCEPTANCE-REPORT.md. Original photos not available (BLOCKED). Testing on the teacher's real newsletters exposed a layout defect (1/15 spelling, 0% vocabulary pairing); fixed with layout-aware extraction (js/layout.js) → 15/15 and 7/7 with 100% pairing on the clean Sept 28 newsletter, 7/15 with no wrong words on the Sept 21 redraw. Added an unsuitable-word warning for imported text. Sunday workflow measured with tests/walkthrough.mjs. Sentences and pictures for new words are manual (options in the report). Real speech verified to start/finish on Windows Chrome and Edge; mobile devices unverified. Totals: 57 unit tests, 167 browser checks (Chrome and Edge).
+
 ## Known limitations / decisions log
 - Data lives in one browser on one device; no sync (by design, documented in the UI).
 - Demo names only in code; the pre-existing `docs/REQUIREMENTS.md` and `sample-data/*.json` (planning files, already on `main`) still contain the children's first names, and git history keeps earlier versions. Owner decision.

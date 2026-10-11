@@ -105,6 +105,13 @@ function stemOf(word) {
   return w.length <= 5 ? w : w.slice(0, Math.max(5, Math.ceil(w.length * 0.6)));
 }
 
+/**
+ * Photo reading can turn an innocent word into a rude one (e.g. "luck" misread). Imported text containing any of
+ * these whole words raises a warning so it is never approved without a look. Not a content filter for typed text.
+ */
+const UNSUITABLE = /\b(fuck\w*|shit\w*|bitch\w*|cunt\w*|dick|dicks|cock|cocks|pussy|whore\w*|slut\w*|bastard\w*|ass|asshole\w*|damn\w*|crap)\b/i;
+export function unsuitableText(...texts) { return texts.some((t) => UNSUITABLE.test(String(t || ''))); }
+
 /** Does the definition contain a recognisable part of the word (so it would give the answer away)? */
 export function definitionHintsWord(word, definition) {
   const w = String(word || '').trim();
@@ -129,6 +136,7 @@ export function vocabFlags(item, week) {
   const W = compareKey(item.word), D = W + '|' + compareKey(def), S = W + '|' + compareKey(item.sentence);
   const add = (code, level, message, fp = D) => flags.push({ code, level, message, key: `${code}|${fp}`, acknowledged: false });
   if (!item.word.trim()) add('missing-word', 'warning', 'The word is missing.');
+  if (unsuitableText(item.word, def, item.sentence)) add('unsuitable', 'warning', 'This contains a word that is not suitable for children. If it came from a photo, it is probably a misreading: compare it with the sheet.', W + '|' + compareKey(def) + '|' + compareKey(item.sentence));
   if (!String(def).trim()) add('missing-definition', 'warning', 'The definition is missing.');
   for (const f of item.importedFlags || []) add('imported:' + compareKey(f).slice(0, 40), 'warning', f);
   if (item.ocrConfidence != null && item.ocrConfidence < LOW_CONFIDENCE) add('ocr-low-confidence', 'warning', `The photo reader was unsure (${Math.round(item.ocrConfidence)}% confident). Compare with the photo.`);
@@ -149,6 +157,7 @@ export function spellingFlags(item, week) {
   const add = (code, level, message, fp = W) => flags.push({ code, level, message, key: `${code}|${fp}`, acknowledged: false });
   if (!item.word.trim()) add('missing-word', 'warning', 'The word is missing.');
   else if (!/^[\p{L}][\p{L}'’-]*( [\p{L}'’-]+)*$/u.test(item.word.trim())) add('not-a-word', 'warning', 'Contains numbers or symbols. Check the spelling against the list.');
+  if (unsuitableText(item.word, item.sentence)) add('unsuitable', 'warning', 'This contains a word that is not suitable for children. If it came from a photo, it is probably a misreading: compare it with the list.', S);
   if (item.ocrConfidence != null && item.ocrConfidence < LOW_CONFIDENCE) add('ocr-low-confidence', 'warning', `The photo reader was unsure (${Math.round(item.ocrConfidence)}% confident). Compare with the photo.`);
   const others = (week?.spelling || []).filter((x) => x.id !== item.id);
   if (item.word.trim() && others.some((x) => compareKey(x.word) === compareKey(item.word))) add('duplicate-word', 'warning', 'This word appears more than once.');
