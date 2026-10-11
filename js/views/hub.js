@@ -75,11 +75,12 @@ async function subjectHub({ params, query }, subject) {
   const tiles = subject === 'vocab' ? [
     tile('Study cards', `${base}/vocab/study`, '📖', 'Look, listen and learn'),
     tile('Choose the meaning', `${base}/vocab/practice?type=def-mc`, '🎯', 'Pick the right meaning'),
-    tile('Fill in the blank', `${base}/vocab/practice?type=blank`, '✏️', 'Finish the sentence'),
+    // Fill in the blank needs example sentences (worksheets often have none): offer Choose the word instead.
+    words.some((w) => w.sentence) ? tile('Fill in the blank', `${base}/vocab/practice?type=blank`, '✏️', 'Finish the sentence') : tile('Choose the word', `${base}/vocab/practice?type=word-mc`, '✏️', 'Read the meaning, pick the word'),
     tile('Matching', `${base}/vocab/practice?type=match`, '🧩', 'Match words and meanings'),
     tile('Crossword', `${base}/vocab/crossword`, '🔠', 'Solve the puzzle'),
     missed.length ? tile('Practice missed words', `${base}/vocab/practice?type=mixed&only=${missed.join(',')}`, '🔁', `${missed.length} word${missed.length === 1 ? '' : 's'} to practise`, 'tile-missed') : null,
-    tile('Test', `${base}/vocab/test`, '📝', 'Show what you know', 'tile-test'),
+    tile('Test', `${base}/vocab/test?type=mixed`, '📝', 'Show what you know', 'tile-test'),
   ] : [
     tile('Study cards', `${base}/spell/study`, '📖', 'See and hear each word'),
     tile('Listen and spell', `${base}/spell/practice`, '🎧', 'Type the word you hear'),

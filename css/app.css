@@ -577,6 +577,15 @@ details[open] > summary::before { content: "▾"; }
   .ws-row .ws-num { margin-top: .4rem; }
 }
 
+/* The same card layout whenever the word list itself is narrow (e.g. beside the photo panel on a laptop) */
+.ws-check-main { container: wsmain / inline-size; min-width: 0; }
+@container wsmain (max-width: 699px) {
+  .ws-cols { display: none; }
+  .ws-table-vocab .ws-row, .ws-table-spelling .ws-row { grid-template-columns: 2rem minmax(0, 1fr) 2.75rem; }
+  .ws-table-vocab .ws-row .ws-def, .ws-row .ws-status, .ws-row .ws-extra, .ws-row .ws-orig, .ws-row .ws-own { grid-column: 2 / -1; }
+  .ws-row .ws-menu { grid-column: 3; grid-row: 1; }
+}
+
 /* Finish */
 .ws-finish { display: grid; gap: 0 1rem; grid-template-columns: 1fr; align-items: start; }
 @media (min-width: 1000px) { .ws-finish { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); } }
@@ -710,7 +719,7 @@ details[open] > summary::before { content: "▾"; }
 .sf-q { border-top: 6px solid var(--area); }
 .sf-label { font-weight: 700; color: var(--muted); margin: .2rem 0 .3rem; display: block; }
 .sf-incorrect { font-size: clamp(1.25rem, 3.6vw, 1.6rem); line-height: 1.5; background: #fff7f7; border: 2px dashed #fca5a5; border-radius: 14px; padding: .8rem 1rem; margin: 0 0 1rem; overflow-wrap: anywhere; }
-.sf-answer { font-size: clamp(1.15rem, 3.4vw, 1.45rem); line-height: 1.5; min-height: 7.5rem; border-width: 3px; border-color: color-mix(in srgb, var(--area) 50%, #cfcae6); }
+.sf-answer { overflow: auto; resize: none; font-size: clamp(1.15rem, 3.4vw, 1.45rem); line-height: 1.5; min-height: 7.5rem; border-width: 3px; border-color: color-mix(in srgb, var(--area) 50%, #cfcae6); }
 .sf-answer:focus { border-color: var(--area); }
 .sf-actions .btn-big { min-width: min(100%, 260px); }
 .sf-hint-list { background: #fffbeb; border-radius: 12px; padding: .6rem 1rem .6rem 2rem; margin: .5rem 0; font-size: 1.05rem; }

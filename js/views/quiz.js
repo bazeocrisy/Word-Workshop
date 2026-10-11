@@ -30,15 +30,15 @@ async function vocabSession({ params, query }, mode) {
   const seed = draft ? draft.seed : newSeed();
   const { questions, skipped } = buildActivity(activity, snap.vocab, { seed, only });
   if (!questions.length) {
-    return themed(st, page({ title, back: `${base}/vocab/${mode}`, backLabel: 'Choose an activity' },
-      emptyState(`This activity is not available for these words. ${skipped.map((s) => s.reason)[0] || ''}`)));
+    return themed(st, page({ title, back: `#/s/${st.id}/vocab?w=${snap.weekId}`, backLabel: 'Vocabulary' },
+      emptyState('These words do not have example sentences, so this game cannot be played with them. Go back and pick another game!')));
   }
   const s = new Session({ st, snap, base, mode, activity, only, seed, questions, skipped, key, draft, title });
   return themed(st, s.render());
 }
 
 function picker(st, snap, base, mode, title) {
-  const acts = Object.entries(VOCAB_ACTIVITIES);
+  const acts = Object.entries(VOCAB_ACTIVITIES).filter(([k]) => k !== 'blank' || snap.vocab.some((w) => w.sentence));
   return page({ title, back: `#/s/${st.id}/vocab?w=${snap.weekId}`, backLabel: 'Vocabulary', cls: 'student',
     subtitle: mode === 'test' ? 'Tests are graded. You will see your answers after you finish.' : 'Practice shows you right away if you are correct.' },
   h('div', { class: 'tiles' }, acts.map(([k, a]) => h('a', { href: `${base}/vocab/${mode}?type=${k}`, class: 'tile' },

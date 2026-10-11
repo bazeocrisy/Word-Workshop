@@ -102,7 +102,12 @@ function sentenceCard(item, label = 'This sentence has mistakes:') {
 function answerBox(item, value, onInput, id = 'sf-answer') {
   // Spell-check and auto-correct are off: the red underline would give spelling answers away.
   const ta = h('textarea', { id, class: 'sf-answer', rows: 3, spellcheck: 'false', autocomplete: 'off', autocorrect: 'off', autocapitalize: 'off', 'data-gramm': 'false' }, value ?? item.incorrect);
-  ta.addEventListener('input', () => onInput(ta.value));
+  // The box grows with the sentence so long sentences never hide inside it on a phone.
+  const fit = () => { if (!ta.isConnected) return; ta.style.height = 'auto'; ta.style.height = `${ta.scrollHeight + 6}px`; };
+  ta.addEventListener('input', () => { onInput(ta.value); fit(); });
+  ta.addEventListener('focus', fit);
+  const kick = (n = 0) => (ta.isConnected ? fit() : n < 30 && requestAnimationFrame(() => kick(n + 1)));
+  kick();
   return ta;
 }
 
@@ -116,16 +121,19 @@ const counter = (i, n) => h('div', { class: 'sf-counter' }, h('p', null, `Senten
 /** Start (or continue) a session for this mode; returns the session object in state.current. */
 async function session(ctx, mode, query) {
   const { state } = ctx;
-  const misses = query.misses === '1' ? (state.engine.missed || []).filter((id) => ctx.byId.has(id)) : null;
+  // ?ids= names the exact sentences (a test's misses or this set's misses); otherwise use everything missed so far.
+  const misses = query.misses === '1' ? (query.ids ? query.ids.split(',') : (state.engine.missed || [])).filter((id) => ctx.byId.has(id)) : null;
   const skill = SKILLS[query.skill] ? query.skill : null;
   const fresh = query.new === '1';
   const cur = state.current;
   if (!fresh && cur && cur.mode === mode && cur.index < cur.ids.length && (!misses || cur.misses) && (!skill || cur.skill === skill)) return cur;
   const seed = `${ctx.st.id}:${mode}:${Date.now()}`;
   const ids = E.pickSession(ctx.items, state.engine, { mode, size: SIZE[mode], skill: skill || undefined, seed, onlyIds: misses && misses.length ? misses : undefined });
-  state.current = { mode, ids, index: 0, answers: {}, skill, misses: !!misses, seed, startedAt: new Date().toISOString() };
+  state.current = { mode, ids, index: 0, answers: {}, skill, misses: !!(misses && misses.length), seed, startedAt: new Date().toISOString() };
   state.engine = E.markSessionSeen(state.engine, ids);
   await ctx.save();
+  // Reloading the page now continues this set instead of starting another one.
+  if (fresh) { try { history.replaceState(null, '', location.hash.replace(/([?&])new=1(&|$)/, '$1').replace(/[?&]$/, '')); } catch { /* ignore */ } }
   return state.current;
 }
 
@@ -236,7 +244,7 @@ async function fixSession({ params, query }, mode) {
     const fixArea = h('div', { class: 'sf-fix-area' },
       h('label', { for: 'sf-answer', class: 'sf-label' }, 'Write the sentence the right way:'), ta,
       h('div', { class: 'row sf-actions' }, btn('✔ Check my sentence', check, 'btn-primary btn-big sf-check'), hintBtn,
-        btn('↺ Start over', () => { ta.value = item.incorrect; a.text = item.incorrect; persist(); ta.focus(); }, 'btn-ghost sf-start-over')),
+        btn('↺ Start over', () => { ta.value = item.incorrect; a.text = item.incorrect; persist(); ta.dispatchEvent(new Event('input')); ta.focus(); }, 'btn-ghost sf-start-over')),
       hintBox, feedback);
     drawHints(); hintBtn.disabled = a.hints >= 3; showResult();
     // Thinking Lab: first say what kind of mistake it is.
@@ -267,7 +275,7 @@ async function fixSession({ params, query }, mode) {
     fill(box, h('section', { class: 'card sf-summary' }, h('p', { class: 'sf-intro-icon', 'aria-hidden': 'true' }, '🌟'),
       h('h2', null, `You fixed ${firstRight} of ${s.ids.length} on your first try!`),
       h('div', { class: 'row' },
-        missedHere.length ? link(`Practice my misses (${missedHere.length})`, `${ctx.home}/practice?misses=1&new=1`, 'btn btn-primary btn-big') : null,
+        missedHere.length ? link(`Practice my misses (${missedHere.length})`, `${ctx.home}/practice?misses=1&new=1&ids=${missedHere.join(',')}`, 'btn btn-primary btn-big') : null,
         link(mode === 'lab' ? 'New Thinking Lab set' : 'New practice set', `${ctx.home}/${mode}?new=1`, 'btn btn-ghost btn-big sf-new'),
         link('Sentence Fix home', ctx.home, 'btn btn-ghost'))));
   };
@@ -348,7 +356,7 @@ export async function sfResult({ params }) {
       t.review ? h('p', null, `${t.review} sentence${t.review === 1 ? ' is' : 's are'} different from our answer, so the app did not count ${t.review === 1 ? 'it' : 'them'}. Ask a grown-up to check.`) : null,
       h('ul', { class: 'sf-skills' }, Object.entries(t.bySkill || {}).map(([k, v]) => h('li', null, h('span', null, SKILLS[k]?.name || k), progressBar(v.correct, v.total, `${SKILLS[k]?.name || k}: ${v.correct} of ${v.total}`), h('span', null, `${v.correct}/${v.total}`)))),
       h('div', { class: 'row' },
-        t.missedIds?.length ? link(`Practice my misses (${t.missedIds.length})`, `${ctx.home}/practice?misses=1&new=1`, 'btn btn-primary btn-big sf-practice-misses') : null,
+        t.missedIds?.length ? link(`Practice my misses (${t.missedIds.length})`, `${ctx.home}/practice?misses=1&new=1&ids=${t.missedIds.join(',')}`, 'btn btn-primary btn-big sf-practice-misses') : null,
         link('Take another test', `${ctx.home}/test?new=1`, 'btn btn-ghost btn-big'), link('Sentence Fix home', ctx.home, 'btn btn-ghost'))),
     h('section', { class: 'card', 'aria-labelledby': 'rev-h' }, h('h2', { id: 'rev-h' }, 'Look at your answers'),
       h('ol', { class: 'sf-review-list' }, t.answers.map((x) => {

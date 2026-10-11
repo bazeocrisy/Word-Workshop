@@ -36,7 +36,7 @@ export default {
     if (await b.js(`return !!document.querySelector('.dialog');`)) { await b.click('.dialog .btn-primary'); await b.wait(300); }
     await b.settle();
     t = await b.text();
-    check('after Start learning the Vocabulary page has the words and every activity', (await b.js('return location.hash;')) === `#/s/${alex}/vocab` && ['Study cards', 'Choose the meaning', 'Fill in the blank', 'Matching', 'Crossword', 'Test'].every((x) => t.includes(x)), t.slice(0, 500));
+    check('after Start learning the Vocabulary page has the words and every activity', (await b.js('return location.hash;')) === `#/s/${alex}/vocab` && ['Study cards', 'Choose the meaning', 'Choose the word', 'Matching', 'Crossword', 'Test'].every((x) => t.includes(x)), t.slice(0, 500));
     const snap = await b.js(`const w = (await WW.store.listApprovedWeeks(${JSON.stringify(alex)}))[0]; return w;`);
     check('the child\'s correction is kept exactly and the photo/typed original is logged', snap && snap.vocab.find((v) => v.word === 'Peculiar')?.definition === 'Strange or unusual!');
     await b.go(`#/s/${jordan}/vocab`);
@@ -169,6 +169,15 @@ export default {
     await b.js(`document.querySelector('.sf-reset summary').click(); return 1;`);
     await b.click('.sf-reset-btn'); await b.wait(150); await b.click('.dialog .btn-primary'); await b.wait(300);
     check('"Reset my practice" keeps the saved test results', (await b.js(`return (await WW.store.listSfTests(${JSON.stringify(alex)})).length;`)) === 1 && (await b.js(`return (await WW.store.getSfProgress(${JSON.stringify(alex)})).current;`)) === null);
+    // After a reset, the result's Practice my misses still uses exactly that test's missed sentences (QA M2).
+    await b.go(`#/s/${alex}/sentence-fix/results/${saved[0].id}`);
+    await b.click('.sf-practice-misses'); await b.settle();
+    { const cur = await b.js(`return (await WW.store.getSfProgress(${JSON.stringify(alex)})).current;`);
+      const missed = saved[0].missedIds || [];
+      check('after a reset, Practice my misses from a saved result gives exactly that test’s missed sentences', cur && cur.misses && cur.ids.length === Math.min(10, missed.length) && cur.ids.every((id) => missed.includes(id)) && /Practice my misses/.test(await b.text()), { cur: cur && cur.ids, missed });
+      await b.reload(); await b.js(`for (let i = 0; i < 100 && !window.WW?.ready; i++) await new Promise((r) => setTimeout(r, 50));`); await b.settle();
+      const again = await b.js(`return (await WW.store.getSfProgress(${JSON.stringify(alex)})).current;`);
+      check('reloading during a set continues the same set (no new set)', again && cur && again.seed === cur.seed, { a: again && again.seed, b: cur && cur.seed }); }
     check('Jordan has no Sentence Fix results (profiles are separate)', (await b.js(`return (await WW.store.listSfTests(${JSON.stringify(jordan)})).length;`)) === 0);
     // Persistence
     await b.reload(); await b.js(`for (let i = 0; i < 100 && !window.WW?.ready; i++) await new Promise((r) => setTimeout(r, 50));`);
