@@ -346,3 +346,6 @@ details > summary { cursor: pointer; min-height: 44px; display: flex; align-item
 .toast.show { transform: translate(-50%, 0); }
 .tiles { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
 .tile { padding: .8rem .75rem; }
+details > summary::before { content: "▸"; display: inline-block; width: 1.1rem; color: var(--primary); }
+details[open] > summary::before { content: "▾"; }
+.groups > summary::before { content: none; }

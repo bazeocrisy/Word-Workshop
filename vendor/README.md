@@ -1,6 +1,6 @@
 # Third-party files
 
-Kept in the repository (not loaded from a CDN) so the photo reader works offline after the first visit and photos never leave the device.
+Kept in the repository and served from this site (no third-party CDN), so photos never leave the device and no other website is contacted.
 
 | Folder | Package | Version | Licence | Source |
 |---|---|---|---|---|

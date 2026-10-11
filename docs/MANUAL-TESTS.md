@@ -14,7 +14,7 @@ Devices: ☐ iPhone (Safari) ☐ iPad (Safari) ☐ Android phone (Chrome) ☐ Wi
 - ☐ The reader downloads the first time (needs internet), then reads each page in under ~30 s.
 - ☐ Compare the text boxes with the photos. Note how many words/definitions were wrong: ____ / ____.
 - ☐ Add as drafts; the editor shows the source pages beside the words; low-confidence words are flagged.
-- ☐ Turn on airplane mode and import again: the reader still works (cached).
+- ☐ Import a second time: the reader starts faster than the first time (the browser keeps its copy). Note: the app needs an internet connection to open; it is not an offline app.
 - ☐ Also try "Paste or type a list" with text copied from the photo by the phone (Live Text). Which was more accurate? ____
 - ☐ For an exact accuracy number, copy the photos to `local-fixtures/` on the computer and run `npm run test:ocr`.
 

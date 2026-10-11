@@ -65,7 +65,7 @@ class Importer {
       h('section', { class: 'card' },
         h('h2', null, '2. Read the words'),
         this.readBtn = btn('Read the photos', () => this.readAll(), 'btn-primary btn-big read-btn', { disabled: !this.pages.length }),
-        h('p', { class: 'hint' }, 'The first time, the photo reader downloads about 7 MB. After that it works offline.')),
+        h('p', { class: 'hint' }, 'The first time, the photo reader downloads about 7 MB from this site. After that the browser keeps a copy, so it starts faster.')),
       h('details', { class: 'card tip' }, h('summary', null, 'Tip: the quickest way on iPhone or iPad'),
         h('p', null, 'In the Photos app, press and hold the text in the photo, choose "Select All" and "Copy". Then go back to the week, choose "Paste or type a list" and paste. Your phone\'s own text reader is often more accurate than the one in this app.'),
         link('Back to the week', `#/parent/week/${this.w.id}`, 'btn btn-ghost btn-small')));
