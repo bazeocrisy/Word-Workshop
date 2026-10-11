@@ -108,3 +108,9 @@ test('stray numbers and marks from photos are not spelling words', () => {
   const r = parseSpellingText('rushed\tn]\t4\nblasted');
   assert.deepEqual(r.words.map((w) => w.word), ['rushed', 'blasted']);
 });
+
+test('a mostly numbered list keeps teacher order, with unnumbered extras at the end', () => {
+  const r = parseSpellingText('1. rushed\t3. washed\n2. blasted\t4. winked\nrusted');
+  assert.deepEqual(r.words.map((w) => w.word), ['rushed', 'blasted', 'washed', 'winked', 'rusted']);
+  assert.ok(r.notes.some((n) => /put at the end: rusted/.test(n)));
+});

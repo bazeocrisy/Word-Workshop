@@ -206,21 +206,32 @@ class Importer {
   buildItems(sp, vo) {
     const at = nowIso();
     let corrected = 0;
-    const words = this.readRows.words;
-    const spItems = sp.map((x) => {
-      let best = null, bestSim = 0;
-      for (const w of words) { const s = similarity(w.text.replace(/[.,;:]$/, ''), x.word); if (s > bestSim) { bestSim = s; best = w; } }
-      const read = best && bestSim >= 0.6 ? best : null;
+    const clean = (t) => t.replace(/[.,;:]$/, '');
+    // Spelling: each reader word can back only one item. Exact matches first, then close misreadings (≥ 75%).
+    const words = this.readRows.words.map((w) => ({ ...w, text: clean(w.text), used: false }));
+    const readFor = sp.map(() => null);
+    sp.forEach((x, i) => { const w = words.find((r) => !r.used && compareKey(r.text) === compareKey(x.word)); if (w) { w.used = true; readFor[i] = w; } });
+    sp.forEach((x, i) => {
+      if (readFor[i]) return;
+      let best = null, bs = 0;
+      for (const r of words) { const sm = similarity(r.text, x.word); if (!r.used && sm >= 0.75 && sm > bs) { bs = sm; best = r; } }
+      if (best) { best.used = true; readFor[i] = best; }
+    });
+    const spItems = sp.map((x, i) => {
+      const read = readFor[i];
       const it = newSpellingItem({ word: x.word, origin: read ? 'ocr' : 'typed', ocrConfidence: read ? read.conf : null });
-      if (read) { it.originalTranscription = read.text.replace(/[.,;:]$/, ''); if (compareKey(it.originalTranscription) !== compareKey(x.word)) corrected++; }
+      if (read) { it.originalTranscription = read.text; if (compareKey(read.text) !== compareKey(x.word)) corrected++; }
       it.groups = suggestGroups(x.word);
       return it;
     });
+    // Vocabulary: a row is the reader's row only if the word is nearly the same (≥ 75%), or fairly close AND the
+    // definition is recognisably the same. Otherwise it is a row the parent typed.
+    const rows = this.readRows.vo;
     const used = new Set();
+    const sameRow = (r, x) => { const ws = similarity(r.word, x.word); return ws >= 0.75 || (ws >= 0.6 && similarity(r.definition, x.definition) >= 0.6); };
     const voItems = vo.map((x, i) => {
-      const rows = this.readRows.vo;
-      let match = rows[i] && !used.has(i) && similarity(rows[i].word, x.word) >= 0.6 ? i : -1;
-      if (match < 0) { let bs = 0; rows.forEach((r, j) => { const s = similarity(r.word, x.word); if (!used.has(j) && s >= 0.6 && s > bs) { bs = s; match = j; } }); }
+      let match = rows[i] && !used.has(i) && sameRow(rows[i], x) ? i : -1;
+      if (match < 0) { let bs = 0; rows.forEach((r, j) => { const sm = similarity(r.word, x.word); if (!used.has(j) && sameRow(r, x) && sm > bs) { bs = sm; match = j; } }); }
       if (match < 0) return newVocabItem({ word: x.word, definition: x.definition, origin: 'typed', importedFlags: x.notes });
       used.add(match);
       const read = rows[match];

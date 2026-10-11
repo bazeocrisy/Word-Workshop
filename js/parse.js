@@ -197,8 +197,16 @@ export function parseSpellingLines(lines) {
     }
     if (labelNote && tokens.length > before) notes.push(labelNote); // only mention the label if its words were kept
   }
-  const allNumbered = tokens.length > 1 && tokens.every((t) => t.number != null);
-  if (allNumbered) tokens.sort((a, b) => a.number - b.number);
+  const numberedCount = tokens.filter((t) => t.number != null).length;
+  const allNumbered = tokens.length > 1 && numberedCount === tokens.length;
+  // Mostly numbered (e.g. a teacher's list plus a word added by hand): keep the teacher's order, extras at the end.
+  const mostlyNumbered = !allNumbered && tokens.length > 2 && numberedCount >= tokens.length * 0.7;
+  if (allNumbered || mostlyNumbered) {
+    const extras = tokens.filter((t) => t.number == null);
+    const numbered = tokens.filter((t) => t.number != null).sort((a, b) => a.number - b.number);
+    tokens.splice(0, tokens.length, ...numbered, ...extras);
+    if (mostlyNumbered) notes.push(`${extras.length} word${extras.length === 1 ? ' has' : 's have'} no number and ${extras.length === 1 ? 'was' : 'were'} put at the end: ${extras.map((t) => t.word).join(', ')}.`);
+  }
   const words = tokens.map((t) => ({
     word: t.word, conf: t.conf, number: t.number,
     notes: WORD_RE.test(t.word.replace(/\s/g, '')) ? [] : ['Contains numbers or symbols. Check the spelling.'],
@@ -207,7 +215,7 @@ export function parseSpellingLines(lines) {
     const nums = tokens.map((t) => t.number);
     const missing = []; for (let n = 1; n <= Math.max(...nums); n++) if (!nums.includes(n)) missing.push(n);
     if (missing.length) notes.push(`Number${missing.length > 1 ? 's' : ''} ${missing.join(', ')} ${missing.length > 1 ? 'were' : 'was'} not found. A word may be missing.`);
-  } else if (tokens.length > 1 && tokens.some((t) => t.number != null)) {
+  } else if (!mostlyNumbered && tokens.length > 1 && tokens.some((t) => t.number != null)) {
     notes.push('Some words were numbered and some were not; check the order.');
   }
   return { words, ignored, notes };

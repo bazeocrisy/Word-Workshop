@@ -92,7 +92,8 @@ No Critical findings. Major fixed: (1) text corrected on the photo review screen
 - Final independent audit: ~140 requirements traced, 133 met; end-to-end parent→student journey including edit/re-approve, backup, wipe and restore (byte-identical); XSS payloads in every text field and in a hostile backup — no execution; no secrets; no third-party requests; definition integrity, version linkage and isolation confirmed. No Critical or Major findings.
 - Audit Minor items fixed: slow playback for sentences (not only words); paste picks "Both" when both headings are present; dashboard prompts renaming demo profiles; on-device voices preferred (an online voice would send words to its provider); a failed save now shows a dialog and reloads what is actually stored; weeks can be archived (hidden from the student's list, results kept); the architecture proposal no longer names the children.
 - Docs: README, MANUAL-TESTS.md (real-device checklist), DEPLOYMENT.md (not performed), OCR.md, ILLUSTRATIONS.md, GRADING.md.
-- Totals: 50 unit tests, 166 browser checks, OCR evaluation (synthetic only; real photos blocked).
+- Independent recheck of the Milestone 5–6 Major fixes: all three confirmed fixed, no new Critical/Major. Its two Minor notes were then fixed: rows typed fresh on the photo review screen are no longer mistaken for corrections of similar reader words (one-to-one, stricter matching), and a mostly numbered list keeps the teacher's order with unnumbered extras at the end.
+- Totals: 51 unit tests, 167 browser checks, OCR evaluation (synthetic only; real photos blocked).
 
 ## Known limitations / decisions log
 - Data lives in one browser on one device; no sync (by design, documented in the UI).

@@ -42,10 +42,16 @@ export default {
 
     // Parent fixes a line before adding (correction workflow), then adds as drafts.
     await b.js(`const ta = document.getElementById('ocr-vocab'); ta.value = ta.value.replace('Fresh fruits and vegetables', 'Fresh fruit and vegetables'); ta.dispatchEvent(new Event('input'));
-      const sp = document.getElementById('ocr-spelling'); sp.value = sp.value.replace('hunted', 'hunnted'); sp.dispatchEvent(new Event('input')); return 1;`);
+      ta.value += '\\nProducts – Things that are made'; ta.dispatchEvent(new Event('input'));
+      const sp = document.getElementById('ocr-spelling'); sp.value = sp.value.replace('hunted', 'hunnted') + '\\nrusted'; sp.dispatchEvent(new Event('input')); return 1;`);
     await b.click('.commit-btn');
     await b.wait(800); await b.settle();
     const wk = await b.js(`return await WW.store.getWeek(${JSON.stringify(wid)});`);
+    const typedSp = wk.spelling.find((s) => s.word === 'rusted');
+    const typedVo = wk.vocab.find((v) => v.word === 'Products');
+    check('rows typed on the review screen are stored as typed, not as corrections of similar reader words',
+      typedSp && typedSp.origin === 'typed' && typedVo && typedVo.origin === 'typed' && typedVo.definitionLog.length === 0 && wk.spelling.find((s) => s.word === 'rushed').origin === 'ocr', { typedSp, typedVo });
+    wk.spelling = wk.spelling.filter((s) => s !== typedSp); wk.vocab = wk.vocab.filter((v) => v !== typedVo);
     check('imported words land in the week as unchecked drafts', wk.spelling.length === 15 && wk.vocab.length === 12 && [...wk.spelling, ...wk.vocab].every((x) => !x.reviewed && x.origin === 'ocr'));
     check('spelling words keep the teacher\'s numbered order', wk.spelling.map((s) => s.word).join(',') === 'rushed,blasted,washed,winked,opened,buzzed,asked,called,lifted,landed,hunnted,screamed,stepped,handed,crashed', wk.spelling.map((s) => s.word));
     check('words and definitions are paired correctly', wk.vocab.find((v) => v.word === 'Trustworthy')?.sourceDefinition === 'The ability to keep promises' && wk.vocab.find((v) => v.word === 'Constellations')?.sourceDefinition.endsWith('a pattern'));
