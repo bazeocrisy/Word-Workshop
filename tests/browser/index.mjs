@@ -7,5 +7,6 @@ import print from './print.mjs';
 import responsive from './responsive.mjs';
 import workspace from './workspace.mjs';
 import onlineReader from './onlineReader.mjs';
+import student from './student.mjs';
 
-export const suites = [core, lessons, vocab, spelling, ocr, print, responsive, workspace, onlineReader];
+export const suites = [core, lessons, vocab, spelling, ocr, print, responsive, workspace, onlineReader, student];

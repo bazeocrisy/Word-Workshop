@@ -2,11 +2,11 @@
 // every control has an accessible name. SHOTS=1 saves screenshots to tests/screenshots/ (git-ignored).
 import { APPROVED_SAMPLE } from './helpers.mjs';
 
-const VIEWPORTS = [['iphone-se', 375, 667], ['iphone', 390, 844], ['ipad-portrait', 768, 1024], ['ipad-landscape', 1024, 768], ['desktop', 1366, 900]];
+const VIEWPORTS = [['small-phone', 320, 640], ['iphone-se', 375, 667], ['iphone', 390, 844], ['ipad-portrait', 768, 1024], ['ipad-landscape', 1024, 768], ['desktop', 1366, 900]];
 
 const AUDIT = `
   const doc = document.documentElement;
-  const wide = [...document.querySelectorAll('#app *')].filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.right > doc.clientWidth + 1 && getComputedStyle(e).position !== 'fixed' && !e.closest('.table-wrap'); })
+  const wide = [...document.querySelectorAll('#app *')].filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.right > doc.clientWidth + 1 && getComputedStyle(e).position !== 'fixed' && !e.closest('.table-wrap, .cw-wrap'); })
     .slice(0, 3).map((e) => e.tagName + '.' + e.className);
   const small = [...document.querySelectorAll('#app button, #app a.btn, #app .tile, #app select, #app input:not([type=checkbox]):not([type=radio]):not([type=file]), #app .check, #app .choice, #app .back-link')]
     .filter((e) => e.offsetParent && !e.closest('[hidden]') && !e.classList.contains('sr-only'))
@@ -26,6 +26,8 @@ export default {
     await b.fresh();
     const { sid, wid } = await b.js(APPROVED_SAMPLE);
     // An unfinished lesson (sample words, nothing checked) for the wizard screens.
+    const passage = await b.js(`const p = await WW.store.savePassage({ id: 'ps_resp', studentId: ${JSON.stringify(sid)}, title: 'The Busy Beaver', kind: 'text', paragraphs: ['Beavers are busy animals. They build dams across streams with sticks and mud.', 'A dam makes a pond.'], words: 20, createdAt: new Date().toISOString() }); return p.id;`);
+    await b.js(`await WW.store.saveSfProgress(${JSON.stringify(sid)}, { introSeen: true, done: {}, current: null, engine: null }); return 1;`);
     const draft = await b.js(`const st = (await WW.store.listStudents())[1];
       const w = await WW.store.createWeek(st.id, { startDate: '2026-10-19', endDate: '2026-10-23' });
       const { sampleItems } = await import('./js/sample.js'); const s = await sampleItems();
@@ -39,6 +41,12 @@ export default {
       ['backup', '#/parent/backup'], ['settings', '#/parent/settings'], ['print', `#/print/${wid}`],
       ['lesson-new', '#/parent/new'], ['lesson-add', `#/parent/lesson/${draft}?stage=add`], ['lesson-check', `#/parent/lesson/${draft}?stage=check`],
       ['lesson-finish', `#/parent/lesson/${draft}?stage=finish`], ['results', '#/parent/results'],
+      // Word Workshop 3.0 student screens
+      ['kid-vocab', `#/s/${sid}/vocab`], ['kid-spelling', `#/s/${sid}/spelling`], ['kid-add', `#/s/${sid}/add/vocab`], ['kid-add-check', `#/s/${sid}/add/vocab?stage=check`],
+      ['crossword', `#/s/${sid}/w/${wid}/vocab/crossword`], ['build', `#/s/${sid}/w/${wid}/spell/build`],
+      ['reading', `#/s/${sid}/reading`], ['reading-add', `#/s/${sid}/reading/add`], ['reader', `#/s/${sid}/reading/${passage}`],
+      ['sf-menu', `#/s/${sid}/sentence-fix`], ['sf-learn', `#/s/${sid}/sentence-fix/learn`], ['sf-learn-demo', `#/s/${sid}/sentence-fix/learn?skill=mixed`],
+      ['sf-practice', `#/s/${sid}/sentence-fix/practice`], ['sf-lab', `#/s/${sid}/sentence-fix/lab?new=1`], ['sf-test', `#/s/${sid}/sentence-fix/test?new=1`], ['sf-results', `#/s/${sid}/sentence-fix/results`],
     ];
     for (const [vname, w, hgt] of VIEWPORTS) {
       await b.viewport(w, hgt);
