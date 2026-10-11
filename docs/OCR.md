@@ -81,10 +81,15 @@ The layout fix (Oct 11): a numbered list is found anywhere on the page even when
 - Complex newsletter layouts (text boxes, decorative fonts) may put lines in the wrong box; the parent can move lines between the boxes.
 - The iPhone/iPad's own Live Text ("Paste or type a list") is often more accurate and is offered as a tip.
 
-## If on-device OCR proves insufficient on the real photos
-A secure alternative (requires owner approval because it costs money and sends photos off the device):
-- A small server the owner controls (e.g. a Cloudflare Worker) holding an API key, never exposed to the browser.
-- The browser sends a photo only when the parent chooses "Read with the online reader"; the server asks a vision model (e.g. Claude) for structured `{spelling: [...], vocabulary: [{word, definition}]}` and returns it.
-- Output is still a draft with mandatory parent review; the teacher's wording is never rewritten.
-- Rough cost: a few cents per photo at current API prices; Cloudflare Workers free tier covers the server. Needs: Anthropic API account with billing and a spend cap, Cloudflare account, a shared passphrase entered once on the parent's device, rate limiting, and the parent's agreement that photos of school material are sent to the provider.
-Not implemented. No keys exist in this repository.
+## Online photo reader (optional, added 2026-10-11)
+Because on-device reading of the vocabulary photo is not reliable, the app can now use an online reader instead.
+It is **off until the parent sets it up** (Settings → Online photo reader).
+
+- `server/ocr-worker/`: a Cloudflare Worker the owner deploys. It holds the Anthropic API key (a Cloudflare secret, never in the browser or this repository), checks the page's origin and a shared passphrase, and asks Claude's vision model (default `claude-sonnet-5-5`) to transcribe the spelling list and the vocabulary words/definitions **exactly as printed**, through a forced tool call that returns `{ spelling: [{ number, word, unsure }], vocabulary: [{ word, definition, unsure }], notes }`. Nothing is stored on the server. Setup: `server/ocr-worker/README.md`.
+- `js/cloudOcr.js`: settings (address + passphrase in this browser's localStorage, not in backups), sending the photo (JPEG, long side ≤ 2400 px), and turning the reply into draft items through the same `buildDraftItems` as on-device reading.
+- When it is on, every uploaded photo (including vocabulary tables; no corner marking needed) is read online. If the server cannot be reached, refuses (passphrase, origin, size, daily limit) or fails, the photo is read on the device instead and the reason is kept with the source photo.
+- Review is unchanged: every word is an unchecked draft; words the model marks as unsure get confidence 60% (below the 80% warning threshold) and a "check it against the photo" note; the reply text is kept with the source photo as the reader's transcription; the source records which reader read it.
+- Privacy: with the reader on, worksheet photos leave the device and go to the owner's Worker and to Anthropic. The settings text says so and states the cost (a few cents per photo).
+- Tests: `tests/unit/cloudOcr.test.mjs` (conversion, worker origin/passphrase/size checks, request to the API with a stubbed network) and the browser suite `onlineReader` (settings, a vocabulary photo read through a stubbed server into Check, fallback to on-device reading on a refusal).
+
+**Accuracy on the real photos: not measured yet.** No API key exists in this environment. After deploying, run `READER_URL=… READER_PASSPHRASE=… npm run test:ocr:online` with the photos in `local-fixtures/` and record the results here. Note the vocabulary photo itself is low resolution (1152 × 1536, definitions about 8–9 px tall); a full-resolution phone photo will help any reader.

@@ -5,7 +5,8 @@ import { decode, toCanvas, canvasToBlob, checkFile, ImageError } from './images.
 import { parseVocabLines, parseSpellingLines } from './parse.js';
 import { extractPages, buildDraftItems } from './views/importView.js';
 import * as store from './store.js';
-import { nowIso } from './model.js';
+import { nowIso, compareKey } from './model.js';
+import { draftInputs } from './cloudOcr.js';
 
 export const MAX_PHOTOS = 6;
 
@@ -36,6 +37,22 @@ export function readerError(e) {
  * Returns the reader result ({ lines, alternatives, confidence, cards? … }).
  */
 export async function readPhoto(page, { target = 'auto', onProgress = () => {} } = {}) {
+  // The online reader, when the parent has set it up, reads the whole page (tables of cards included). If it fails,
+  // the photo is read on this device instead and the parent is told why.
+  let fallbackNote = null;
+  const cloud = await import('./cloudOcr.js');
+  if (cloud.isEnabled()) {
+    try { return await cloud.readOnline(page.canvas, { target, onProgress }); } catch (e) {
+      console.warn(e);
+      fallbackNote = `${e instanceof cloud.OnlineReaderError ? e.message : 'The online reader stopped with an error.'} The photo was read on this device instead, which is less accurate.`;
+      onProgress(0, fallbackNote);
+    }
+  }
+  const res = await readOnDevice(page, { target, onProgress });
+  return fallbackNote ? { ...res, fallbackNote } : res;
+}
+
+async function readOnDevice(page, { target, onProgress }) {
   const ocr = await import('./ocr.js');
   const opts = {
     target,
@@ -56,6 +73,17 @@ const tokens = (t) => String(t || '').toLowerCase().match(/\p{L}{2,}/gu) || [];
  * ("other text": headings, notes, unreadable bits) so the parent can recover a valid word from it.
  */
 export function draftsFromReading(result, target = 'auto') {
+  if (result.online) {
+    const { ctx, sp, vo } = draftInputs(result, compareKey);
+    const { spItems, voItems } = buildDraftItems(ctx, sp, vo);
+    return { spItems, voItems, notes: [...result.notes], other: [] };
+  }
+  const extra = result.fallbackNote ? [result.fallbackNote] : [];
+  const d = draftsOnDevice(result, target);
+  return { ...d, notes: [...extra, ...d.notes] };
+}
+
+function draftsOnDevice(result, target) {
   const results = [result];
   const ex = extractPages(results, target);
   const linesOf = (text) => String(text).split('\n').map((t) => ({ text: t, conf: ex.conf.get(t.trim()) ?? null }));
@@ -74,7 +102,7 @@ export function draftsFromReading(result, target = 'auto') {
 export async function saveSource(page, result, extra = {}) {
   const blob = await canvasToBlob(toCanvas(page.canvas, 1800), 'image/jpeg', 0.82);
   const ref = await store.saveImage(blob, { kind: 'source', name: page.name });
-  return { kind: 'photo', id: ref, imageRef: ref, name: page.name, at: nowIso(), confidence: result.confidence, ocrText: (result.lines || []).map((l) => l.text).join('\n'), ...extra };
+  return { kind: 'photo', id: ref, imageRef: ref, name: page.name, at: nowIso(), confidence: result.confidence, reader: result.online ? `online (${result.model || 'vision model'})` : 'on device', ocrText: (result.lines || []).map((l) => l.text).join('\n'), ...extra };
 }
 
 /** A canvas for a stored source photo (to read it again, e.g. as a table of cards). */

@@ -6,6 +6,7 @@ import { DEMO_STUDENTS } from '../store.js';
 import { avatar, themeClass, deviceNotice, pinEnabled, setPin, askPinDialog, lockParent } from './common.js';
 import { resumeHref, resumeStage, stageLabel, lessonHref } from './lessonSteps.js';
 import { go } from '../router.js';
+import * as cloud from '../cloudOcr.js';
 
 const STATUS_KIND = { draft: 'grey', 'pending-review': 'warn', approved: 'ok', 'pending-changes': 'warn' };
 
@@ -127,7 +128,41 @@ export async function settingsView() {
       pinOn ? btn('Remove PIN', async () => { await setPin(null); toast('PIN removed.'); go('#/parent/settings'); }, 'btn-ghost') : null),
     h('h2', null, 'Speech'),
     h('p', null, link('Test the voice on this device', '#/parent/speech', 'btn btn-ghost')),
+    onlineReaderSettings(),
     deviceNotice());
+}
+
+/** Optional online photo reader: address + passphrase of the family's own reader server (see docs/OCR.md). */
+function onlineReaderSettings() {
+  const cfg = cloud.getConfig() || { url: '', passphrase: '', enabled: false };
+  const url = h('input', { type: 'url', value: cfg.url, placeholder: 'https://word-workshop-reader.example.workers.dev', autocomplete: 'off', spellcheck: 'false' });
+  const pass = h('input', { type: 'password', value: cfg.passphrase, autocomplete: 'off' });
+  const on = h('input', { type: 'checkbox', checked: !!cfg.enabled, id: 'online-reader-on' });
+  const msg = h('p', { class: 'hint', 'aria-live': 'polite' }, cfg.enabled ? 'On: worksheet photos are read online.' : 'Off: worksheet photos are read on this device.');
+  const read = () => ({ url: url.value.trim(), passphrase: pass.value, enabled: on.checked });
+  const valid = (c) => /^https:\/\/[^\s/]+/.test(c.url) && c.passphrase;
+  return h('section', { class: 'online-reader' },
+    h('h2', null, 'Online photo reader (optional)'),
+    h('p', { class: 'hint' }, 'Reads worksheet photos much more accurately than the reader on this device, especially vocabulary tables. When it is on, each photo you upload is sent to your own reader server, which sends it to Anthropic\'s Claude to read. Each photo costs a few cents on your Anthropic account. Words still arrive as drafts for you to check.'),
+    field('Reader address', url),
+    field('Passphrase', pass, 'Stored only in this browser. It is not included in backups.'),
+    h('label', { class: 'check' }, on, h('span', null, 'Read worksheet photos online')),
+    h('div', { class: 'row' },
+      btn('Save', () => {
+        const c = read();
+        if (c.enabled && !valid(c)) { toast('Enter an https address and the passphrase first.', 'error'); return; }
+        if (!c.url && !c.passphrase) { cloud.setConfig(null); msg.textContent = 'Removed. Photos are read on this device.'; toast('Saved.'); return; }
+        if (!cloud.setConfig(c)) { toast('This browser would not save the setting.', 'error'); return; }
+        msg.textContent = c.enabled ? 'On: worksheet photos are read online.' : 'Off: worksheet photos are read on this device.';
+        toast('Saved.');
+      }, 'btn-primary'),
+      btn('Test connection', async () => {
+        const c = read();
+        if (!valid(c)) { msg.textContent = 'Enter an https address and the passphrase first.'; return; }
+        msg.textContent = 'Testing…';
+        try { const r = await cloud.ping(c); msg.textContent = `Connected${r.model ? ` (${r.model})` : ''}. Remember to Save.`; } catch (e) { msg.textContent = e.message || 'Could not connect.'; }
+      }, 'btn-ghost')),
+    msg);
 }
 
 export async function confirmDeleteWeek(weekId) {

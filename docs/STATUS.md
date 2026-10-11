@@ -240,3 +240,6 @@ Every run ended with an approved lesson that exactly matches the teacher's sheet
 - Answers live in the browser; a determined child with developer tools could find them. Acceptable for a family study app.
 - Two parent tabs editing the same week at once could overwrite each other (very unlikely; not handled).
 - Real iPhone/iPad/Android behaviour (speech, camera photos, Safari storage, printing) is verified only through the manual checklist (docs/MANUAL-TESTS.md), not automatically.
+
+## Online photo reader (2026-10-11, branch `claude/online-ocr`)
+Optional Claude-vision photo reader behind an owner-deployed Cloudflare Worker (`server/ocr-worker/`), set up per browser in Settings, with automatic fallback to on-device reading. Details, privacy and cost: docs/OCR.md. Not deployed; real-photo accuracy not yet measured (needs the owner's API key: `npm run test:ocr:online`). Totals: 67 unit tests; browser suite adds 11 checks (`onlineReader`). In this Linux/Chromium test environment 8 existing on-device OCR checks fail identically with and without this change (Tesseract reads an extra "HT" row from the synthetic vocabulary page); they pass on Windows Chrome/Edge per earlier runs.
