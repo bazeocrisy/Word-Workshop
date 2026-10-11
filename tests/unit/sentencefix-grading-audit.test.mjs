@@ -395,6 +395,15 @@ const RULE_CASES = [
   ['SF-CAP-001', 'Our class visited the libary on Monday.', 'incorrect'], // non-word stays a misspelling
   ['SF-SVA-010', 'Jin and his brother play tennis, and Jin wins most of games.', 'ok'],
   ['SF-HOM-015', 'Do you know where the moon is during the day? Sometimes it is still up there in sky.', 'ok'],
+  // one ↔ more than one (G-1..G-3): wrong only when it breaks agreement
+  ['SF-SVA-007', 'My grandparents live on a farm, and the cows give lots of milk.', 'ok'], // noun + verb both changed
+  ['SF-SVA-008', 'The mail carrier comes to our street every day, and the dogs barks at her.', 'incorrect'], // mistake left
+  ['SF-SPL-016', 'The two birds carried twig and grass together to build a nest.', 'ok'],
+  // real-word misspellings scoped to the key word (G-6)
+  ['SF-SPL-011', 'My neighbor finely helped us carry the heavy boxes upstairs.', 'incorrect'],
+  // ", and" + the/two + a noun with no verb is one more item (G-7)
+  ['SF-HOM-002', 'I have two pencils, and an eraser in my desk.', 'incorrect'],
+  ['SF-SVA-008', 'The mail carrier comes to our street every day, and the dogs bark at her!', 'ok'],
 ];
 
 for (const [id, answer, expect] of RULE_CASES) {
@@ -557,16 +566,16 @@ const FINAL = [
   ['SF-HOM-001', 'We walked over there to see the new puppies.', 'ok'],
   ['SF-TEN-008', 'Last week, we planted seeds in a cup and watched them sprout.', 'ok'],
   ['SF-MIX-011', 'At the beach, Elena found a starfish and two tiny crabs under the rocks.', 'ok'],
-  ['SF-SVA-008', 'The mail carrier comes to our street every day, and the dog barks at her.', 'ok', G.numberCoordinated],
-  ['SF-SVA-007', 'My grandparents live on a farm, and their cows give lots of milk.', 'ok', G.numberCoordinated],
-  ['SF-SPL-012', 'Dad and I believe the stores close in ten minutes.', 'ok', G.numberCoordinated],
-  ['SF-CAP-002', 'My grandma and I baked bread for the neighbor.', 'ok', G.numberIsolated],
-  ['SF-TEN-012', 'Last Sunday morning, the sun came up, and the birds sang in the tree.', 'ok', G.numberIsolated],
-  ['SF-END-002', 'The leaves on the maple trees turn red in the fall.', 'ok', G.numberIsolated],
-  ['SF-POS-002', 'Mia\'s backpack is hanging on the hook by the doors.', 'ok', G.numberIsolated],
-  ['SF-SPL-019', 'Two baby foxes were hiding under the bush near our tent.', 'ok', G.numberSlot],
-  ['SF-CAP-015', 'My brothers\' team, the Hilltop Hawks, won the big game against the Lakeview Lions on Saturday.', 'ok', G.pluralPossessive],
-  ['SF-SVA-006', 'A spider has eight legs, but an insect has just six.', 'ok', G.swapWords],
+  ['SF-SVA-008', 'The mail carrier comes to our street every day, and the dog barks at her.', 'ok'],
+  ['SF-SVA-007', 'My grandparents live on a farm, and their cows give lots of milk.', 'ok'],
+  ['SF-SPL-012', 'Dad and I believe the stores close in ten minutes.', 'ok'],
+  ['SF-CAP-002', 'My grandma and I baked bread for the neighbor.', 'ok'],
+  ['SF-TEN-012', 'Last Sunday morning, the sun came up, and the birds sang in the tree.', 'ok'],
+  ['SF-END-002', 'The leaves on the maple trees turn red in the fall.', 'ok'],
+  ['SF-POS-002', 'Mia\'s backpack is hanging on the hook by the doors.', 'ok'],
+  ['SF-SPL-019', 'Two baby foxes were hiding under the bush near our tent.', 'ok'],
+  ['SF-CAP-015', 'My brothers\' team, the Hilltop Hawks, won the big game against the Lakeview Lions on Saturday.', 'ok'],
+  ['SF-SVA-006', 'A spider has eight legs, but an insect has just six.', 'ok'],
   // WRONG: must be incorrect
   ['SF-SPL-015', 'The firefighters stopped buy our school to talk about safety.', 'incorrect'],
   ['SF-SPL-004', 'Grandma maid my favorite soup for dinner tonight.', 'incorrect'],
@@ -578,15 +587,15 @@ const FINAL = [
   ['SF-POS-002', 'Mias backpack is hanging on the hook by the door.', 'incorrect'],
   ['SF-POS-008', 'My two brothers bike\'s are in the garage, but Dad\'s car isn\'t.', 'incorrect'],
   ['SF-HOM-002', 'I have two pencil and an eraser in my desk.', 'incorrect'],
-  ['SF-SPL-004', 'Grandma made my favorite soup for diner tonight.', 'incorrect', G.realWordTypo],
-  ['SF-SPL-001', 'My fiend Jamal sits next to me in class.', 'incorrect', G.realWordTypo],
-  ['SF-SPL-007', 'Our team was really tied after the long game.', 'incorrect', G.realWordTypo],
-  ['SF-SPL-018', 'I was so excited to open my birthday presence.', 'incorrect', G.realWordTypo],
-  ['SF-TEN-001', 'We waked to the science museum last Friday.', 'incorrect', G.realWordTypo],
-  ['SF-SPL-022', 'Every morning, our teacher writes a question on the bored, and we write our answers in our journals.', 'incorrect', G.realWordTypo],
-  ['SF-HOM-007', 'Dad and I rode to the store to buy milk, and two loaves of bread.', 'incorrect', G.twoItemComma],
-  ['SF-MIX-011', 'At the beach, Elena found a starfish, and two tiny crabs under a rock.', 'incorrect', G.twoItemComma],
-  ['SF-COM-002', 'Priya, please hand me the tape, and the scissors.', 'incorrect', G.twoItemComma],
+  ['SF-SPL-004', 'Grandma made my favorite soup for diner tonight.', 'incorrect'],
+  ['SF-SPL-001', 'My fiend Jamal sits next to me in class.', 'incorrect'],
+  ['SF-SPL-007', 'Our team was really tied after the long game.', 'incorrect'],
+  ['SF-SPL-018', 'I was so excited to open my birthday presence.', 'incorrect'],
+  ['SF-TEN-001', 'We waked to the science museum last Friday.', 'incorrect'],
+  ['SF-SPL-022', 'Every morning, our teacher writes a question on the bored, and we write our answers in our journals.', 'incorrect'],
+  ['SF-HOM-007', 'Dad and I rode to the store to buy milk, and two loaves of bread.', 'incorrect'],
+  ['SF-MIX-011', 'At the beach, Elena found a starfish, and two tiny crabs under a rock.', 'incorrect'],
+  ['SF-COM-002', 'Priya, please hand me the tape, and the scissors.', 'incorrect'],
   ['SF-TEN-001', 'We walked to science museum last Friday.', 'incorrect', G.droppedThe],
 ];
 

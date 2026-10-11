@@ -233,6 +233,17 @@ const REAL_WORDS = new Set(('a an the is are am was were be been being has have 
   'make made take took give gave run ran find found know knew grow grew').split(' '));
 // Rare dictionary words that are really common misspellings ("stoped" for "stopped"): never count them as real.
 const KNOWN_MISSPELLINGS = new Set(['wich', 'stoped', 'watter', 'wiling']);
+// Real words that are common misspellings of one particular word ("diner" for "dinner"). Scoped to that key word.
+const REAL_WORD_TYPOS = {
+  dinner: ['diner'], friend: ['fiend'], friends: ['fiends'], tired: ['tied'], presents: ['presence'], present: ['presence'],
+  walked: ['waked'], woke: ['waked'], board: ['bored'], quite: ['quit'], quiet: ['quit'], dessert: ['desert'],
+  desert: ['dessert'], clothes: ['cloths'], though: ['through', 'thought'],
+  through: ['threw', 'though'], thought: ['though'], weather: ['whether'], whether: ['weather'], angel: ['angle'],
+  angle: ['angel'], breathe: ['breath'], breath: ['breathe'], finally: ['finely'], later: ['latter'], every: ['very'],
+  since: ['sense'], wander: ['wonder'], wonder: ['wander'], picture: ['pitcher'], pictures: ['pitchers'],
+  costume: ['custom'], advice: ['advise'], beach: ['beech'], minute: ['minuet'], from: ['form'], form: ['from'], united: ['untied'], trail: ['trial'], aunt: ['ant'],
+  little: ['lite'], when: ['wen'], were: ['wear'], whole: ['hole'],
+};
 // Helper verbs that take "n't" (can't → "ca", won't → "wo").
 const NT_VERBS = new Set(['do', 'does', 'did', 'is', 'are', 'was', 'were', 'has', 'have', 'had', 'could', 'would',
   'should', 'must', 'need', 'might', 'ca', 'wo', 'sha', 'ai']);
@@ -264,7 +275,28 @@ function isRealWord(word) {
   return !w.includes("'") && inWordList(w);
 }
 // Small words a fair rewrite may leave out ("most games" for "most of the games").
-const SMALL_WORDS = new Set(['of', 'the', 'a', 'an', 'that', 'very', 'really', 'just', 'also', 'all', 'still', 'some']);
+const SMALL_WORDS = new Set(['of', 'the', 'a', 'an', 'that', 'very', 'really', 'just', 'only', 'even', 'too', 'so',
+  'also', 'all', 'still', 'some']);
+// Words that say "more than one" or "just one" before a noun.
+const PLURAL_DET = new Set(['two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'many', 'several',
+  'these', 'those', 'both', 'few']);
+const SINGULAR_DET = new Set(['a', 'an', 'one', 'this', 'that', 'each', 'every', 'another']);
+const PLURAL_VERBS = new Set(['are', 'were', 'have', 'do', "aren't", "weren't", "haven't", "don't"]);
+const SINGULAR_VERBS = new Set(['is', 'was', 'has', 'does', "isn't", "wasn't", "hasn't", "doesn't"]);
+/**
+ * A word typed with the other number (one ↔ more than one: dog/dogs, gives/give). Clear only when it breaks
+ * agreement with the word before or after it ("two pencil", "player have", "he give"); otherwise the sentence can
+ * still be fine ("the neighbor", "the dog barks") and a grown-up decides.
+ */
+function numberBreaks(g, typedPlural, prev, next) {
+  const p = lc(prev || ''), n = lc(next || '');
+  if (typedPlural ? SINGULAR_DET.has(p) : PLURAL_DET.has(p)) return true; // "a dogs", "two pencil"
+  if (typedPlural ? SINGULAR_VERBS.has(n) : PLURAL_VERBS.has(n)) return true; // "dogs is", "player have"
+  if (typedPlural && ['he', 'she', 'it'].includes(p)) return false; // "he runs"
+  if (!typedPlural && ['he', 'she', 'it'].includes(p) && !g.endsWith('s')) return true; // "he run"
+  if (typedPlural && ['i', 'you', 'we', 'they'].includes(p)) return true; // "they runs"
+  return false;
+}
 // Contractions and their long forms count as the same words when checking equivalence.
 const PRONOUN_IS = new Set(['it', 'he', 'she', 'that', 'there', 'here', 'what', 'who', 'where', 'how']);
 const SUBJECTS = new Set(['i', 'you', 'he', 'she', 'it', 'we', 'they']);
@@ -318,13 +350,32 @@ function stems(w) {
   return s;
 }
 
+/** Same word, one ↔ more than one (dog/dogs, box/boxes, give/gives). */
+const numberPair = (e, g) => Math.min(e.length, g.length) >= 3 && (g === `${e}s` || g === `${e}es` || e === `${g}s` || e === `${g}es`);
+/**
+ * A noun and the verb after it both switched number so they still agree ("the dog barks" for "the dogs bark",
+ * "their cows give" for "their cow gives"): a deliberate rewrite, not a mistake.
+ */
+function coordinatedNumber(winA, winC) {
+  if (winA.length !== winC.length) return false;
+  return winA.some((_, i) => {
+    if (i + 1 >= winA.length) return false;
+    const [a0, a1, c0, c1] = [winA[i], winA[i + 1], winC[i], winC[i + 1]].map(lc);
+    return numberPair(c0, a0) && numberPair(c1, a1) && (a0.length > c0.length) !== (a1.length > c1.length);
+  });
+}
+
 /**
  * Typed word `got` where the key has `exp`: a clear mistake ('capital', 'article', 'homophone', 'verb',
  * 'agreement', 'spelling') or null (could be a fair rewrite). `inSlot`: this is where a planted mistake was,
  * so another form of the same word (cook/cooked, want/wants) is also a mistake. `planted`: the planted mistake there.
  */
-function wrongWord(exp, got, next, inSlot, planted) {
+function wrongWord(exp, got, next, inSlot, planted, prev) {
   const e = lc(exp), g = lc(got);
+  const pl = planted ? lc(planted) : '';
+  // Another form of the key word typed where a SPELLING mistake was planted ("bush" where "bushs" → "bushes"):
+  // judged like any other word. Where a word-form mistake was planted ("cooks" → "cooked"), any other form is wrong.
+  const spellingSlot = inSlot && pl && pl !== e && !isRealWord(pl) && !pl.includes("'");
   if (e === g) return exp === got ? null : 'capital';
   if ((e === 'a' || e === 'an') && (g === 'a' || g === 'an')) return articleFits(got, next) ? null : 'article';
   if (HOMOPHONES.has(e) && HOMOPHONES.has(g)) return 'homophone';
@@ -338,14 +389,22 @@ function wrongWord(exp, got, next, inSlot, planted) {
     const forms = [base, `${base}s`, `${base}es`, `${base}ed`, `${base}d`, `${base}${base.at(-1)}ed`, `${e}ed`, `${base}ing`, PARTICIPLE[e]];
     if (forms.includes(g)) return 'verb';
   }
-  if (inSlot && [...stems(e)].some((x) => stems(g).has(x))) return 'verb';
+  const plural = numberPair(e, g);
+  if (plural && !g.includes("'") && isRealWord(g) && (!inSlot || spellingSlot)) {
+    // One ↔ more than one: clear only when it breaks agreement ("two pencil", "player have").
+    return numberBreaks(g, g.length > e.length, prev, next) ? 'number' : null;
+  }
+  if (inSlot && !spellingSlot && [...stems(e)].some((x) => stems(g).has(x))) return 'verb';
+  if (REAL_WORD_TYPOS[e]?.includes(g)) return 'spelling'; // "diner" for "dinner", "fiend" for "friend"
   const noApos = (x) => x.replace(/'/g, '');
+  // Both possessive but for a different number ("brothers' team" for "brother's team") is a fair rewrite, except
+  // for names ("Mias'") and where the possessive itself was the planted mistake.
+  const possessive = (x) => /'s$|s'$/.test(x);
+  if (possessive(e) && possessive(g) && !inSlot && !isCap(got) && [...stems(noApos(e))].some((x) => stems(noApos(g)).has(x))) return null;
   if (noApos(e) === noApos(g)) return 'spelling'; // apostrophe left out or misplaced: "cant", "does'nt"
   if (g.includes('our') && g.replace('our', 'or') === e) return 'spelling'; // British "colours" in a US bank
   // Plural and possessive forms of the same noun mixed up ("fox's" for "foxes", "coaches'" for "coach's").
   if ((e.includes("'") || g.includes("'")) && [...stems(noApos(e))].some((x) => stems(noApos(g)).has(x))) return 'spelling';
-  // One where the key has more than one, or the other way round ("dog" for "dogs"): a changed number, not a rewrite.
-  if (Math.min(e.length, g.length) >= 3 && (g === `${e}s` || g === `${e}es` || e === `${g}s` || e === `${g}es`)) return 'number';
   // A real word ("placed" for "planted", "hats" for "caps") may be a fair rewrite: never call it a misspelling,
   // unless it is one letter from both the fix and the planted mistake ("now" where "no" → "know").
   if (isRealWord(g)) return inSlot && planted && lc(planted) !== e && editDistance(e, g) === 1 && editDistance(lc(planted), g) === 1 ? 'spelling' : null;
@@ -356,7 +415,7 @@ function wrongWord(exp, got, next, inSlot, planted) {
 }
 
 /** Compare the key's tokens with the typed tokens word by word: a clear mistake kind, 'same', or null. */
-function wordVerdict(exp, got, after, inSlot, planted) {
+function wordVerdict(exp, got, after, inSlot, planted, before) {
   if (exp.length !== got.length) {
     const squash = (toks) => lc(toks.join('')).replace(/-/g, '');
     return exp.length && squash(exp) === squash(got) ? 'spelling' : null;
@@ -365,7 +424,7 @@ function wordVerdict(exp, got, after, inSlot, planted) {
   for (let i = 0; i < exp.length; i++) {
     if (exp[i] === got[i]) continue;
     if (!isWord(exp[i]) || !isWord(got[i])) return null;
-    const k = wrongWord(exp[i], got[i], got[i + 1] ?? after, inSlot, planted?.length === exp.length ? planted[i] : undefined);
+    const k = wrongWord(exp[i], got[i], got[i + 1] ?? after, inSlot, planted?.length === exp.length ? planted[i] : undefined, got[i - 1] ?? before);
     if (!k) return null;
     if (kind === 'same') kind = k;
   }
@@ -457,6 +516,32 @@ function presentBefore(A, k) {
   return false;
 }
 
+const DETERMINERS = new Set(['the', 'a', 'an', 'my', 'our', 'your', 'his', 'her', 'their', 'its', 'this', 'that',
+  'these', 'those', 'each', 'every', 'both', 'all', 'some', 'many', 'one', 'two', 'three', 'four', 'five', 'six', 'seven',
+  'eight', 'nine', 'ten']);
+const PREPOSITIONS = new Set(['of', 'in', 'on', 'at', 'under', 'over', 'from', 'with', 'for', 'to', 'by', 'near', 'into',
+  'around', 'behind', 'beside', 'between', 'inside', 'outside', 'about', 'after', 'before', 'across', 'through']);
+const HELPERS = new Set(['is', 'are', 'was', 'were', 'am', 'has', 'have', 'had', 'do', 'does', 'did', 'can', 'could',
+  'will', 'would', 'should', 'may', 'might', 'must']);
+/**
+ * Starting at the determiner at index d: just a noun phrase ("the scissors", "two loaves of bread", "two tiny crabs
+ * under a rock") with no verb, so the words after ", and" are one more item rather than a new sentence.
+ * Unsure (a word that could be a verb) → false, so the comma goes to a grown-up.
+ */
+function nounPhraseOnly(A, d) {
+  const plural = PLURAL_DET.has(lc(A[d]));
+  for (let j = d + 1, pos = 1; j < A.length && isWord(A[j]); j++, pos++) {
+    const t = lc(A[j]);
+    if (PREPOSITIONS.has(t)) return pos > 1; // the noun phrase ended; a phrase like "of bread" follows
+    if (pos > 3 || HELPERS.has(t) || /n't$/.test(t) || isPastVerb(t)) return false;
+    if (pos > 1) {
+      if (t.endsWith('s') && !plural && !lc(A[j - 1]).endsWith('s')) return false; // "the dog barks"
+      if (!t.endsWith('s') && (isRealWord(`${t}ed`) || isRealWord(`${t}d`))) return false; // "the dogs bark"
+    }
+  }
+  return true;
+}
+
 /** A comma typed at index k of the answer where the model has none: fine only in an optional spot. */
 function commaAllowed(A, k) {
   const next = A[k + 1] || '';
@@ -471,7 +556,7 @@ function commaAllowed(A, k) {
     let tail = 0;
     for (let j = k + 2; j < A.length && isWord(A[j]); j++) tail++;
     const subj = A[k + 2] || '';
-    if (tail >= 2 && (CLAUSE_STARTS.has(lc(subj)) || isCap(subj))) return true;
+    if (tail >= 2 && (CLAUSE_STARTS.has(lc(subj)) || isCap(subj))) return !(DETERMINERS.has(lc(subj)) && nounPhraseOnly(A, k + 2));
     // A second verb for the same subject ("smiled, and said", "jumps in, and swims"): some teachers accept this
     // comma, so it goes to a grown-up rather than being marked wrong.
     return tail >= 1 && (isPastVerb(subj) || (isPresentS(subj) && presentBefore(A, k)));
@@ -529,7 +614,7 @@ function classify(h, A, C, insBag, delBag) {
     const [e] = exp, [g] = got;
     if (isWord(e) && isWord(g)) {
       if (lc(e) === lc(g)) return h.expAtStart !== (h.aStart === 0) ? ['moved', false] : ['capital', true];
-      const k = wrongWord(e, g, A[h.aStart + 1], false);
+      const k = wrongWord(e, g, A[h.aStart + 1], false, undefined, A[h.aStart - 1]);
       return k ? [k, true] : ['different-word', false];
     }
     if (!isWord(e) && !isWord(g)) {
@@ -538,7 +623,7 @@ function classify(h, A, C, insBag, delBag) {
     }
     return ['rewrite', false];
   }
-  const k = wordVerdict(exp, got, A[h.aStart + got.length], false);
+  const k = wordVerdict(exp, got, A[h.aStart + got.length], false, undefined, A[h.aStart - 1]);
   if (k && k !== 'same') return [k, true];
   return ['rewrite', false];
 }
@@ -563,7 +648,7 @@ const endMark = (toks) => {
  * mistake left in, winA = what was typed. Returns 'fixed' | 'unfixed' | 'wrong' (a different mistake there) |
  * 'equal' (same words, e.g. "cannot" for "can't") | 'alt' ("!" for ".": a grown-up should check) | null.
  */
-function judgeSlot(winA, winC, winW, after) {
+function judgeSlot(winA, winC, winW, after, before) {
   if (sameList(winA, winC)) return 'fixed';
   if (sameList(winA, winW)) return 'unfixed';
   if (winA.length === winC.length) {
@@ -581,7 +666,7 @@ function judgeSlot(winA, winC, winW, after) {
     if (sameList(expandWords([...winA, ...tail], false), expandWords([...winC, ...tail], false))) return 'wrong'; // "is not it?"
     if (sameList(xa, expandWords([...winW, ...tail]))) return 'wrong';
   }
-  const k = wordVerdict(winC, winA, after, true, winW);
+  const k = wordVerdict(winC, winA, after, true, winW, before);
   return k && k !== 'same' ? 'wrong' : null;
 }
 
@@ -630,6 +715,7 @@ export function grade(item, answer) {
     const winW = [...winC.slice(0, off), ...w, ...winC.slice(off + r.length)];
     const after = A[M[sp.kR][1]];
     const rightFirst = !(indexOfRun(w, r) >= 0 && w.length > r.length); // "the the" → "the": look for the wrong form first
+    if (coordinatedNumber(winA, winC)) continue; // "the dog barks": a grown-up checks it
     // 1. The window also holds changed neighbours (often another mistake): if they line up one-to-one,
     //    judge just this mistake's own tokens.
     const pre = off, post = winC.length - off - r.length, aFrom = M[sp.kL][1] + 1;
@@ -638,12 +724,12 @@ export function grade(item, answer) {
     if ((pre || post) && winA.length > pre + post
       && [...Array(pre).keys()].every((i) => lines(cFrom + i, aFrom + i))
       && [...Array(post).keys()].every((i) => lines(cTo - 1 - i, aFrom + winA.length - 1 - i))) {
-      verdict = judgeSlot(winA.slice(pre, winA.length - post), r, w, after);
+      verdict = judgeSlot(winA.slice(pre, winA.length - post), r, w, winA[winA.length - post] ?? after, pre ? winA[pre - 1] : A[M[sp.kL][1]]);
     }
     // 2. The right form is there (the child changed something next to it).
     if (!verdict && rightFirst && indexOfRun(winA, r) >= 0) verdict = 'fixed';
     // 3. Judge the whole window.
-    if (!verdict) verdict = judgeSlot(winA, winC, winW, after);
+    if (!verdict) verdict = judgeSlot(winA, winC, winW, after, A[M[sp.kL][1]]);
     // A mostly rewritten sentence: only an exact leftover mistake counts; other judgements go to a grown-up.
     if (rewritten && (verdict === 'wrong' || verdict === 'equal')) verdict = null;
     if (verdict === 'fixed' || verdict === 'unfixed') { status[sp.index] = verdict; continue; }
