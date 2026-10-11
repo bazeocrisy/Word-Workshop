@@ -154,6 +154,8 @@ The first real parent test showed parents could not find where to upload workshe
   - Draft names were shown on the home page while a PIN was set. They are now hidden while locked.
 - **Not changed (owner to confirm):** after approval the parent lands in the student's lesson list, as the requirement says, not back in the parent area.
 
+**Second round (fresh-browser review of the whole workflow, 8 owner checks):** added a visible "All changes saved" status and **Save and finish later**. Approval now opens the new lesson, where Study, Practice and Test are ready. Reviewer found 1 Major: on tablets and phones the Spelling upload and paste buttons (and on phones the vocabulary paste button) were below the first screen or under the bottom bar. Fixed with a block of all four buttons at the top of Add words on narrow screens; "Add one word" folds there, and the bottom bar is one row on phones. Minor fixes: the approve action comes first in Step 4; student cards no longer overflow. Re-review: all 8 checks pass at 1366, 768 and 390 px. Totals: 61 unit tests, 245 browser checks. Branch head 2e9b887 plus this note; not merged or deployed.
+
 **Not verified:** real phones, tablets and screen readers; a timed session with a real parent.
 
 ## Known limitations / decisions log
