@@ -207,6 +207,10 @@ const HOMOPHONES = new Set(('there their they\'re to too two your you\'re its it
   'some sum tide tied toe tow wait weight way weigh wore war allowed aloud ant aunt be bee berry bury cell sell ' +
   'flew flu grown groan hair hare herd heard hi high hole knows nose pail pale passed past rain reign rein ' +
   'sew so sow stair stare steal steel tail waist waste').split(' '));
+// Real words children commonly confuse (sound-alike or look-alike): one typed for another is a mistake.
+const CONFUSABLES = [['our', 'are', 'hour'], ['then', 'than'], ['where', 'were', 'wear', "we're"], ['of', 'off'],
+  ['your', "you're"], ['to', 'too', 'two'], ['there', 'their', "they're"], ['its', "it's"], ['accept', 'except'],
+  ['lose', 'loose'], ['quiet', 'quite'], ['whose', "who's"], ['affect', 'effect']];
 // Forms that only differ by agreement inside the same tense: one for another is an agreement mistake.
 const AGREEMENT_SETS = [['is', 'are', 'am'], ['was', 'were'], ['has', 'have'], ['does', 'do'], ["doesn't", "don't"],
   ["isn't", "aren't"], ["wasn't", "weren't"], ["there's", 'there are'], ["here's", 'here are']];
@@ -219,15 +223,24 @@ const REAL_WORDS = new Set(('a an the is are am was were be been being has have 
   'make made take took give gave run ran find found know knew grow grew').split(' '));
 // Contractions and their long forms count as the same words when checking equivalence.
 const PRONOUN_IS = new Set(['it', 'he', 'she', 'that', 'there', 'here', 'what', 'who', 'where', 'how']);
-function expandWords(toks) {
+const SUBJECTS = new Set(['i', 'you', 'he', 'she', 'it', 'we', 'they']);
+/**
+ * Words with contractions written out. invert: a "n't" word right before a subject pronoun is a question
+ * ("isn't it?"), whose long form is "is it not", so the pronoun goes before "not".
+ */
+function expandWords(toks, invert = true) {
   const out = [];
-  for (const raw of toks) {
+  for (let i = 0; i < toks.length; i++) {
+    const raw = toks[i];
     if (!isWord(raw)) continue;
     const t = lc(raw);
     let m;
-    if (t === 'cannot' || t === "can't") out.push('can', 'not');
-    else if (t === "won't") out.push('will', 'not');
-    else if ((m = t.match(/^(.+)n't$/))) out.push(m[1], 'not');
+    const neg = t === 'cannot' || t === "can't" ? 'can' : t === "won't" ? 'will' : (m = t.match(/^(.+)n't$/)) ? m[1] : null;
+    if (neg) {
+      const subj = invert && t !== 'cannot' && toks[i + 1] && SUBJECTS.has(lc(toks[i + 1]));
+      if (subj) out.push(neg, lc(toks[++i]), 'not');
+      else out.push(neg, 'not');
+    }
     else if ((m = t.match(/^(.+)'re$/))) out.push(m[1], 'are');
     else if ((m = t.match(/^(.+)'m$/))) out.push(m[1], 'am');
     else if ((m = t.match(/^(.+)'ll$/))) out.push(m[1], 'will');
@@ -271,6 +284,7 @@ function wrongWord(exp, got, next, inSlot) {
   if (e === g) return exp === got ? null : 'capital';
   if ((e === 'a' || e === 'an') && (g === 'a' || g === 'an')) return articleFits(got, next) ? null : 'article';
   if (HOMOPHONES.has(e) && HOMOPHONES.has(g)) return 'homophone';
+  if (CONFUSABLES.some((set) => set.includes(e) && set.includes(g))) return 'homophone';
   if (AGREEMENT_SETS.some((set) => set.includes(e) && set.includes(g))) return 'agreement';
   const base = IRREGULAR_PAST[e];
   if (base) {
@@ -279,6 +293,8 @@ function wrongWord(exp, got, next, inSlot) {
   }
   if (inSlot && [...stems(e)].some((x) => stems(g).has(x))) return 'verb';
   if (!REAL_WORDS.has(g) && nearMiss(exp, got)) return 'spelling';
+  // In a mistake's spot, a long word a few letters off the fix ("dosent" for "doesn't") is a misspelled try.
+  if (inSlot && !REAL_WORDS.has(g) && e[0] === g[0] && Math.min(e.length, g.length) >= 6 && editDistance(e, g) <= 3) return 'spelling';
   return null;
 }
 
@@ -313,6 +329,8 @@ const STATES = new Set(('alabama alaska arizona arkansas california colorado con
   'missouri montana nebraska nevada ohio oklahoma oregon pennsylvania tennessee texas utah vermont virginia ' +
   'washington wisconsin wyoming canada mexico england france').split(' '));
 const CONJ = new Set(['and', 'or', 'but', 'so', 'yet', 'nor']);
+const TAG_VERBS = new Set(['is', 'are', 'was', 'were', 'do', 'does', 'did', 'can', 'will', 'has', 'have', 'should', 'could', 'would']);
+const TITLES = new Set(['mr', 'mrs', 'ms', 'dr', 'st', 'jr']);
 const isCap = (t) => !!t && isWord(t) && t[0] !== lc(t[0]);
 
 /** Is the opening phrase before index k (no marks, ≤ 4 words, starts with an opener word)? */
@@ -341,13 +359,41 @@ function commaRequired(C, k) {
   }
   if (k - 1 === startIdx && isCap(prev) && !OPENERS.has(lc(prev))) return true; // Sam, do you ...
   if (isCap(next) && END_MARKS.has(C[k + 2])) return true; // Thank you, Mom.
+  // Tag question: "..., isn't it?"
+  if ((/n't$/i.test(next) || TAG_VERBS.has(lc(next))) && SUBJECTS.has(lc(C[k + 2] || '')) && C[k + 3] === '?') return true;
+  // A pair of commas around a short phrase in mid-sentence (appositive): "My team, the Hawks, won."
+  const between = (from, step) => {
+    let words = 0;
+    for (let i = from; i >= 0 && i < C.length; i += step) {
+      const t = C[i];
+      if (t === ',') return words >= 1 && words <= 4 ? i : -1;
+      if (t === '.' && TITLES.has(lc(C[i - 1] || ''))) continue; // Mr. Patel
+      if (!isWord(t) || CONJ.has(lc(t)) || ++words > 4) return -1;
+    }
+    return -1;
+  };
+  const pair = (open, close) => open > startIdx + 1 && !afterOpener(C, open) && !CONJ.has(lc(C[close + 1] || ''))
+    && isWord(C[open - 1] || '') && isWord(C[close + 1] || '');
+  const fwd = between(k + 1, 1), back = between(k - 1, -1);
+  if ((fwd >= 0 && pair(k, fwd)) || (back >= 0 && pair(back, k))) return true;
   return false;
 }
 
 /** A comma typed at index k of the answer where the model has none: fine only in an optional spot. */
 function commaAllowed(A, k) {
   const next = A[k + 1] || '';
-  if (CONJ.has(lc(next)) && isWord(A[k - 1] || '')) return true; // before "and"/"but" (Oxford or compound)
+  if (CONJ.has(lc(next)) && isWord(A[k - 1] || '')) {
+    if (!['and', 'or', 'nor'].includes(lc(next))) return true; // before "but"/"so": joins two sentences
+    // Oxford comma: the last item of a list ("crayons, glue, and paper").
+    let words = 0, i = k - 1;
+    while (i >= 0 && isWord(A[i]) && words <= 3) { words++; i--; }
+    if (A[i] === ',' && words >= 1 && words <= 3) return true;
+    // Compound sentence: a clause follows ("..., and Omar can hang it up"), not just one more item ("pears, and peaches").
+    let tail = 0;
+    for (let j = k + 2; j < A.length && isWord(A[j]); j++) tail++;
+    const subj = A[k + 2] || '';
+    return tail >= 3 || (tail >= 2 && (SUBJECTS.has(lc(subj)) || isCap(subj)));
+  }
   if (afterOpener(A, k)) return true;
   if (next === '"') return true; // before speech
   return false;
@@ -366,6 +412,7 @@ const TIPS = {
   'capital-start': 'Remember: a sentence starts with a capital letter.',
   'end-mark': "Don't forget the mark at the end of the sentence.",
   punctuation: 'Check your punctuation marks.',
+  'double-mark': 'A sentence ends with just one mark.',
   comma: 'Check where your commas go.',
   dropped: 'It looks like a word or mark went missing.',
   repeated: 'A word is written twice.',
@@ -442,9 +489,13 @@ function judgeSlot(winA, winC, winW, after) {
   }
   const words = (toks) => toks.filter(isWord).map(lc);
   if (winA.length && sameList(words(winA), words(winC))) return 'wrong'; // same words, wrong marks or capitals
-  const xa = expandWords(winA);
-  if (xa.length && sameList(xa, expandWords(winC))) return 'equal';
-  if (xa.length && sameList(xa, expandWords(winW))) return 'wrong';
+  if (expandWords(winA).length) {
+    const tail = after && isWord(after) ? [after] : []; // "isn't" + "it" → "is it not"
+    const xa = expandWords([...winA, ...tail]);
+    if (sameList(xa, expandWords([...winC, ...tail]))) return 'equal';
+    if (sameList(expandWords([...winA, ...tail], false), expandWords([...winC, ...tail], false))) return 'wrong'; // "is not it?"
+    if (sameList(xa, expandWords([...winW, ...tail]))) return 'wrong';
+  }
   const k = wordVerdict(winC, winA, after, true);
   return k && k !== 'same' ? 'wrong' : null;
 }
@@ -572,6 +623,15 @@ export function grade(item, answer) {
   const cEnd = endMark(C);
   if (cEnd && !endMark(A) && !extras.some((x) => x.clear && x.aEnd === A.length)) {
     extras.push({ expected: cEnd, got: '', kind: 'end-mark', clear: true, aStart: A.length, aEnd: A.length });
+  }
+
+  // Stacked end marks ("open?.", "room.!") that the model sentence does not have.
+  for (let i = 0; i + 1 < A.length; i++) {
+    if (!END_MARKS.has(A[i]) || !END_MARKS.has(A[i + 1])) continue;
+    if (C.some((t, j) => t === A[i] && C[j + 1] === A[i + 1])) continue;
+    if (!extras.some((x) => x.clear && x.aStart <= i + 1 && x.aEnd > i)) {
+      extras.push({ expected: A[i], got: A[i] + A[i + 1], kind: 'double-mark', clear: true, aStart: i, aEnd: i + 2 });
+    }
   }
 
   const fixed = [], unfixed = [], unknown = [];

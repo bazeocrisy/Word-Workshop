@@ -240,15 +240,8 @@ test('hand-written sample covers every skill and difficulty with 40+ responses a
 // ================================================================ RE-AUDIT (after the curriculum revision
 // and the engine fixes for E1–E9). Fresh realistic answers, not used in the first audit. The revised
 // items (MIX-001, COM-014, HOM-015, COM-015, MIX-013, POS-013, TEN-015, SVA-009 …) are included.
-// Minor engine leftovers are marked { todo: 'engine (minor): …' }.
-
-const M = {
-  misspelledTarget: 'engine (minor): a misspelling more than 2 letters from the target ("dosent") is "unknown" → review',
-  droppedRequired: 'engine (minor): dropping a required non-error comma (appositive, tag question) is not "clear" → review',
-  wrongRealWord: 'engine (minor): a different real word swapped in for an untouched word ("are" for "our") is "different-word" → review',
-  doubleMark: 'engine (minor): a doubled or ungrammatical end ("?.", "is not it?") goes to review',
-  addedTwoItem: 'engine (minor): an added comma before "and" joining only two nouns is allowed as if it were optional → review',
-};
+// The minor engine leftovers found there (misspelled target, dropped appositive/tag comma, confusable real word,
+// stacked end marks, comma joining only two items) are fixed and now run as normal assertions.
 
 const RE_CASES = [
   // revised items
@@ -342,14 +335,14 @@ const RE_CASES = [
   ['SF-POS-012', 'They\'re hanging all the student\'s drawings in the hallway, and Ms. Lee\'s class can\'t wait to see them.', 'incorrect'],
   ['SF-CAP-014', 'Mrs. Okafor said that I could read my Report about Harriet Tubman on Friday.', 'incorrect'],
   ['SF-CAP-004', 'Our soccer coach Mr. Patel ran laps with us.', 'incorrect'],
-  // minor engine leftovers (clearly wrong, but sent to review)
-  ['SF-SVA-003', 'My little sister dosent like spicy food at all.', 'incorrect', M.misspelledTarget],
-  ['SF-CAP-015', 'My brother\'s team the Hilltop Hawks won the big game against the Lakeview Lions on Saturday.', 'incorrect', M.droppedRequired],
-  ['SF-POS-011', 'Abraham Lincoln\'s face is on the penny isn\'t it?', 'incorrect', M.droppedRequired],
-  ['SF-HOM-006', 'We mixed flour and water to make clay for are science project.', 'incorrect', M.wrongRealWord],
-  ['SF-END-010', 'The library has a new reading room. When does it open?.', 'incorrect', M.doubleMark],
-  ['SF-POS-011', 'Abraham Lincoln\'s face is on the penny, is not it?', 'incorrect', M.doubleMark],
-  ['SF-HOM-014', 'When we went to the market, we saw a sign for a sale on fresh pears, and peaches.', 'incorrect', M.addedTwoItem],
+  // former minor engine leftovers (clearly wrong; used to be sent to review)
+  ['SF-SVA-003', 'My little sister dosent like spicy food at all.', 'incorrect'],
+  ['SF-CAP-015', 'My brother\'s team the Hilltop Hawks won the big game against the Lakeview Lions on Saturday.', 'incorrect'],
+  ['SF-POS-011', 'Abraham Lincoln\'s face is on the penny isn\'t it?', 'incorrect'],
+  ['SF-HOM-006', 'We mixed flour and water to make clay for are science project.', 'incorrect'],
+  ['SF-END-010', 'The library has a new reading room. When does it open?.', 'incorrect'],
+  ['SF-POS-011', 'Abraham Lincoln\'s face is on the penny, is not it?', 'incorrect'],
+  ['SF-HOM-014', 'When we went to the market, we saw a sign for a sale on fresh pears, and peaches.', 'incorrect'],
 ];
 
 for (const [id, answer, expect, todo] of RE_CASES) {
@@ -357,6 +350,39 @@ for (const [id, answer, expect, todo] of RE_CASES) {
 }
 
 test('re-audit: at least 30 new hand-written answers', () => assert.ok(RE_CASES.length >= 30));
+
+// Rules added for the minor leftovers: more clearly wrong answers, and valid answers that must stay correct/ok.
+const RULE_CASES = [
+  // misspelled try at the fix (up to 3 letters off, 6+ letters, same first letter)
+  ['SF-SVA-003', 'My little sister dosnt like spicy food at all.', 'incorrect'],
+  ['SF-SVA-003', 'My little sister does not like spicy food at all.', 'correct'],
+  ['SF-SVA-003', 'My little sister doesn\'t like spicy food at all!', 'ok'],
+  // required appositive / tag-question commas; optional commas stay optional
+  ['SF-CAP-015', 'My brother\'s team, the Hilltop Hawks won the big game against the Lakeview Lions on Saturday.', 'incorrect'],
+  ['SF-CAP-004', 'Our soccer coach, Mr. Patel ran laps with us.', 'incorrect'],
+  ['SF-CAP-004', 'Our soccer coach, Mr. Patel, ran laps with us.', 'correct'],
+  ['SF-POS-011', 'Abraham Lincoln\'s face is on the penny, is it not?', 'ok'],
+  ['SF-COM-005', 'We planted beans, peas, carrots and lettuce in the school garden.', 'correct'],
+  ['SF-CAP-012', 'Last June my family camped at Yellowstone National Park with Uncle Ray and Aunt Bea.', 'ok'],
+  // commonly confused real words
+  ['SF-CAP-005', 'George Washington was the first president off the United States.', 'incorrect'],
+  ['SF-HOM-006', 'We mixed flour and water to make clay for our art project.', 'ok'], // real synonym swap
+  // stacked end marks
+  ['SF-END-010', 'The library has a new reading room. When does it open?!', 'incorrect'],
+  ['SF-CAP-001', 'Our class visited the library on Monday.!', 'incorrect'],
+  ['SF-COM-001', 'Yes, we can borrow two books from the library today!', 'ok'], // "Yes, that's it!" style
+  ['SF-END-012', 'My puppy ran away this morning! Can you help me look for him?', 'ok'],
+  // comma before "and": fine in a series of 3+ or before a clause, wrong between two items
+  ['SF-SPL-003', 'The butterfly had beautiful orange, and black wings.', 'incorrect'],
+  ['SF-HOM-014', 'When we went to the market, we saw a sign for a sale on fresh pears and peaches.', 'correct'],
+  ['SF-COM-011', 'Lucia, you can paint the sign, and Omar can hang it up.', 'correct'],
+  ['SF-COM-014', 'Mom, I packed crayons, glue, and paper, but I forgot the scissors.', 'correct'],
+  ['SF-SPL-022', 'Every morning, our teacher writes a question on the board, and we write our answers in our journals.', 'correct'],
+];
+
+for (const [id, answer, expect] of RULE_CASES) {
+  test(`new rule ${id}: ${JSON.stringify(answer)} → ${expect}`, () => check(id, answer, expect));
+}
 
 // ---------------------------------------------------------------- Thinking Lab (altCategory / labAccepts)
 
