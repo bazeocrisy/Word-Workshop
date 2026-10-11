@@ -1,6 +1,6 @@
 # Sentence Fix — Independent Educational Audit (Agent 5)
 
-> **Re-audit status (latest):** see section 12. Content bank: approved once the single remaining fix is made (remove `altCategory` from SF-SVA-003); 149/150 items PASS. Grading engine: APPROVED (Minor items only). Audit tests: 389 tests, 381 pass, 0 fail, 8 todo.
+> **Re-audit status (final):** see section 12. **Content bank: APPROVED. All 150 items PASS** after R1 was fixed in commit 42bebc6. **Grading engine: APPROVED** (only Minor items remain). Audit tests after 42bebc6: 389 tests, 382 pass, 0 fail, 7 todo (the Minor engine cases e-R1 to e-R5).
 
 Branch `claude/student-first-v3`. Audited: `data/sentence-fix/bank.json` (all 150 items read one by one), `docs/SENTENCE-FIX-CURRICULUM.md`, `js/sentencefix/engine.js`. Independent grading tests: `tests/unit/sentencefix-grading-audit.test.mjs`. Nothing in the bank, the engine, or other app code was changed.
 
@@ -586,10 +586,10 @@ Suggested low-risk fixes:
 - e-R5: `commaAllowed` before *and* should require at least two earlier list commas.
 
 ### 12.6 Test output
-`node --test tests/unit/sentencefix-grading-audit.test.mjs` gives `tests 389, pass 381, fail 0, todo 8`.
+`node --test tests/unit/sentencefix-grading-audit.test.mjs` gives `tests 389, pass 381, fail 0, todo 8` before the R1 fix. After commit 42bebc6 it gives `tests 389, pass 382, fail 0, todo 7`: the SVA-003 Lab check now passes as a normal assertion. `sentencefix-bank.test.mjs` gives 13/13.
 
 The 8 `todo` tests are e-R1 to e-R5 (7 cases) and the SVA-003 altCategory check (R1). Every `todo` assertion currently fails, which confirms each finding is real. No todo passes by accident. `sentencefix-bank.test.mjs` (13/13) and `sentencefix-engine.test.mjs` (30/30) also pass.
 
 ### 12.7 FINAL VERDICT
-- **Content bank: NOT YET APPROVED — one Major finding blocks it.** 149 of 150 items PASS with no Critical or Major issue. The exception is SF-SVA-003: its `altCategory: "punctuation"` contradicts curriculum rule 3 (R1). Once that one field is deleted and the curriculum's altCategory list says 15, **the bank is approved**, with all 150 items passing. m-R2 (POS-006) is optional.
+- **Content bank: APPROVED. All 150 items PASS** with no Critical or Major issue. R1 was fixed in commit 42bebc6, and I verified the fix. The bank diff removes only `"altCategory": "punctuation"` from SF-SVA-003 and changes nothing else. The bank now has 15 `altCategory` fields, matching the curriculum, which says "15 places" and no longer lists SVA-003. The Lab test confirms SVA-003 no longer accepts Punctuation. Minor m-R2 (adding `altCategory: "spelling"` to POS-006 "Were → We're") stays optional and does not block approval.
 - **Grading engine: APPROVED.** No Critical or Major defects remain. E1–E9 are fixed and verified. No invalid answer is marked correct, and no valid answer is marked incorrect. The five Minor leftovers (e-R1 to e-R5) only send clearly wrong answers to review, and they can be scheduled as polish.
