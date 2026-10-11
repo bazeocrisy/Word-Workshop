@@ -236,6 +236,7 @@ const KNOWN_MISSPELLINGS = new Set(['wich', 'stoped', 'watter', 'wiling']);
 // Real words that are common misspellings of one particular word ("diner" for "dinner"). Scoped to that key word.
 const REAL_WORD_TYPOS = {
   dinner: ['diner'], friend: ['fiend'], friends: ['fiends'], tired: ['tied'], presents: ['presence'], present: ['presence'],
+  leaves: ['leafs'], loaves: ['loafs'], knives: ['knifes'], wolves: ['wolfs'], shelves: ['shelfs'], halves: ['halfs'],
   walked: ['waked'], woke: ['waked'], board: ['bored'], quite: ['quit'], quiet: ['quit'], dessert: ['desert'],
   desert: ['dessert'], clothes: ['cloths'], though: ['through', 'thought'],
   through: ['threw', 'though'], thought: ['though'], weather: ['whether'], whether: ['weather'], angel: ['angle'],
@@ -297,9 +298,12 @@ const SINGULAR_VERBS = new Set(['is', 'was', 'has', 'does', "isn't", "wasn't", "
 /** Looks like a describing word (it has a "-est" form: big → biggest, little → littlest). */
 const describing = (w) => isRealWord(`${w}est`) || isRealWord(`${w}${w.at(-1)}est`) || isRealWord(`${w}st`)
   || (w.endsWith('y') && isRealWord(`${w.slice(0, -1)}iest`));
-function numberBreaks(g, typedPlural, prev, next, prev2) {
+function numberBreaks(g, typedPlural, prev, next, prev2, next2) {
   const p = lc(prev || ''), n = lc(next || ''), pp = lc(prev2 || '');
   if (typedPlural ? SINGULAR_DET.has(p) : PLURAL_DET.has(p)) return true; // "a dogs", "two pencil"
+  // "two tiny crab": a number word, one describing word, then the thing, with nothing after it but a little word or the end.
+  if (!typedPlural && /^(two|three|four|five|six|seven|eight|nine|ten|many|several)$/.test(pp) && describing(p)
+    && (!isWord(next || '') || PREPOSITIONS.has(n) || CONJ.has(n))) return true;
   if (typedPlural ? SINGULAR_VERBS.has(n) : PLURAL_VERBS.has(n)) return true; // "dogs is", "player have"
   if (!typedPlural && !n.endsWith('s') && verbBase(n)) return true; // "the dog bark"
   // A verb that lost its -s after a one-thing subject ("the store close", "our teacher write a"), when the word
@@ -391,6 +395,7 @@ function numberDir(e, g) {
   return 0;
 }
 const numberPair = (e, g) => numberDir(e, g) !== 0;
+const IRREGULAR_PLURAL_SET = new Set(Object.values(IRREGULAR_PLURAL));
 const IRREGULAR_BASES = new Set(Object.values(IRREGULAR_PAST));
 /** Could be the plain form of a verb ("bark", "close", "bring"): it has a past form, and is not a small linking word. */
 const verbBase = (w) => /^[a-z]{2,}$/.test(w) && !PREPOSITIONS.has(w) && !DETERMINERS.has(w) && !SMALL_WORDS.has(w)
@@ -409,15 +414,21 @@ function verbNumber(w, r) {
 function subjectNumber(A, aV, C, cV) {
   const back = (T, i) => {
     const out = [];
+    let compound = false;
     for (let j = i - 1; j >= 0 && out.length < 6; j--) {
+      if (T[j] === '.' && TITLES.has(lc(T[j - 1] || ''))) continue; // Mr. Park's
       const t = lc(T[j]);
+      if (t === 'and' && isWord(T[j - 1] || '') && !isPastVerb(lc(T[j - 1])) && !HELPERS.has(lc(T[j - 1]))) compound = true;
       if (!isWord(T[j]) || CONJ.has(t) || t === 'that' || t === 'which' || t === 'who') break;
       out.unshift(t);
     }
-    return out;
+    return { out, compound };
   };
-  const a = back(A, aV), c = back(C, cV);
+  const { out: a, compound } = back(A, aV), c = back(C, cV).out;
   const typed = a.filter((t) => !c.includes(t)), key = c.filter((t) => !a.includes(t));
+  if (!typed.length) return null;
+  if (compound) return 'pl'; // "Maya and a friend": two people
+  if (a.some((t, i) => ['each', 'one', 'every', 'none', 'either', 'neither'].includes(t) && a[i + 1] === 'of')) return 'sg'; // "each of the students"
   for (const t of typed) {
     if (['they', 'we', 'you', 'i'].includes(t)) return 'pl';
     if (['he', 'she', 'it'].includes(t)) return 'sg';
@@ -425,6 +436,11 @@ function subjectNumber(A, aV, C, cV) {
     if (PLURAL_DET.has(t) || t === 'all') return 'pl';
     if (SINGULAR_DET.has(t)) return 'sg';
   }
+  // A new head noun with no plural ending ("Our team", "Mr. Park's class", "My family"): fits a one-thing verb.
+  const head = a[a.length - 1];
+  if (head && typed.includes(head) && isRealWord(head) && (!head.endsWith('s') || head.endsWith('ss')) && !head.includes("'")
+    && !SUBJECTS.has(head) && !DETERMINERS.has(head) && !PREPOSITIONS.has(head) && !REAL_WORDS.has(head)
+    && !IRREGULAR_PLURAL_SET.has(head)) return 'sg';
   return null;
 }
 /**
@@ -446,11 +462,16 @@ function coordinatedNumber(winA, winC) {
  * 'agreement', 'spelling') or null (could be a fair rewrite). `inSlot`: this is where a planted mistake was,
  * so another form of the same word (cook/cooked, want/wants) is also a mistake. `planted`: the planted mistake there.
  */
-function wrongWord(exp, got, next, inSlot, planted, prev, prev2) {
+function wrongWord(exp, got, next, inSlot, planted, prev, prev2, next2) {
   const e = lc(exp), g = lc(got);
   const pl = planted ? lc(planted) : '';
   // Another form of the key word typed where a SPELLING mistake was planted ("bush" where "bushs" → "bushes"):
   // judged like any other word. Where a word-form mistake was planted ("cooks" → "cooked"), any other form is wrong.
+  // In a mistake's spot, a word that was already right (the mistake was a mark next to it: "poster" → "poster.")
+  // is judged like any other word when the child made it "more than one".
+  // Only toward "more than one" right after the/their/our… ("their posters"); "bean, peas" or "very colds" stay mistakes.
+  if (inSlot && pl && pl === e && numberDir(e, g) > 0
+    && ['the', 'their', 'our', 'my', 'your', 'his', 'her', 'these', 'those', 'some', 'many', 'all'].includes(lc(prev || ''))) inSlot = false;
   const spellingSlot = inSlot && pl && pl !== e && !pl.includes("'")
     && (!isRealWord(pl) || (HOMOPHONES.has(pl) && HOMOPHONES.has(e))); // "bushs" → "bushes", "see" → "sea"
   if (e === g) return exp === got ? null : 'capital';
@@ -461,7 +482,7 @@ function wrongWord(exp, got, next, inSlot, planted, prev, prev2) {
     if ((e === 'toward' && g === 'towards') || (e === 'towards' && g === 'toward')) return null;
     if (REAL_WORDS.has(e) || REAL_WORDS.has(g) || PLURAL_DET.has(e) || PREPOSITIONS.has(e) || IRREGULAR_PAST[e] || e.endsWith('ed')) return 'number';
     // One ↔ more than one: clear only when it breaks agreement ("two pencil", "player have").
-    return numberBreaks(g, numberDir(e, g) > 0, prev, next, prev2) ? 'number' : null;
+    return numberBreaks(g, numberDir(e, g) > 0, prev, next, prev2, next2) ? 'number' : null;
   }
   if (HOMOPHONES.has(e) && HOMOPHONES.has(g)) return 'homophone';
   // The same with an ending ("reeds" for "reads", "pairs" for "pears"), when the spellings are close.
@@ -487,6 +508,9 @@ function wrongWord(exp, got, next, inSlot, planted, prev, prev2) {
   if ((e.includes("'") || g.includes("'")) && [...stems(noApos(e))].some((x) => stems(noApos(g)).has(x))) return 'spelling';
   // A real word ("placed" for "planted", "hats" for "caps") may be a fair rewrite: never call it a misspelling,
   // unless it is one letter from both the fix and the planted mistake ("now" where "no" → "know").
+  // A one-thing verb after a plural pronoun or plural word ("children walks", "they runs") for the key's verb.
+  if (/[^s']s$/.test(g) && [...stems(e)].some((x) => x !== e && stems(g).has(x)) && prev
+    && (['they', 'we', 'you', 'i'].includes(lc(prev)) || IRREGULAR_PLURAL_SET.has(lc(prev)))) return 'agreement';
   if (isRealWord(g)) return inSlot && planted && lc(planted) !== e && editDistance(e, g) === 1 && editDistance(lc(planted), g) === 1 ? 'spelling' : null;
   if (nearMiss(exp, got)) return 'spelling';
   // In a mistake's spot, a non-word a few letters off the fix ("dosent", "exsighted") is a misspelled try.
@@ -496,6 +520,9 @@ function wrongWord(exp, got, next, inSlot, planted, prev, prev2) {
 
 /** Compare the key's tokens with the typed tokens word by word: a clear mistake kind, 'same', or null. */
 function wordVerdict(exp, got, after, inSlot, planted, before, before2) {
+  // The planted word at each position; when the mistake was only a mark ("poster" → "poster."), the words are the key's.
+  const sameWords = planted && sameList(planted.filter(isWord).map(lc), exp.filter(isWord).map(lc));
+  const plantedAt = (i) => (planted?.length === exp.length ? planted[i] : sameWords && isWord(exp[i]) ? exp[i] : undefined);
   if (exp.length !== got.length) {
     const squash = (toks) => lc(toks.join('')).replace(/-/g, '');
     return exp.length && squash(exp) === squash(got) ? 'spelling' : null;
@@ -504,7 +531,8 @@ function wordVerdict(exp, got, after, inSlot, planted, before, before2) {
   for (let i = 0; i < exp.length; i++) {
     if (exp[i] === got[i]) continue;
     if (!isWord(exp[i]) || !isWord(got[i])) return null;
-    const k = wrongWord(exp[i], got[i], got[i + 1] ?? after, inSlot, planted?.length === exp.length ? planted[i] : undefined, got[i - 1] ?? before, i >= 2 ? got[i - 2] : i === 1 ? before : before2);
+    const k = wrongWord(exp[i], got[i], got[i + 1] ?? after, inSlot, plantedAt(i), got[i - 1] ?? before, i >= 2 ? got[i - 2] : i === 1 ? before : before2,
+      got[i + 2] ?? (i + 1 < got.length ? after : undefined));
     if (!k) return null;
     if (kind === 'same') kind = k;
   }
@@ -636,6 +664,11 @@ function commaAllowed(A, k) {
     let tail = 0;
     for (let j = k + 2; j < A.length && (isWord(A[j]) || (A[j] === '.' && TITLES.has(lc(A[j - 1] || '')))); j++) if (isWord(A[j])) tail++;
     const subj = A[k + 2] || '';
+    // "My grandma, and I baked": a short name or noun at the start joined to a pronoun as one subject.
+    if (['i', 'we', 'he', 'she', 'they'].includes(lc(subj)) && k >= 2 && k <= 3 && isWord(A[k + 3] || '')
+      && ['my', 'our', 'your', 'his', 'her', 'their', 'the'].includes(lc(A[0]))
+      && A.slice(0, k).every((t) => isWord(t) && !isPastVerb(lc(t)) && !HELPERS.has(lc(t)) && !verbBase(lc(t)))
+      && isCap(A[0]) && !YES_NO.has(lc(A[0])) && !OPENERS.has(lc(A[0]))) return false;
     if (isCap(subj) && !SUBJECTS.has(lc(subj))) {
       // Names: "Uncle Ray, and Aunt Bea" (one more item) or "Maya, and Leo are" (two names as one subject).
       let j = k + 2;
@@ -702,8 +735,15 @@ function classify(h, A, C, insBag, delBag) {
     const [e] = exp, [g] = got;
     if (isWord(e) && isWord(g)) {
       if (lc(e) === lc(g)) return h.expAtStart !== (h.aStart === 0) ? ['moved', false] : ['capital', true];
-      const k = wrongWord(e, g, A[h.aStart + 1], false, undefined, A[h.aStart - 1], A[h.aStart - 2]);
-      return k ? [k, true] : ['different-word', false];
+      const k = wrongWord(e, g, A[h.aStart + 1], false, undefined, A[h.aStart - 1], A[h.aStart - 2], A[h.aStart + 2]);
+      if (k) return [k, true];
+      // "A baby foxes were" for "Two baby foxes were": one thing, then the same many things and a many-things verb.
+      if (/^(two|three|four|five|six|seven|eight|nine|ten)$/.test(lc(e)) && ['a', 'an', 'one'].includes(lc(g))) {
+        for (let j = h.aStart + 1; j <= h.aStart + 3 && j + 1 < A.length && isWord(A[j]); j++) {
+          if (/[^s']s$/.test(lc(A[j])) && C.includes(A[j]) && ['are', 'were', 'have'].includes(lc(A[j + 1]))) return ['number', true];
+        }
+      }
+      return ['different-word', false];
     }
     if (!isWord(e) && !isWord(g)) {
       const clear = END_MARKS.has(e) !== END_MARKS.has(g) || e === '?' || g === '?';
@@ -896,9 +936,9 @@ export function grade(item, answer) {
     extras.push({ expected: cEnd, got: '', kind: 'end-mark', clear: true, aStart: A.length, aEnd: A.length });
   }
 
-  // A stray "and"/"but"/"or" right before the end ("…in the trees, and.").
+  // A stray "and"/"but"/"or"/"nor" right before the end (not "so"/"yet": "or so.", "open yet?") ("…in the trees, and.").
   for (let i = 1; i < A.length; i++) {
-    if (!CONJ.has(lc(A[i])) || !(i === A.length - 1 || END_MARKS.has(A[i + 1]))) continue;
+    if (!['and', 'but', 'or', 'nor'].includes(lc(A[i])) || !(i === A.length - 1 || END_MARKS.has(A[i + 1]))) continue;
     if (C.some((t, j) => lc(t) === lc(A[i]) && (j === C.length - 1 || END_MARKS.has(C[j + 1])))) continue;
     if (!extras.some((x) => x.clear && x.aStart <= i && x.aEnd > i)) {
       extras.push({ expected: '', got: A[i], kind: 'stray-word', clear: true, aStart: i, aEnd: i + 1 });

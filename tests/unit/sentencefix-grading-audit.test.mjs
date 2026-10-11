@@ -413,6 +413,13 @@ const RULE_CASES = [
   ['SF-COM-002', 'Priya, please hand me the tape, and Mrs. Lee will bring the scissors.', 'ok'], // ", and" + a title name + verb
   ['SF-CAP-010', 'Every Wednesday, Ms. Rivera teach us songs in Spanish.', 'incorrect'],
   ['SF-CAP-007', 'Dr. Kim showed our class how bean plant grow toward sunlight in April.', 'incorrect'],
+  // K round: conservative new "incorrect" rules, and valid neighbours that stay review
+  ['SF-CAP-006', 'On Saturday we helps clean up Maple Street Park.', 'incorrect'], // plural pronoun + -s verb
+  ['SF-SPL-014', 'Long ago, many people travels across the country in covered wagons.', 'incorrect'],
+  ['SF-HOM-007', 'Dad, and I rode to the store to buy milk and two loaves of bread.', 'ok'], // could be "Dad," + a new sentence
+  ['SF-MIX-012', 'Isaac asked his dads, "Can we go to the library after lunch?"', 'ok'],
+  ['SF-END-006', 'Grandpa asked if we wanted pancakes for breakfasts.', 'incorrect'], // mark slot word, no "the/their" before it
+  ['SF-END-010', 'The library has a new reading room. When does it open, and?', 'incorrect'], // stray "and"
 ];
 
 for (const [id, answer, expect] of RULE_CASES) {
@@ -728,10 +735,10 @@ const CLOSING = [
   ['SF-SVA-007', 'My grandparents live on a farm, and their cows give lots of milk.', 'ok'],
   ['SF-SVA-010', 'Jin plays tennis with his brother, and Jin wins most of the games.', 'ok'],
   ['SF-SVA-001', 'Maya and Leo are both in the same reading group.', 'ok'],
-  ['SF-SVA-004', 'Our team has new jerseys this year.', 'ok', K.subjectCollective],
-  ['SF-SVA-012', 'Every Friday, Mr. Park\'s class takes a spelling test, and Ravi always gets every word right because he studies hard.', 'ok', K.subjectCollective],
-  ['SF-SVA-015', 'My family is cleaning the garage, and Dad says we can go swimming when the job is done.', 'ok', K.subjectCollective],
-  ['SF-SVA-012', 'Every Friday, each of Mr. Park\'s students takes a spelling test, and Ravi always gets every word right because he studies hard.', 'ok', K.subjectCollective],
+  ['SF-SVA-004', 'Our team has new jerseys this year.', 'ok'],
+  ['SF-SVA-012', 'Every Friday, Mr. Park\'s class takes a spelling test, and Ravi always gets every word right because he studies hard.', 'ok'],
+  ['SF-SVA-015', 'My family is cleaning the garage, and Dad says we can go swimming when the job is done.', 'ok'],
+  ['SF-SVA-012', 'Every Friday, each of Mr. Park\'s students takes a spelling test, and Ravi always gets every word right because he studies hard.', 'ok'],
   // VALID: "to" variants, irregular plurals, "and then", end words
   ['SF-MIX-003', 'Please don\'t forget your lunch tomorrow.', 'ok'],
   ['SF-MIX-003', 'Please remember to bring your lunch to school tomorrow.', 'ok'],
@@ -741,10 +748,10 @@ const CLOSING = [
   ['SF-SPL-024', 'Many years ago, the children walked to a small school and wrote their lessons on little chalkboards every day.', 'ok'],
   ['SF-SPL-024', 'Many years ago, kids walked to a small school and wrote their lessons on little chalkboards every day.', 'ok'],
   ['SF-COM-011', 'Lucia, you can paint the sign, and then Omar can hang it up.', 'ok'],
-  ['SF-SPL-012', 'Dad and I believe the store closes in ten minutes or so.', 'ok', K.strayAdverb],
-  ['SF-END-010', 'The library has a new reading room. Is it open yet?', 'ok', K.strayAdverb],
-  ['SF-END-001', 'Did you finish your spelling homework yet?', 'ok', K.strayAdverb],
-  ['SF-MIX-010', 'Yes, we finished our projects, but Leah and Nora are still painting their posters.', 'ok', K.markSlotWord],
+  ['SF-SPL-012', 'Dad and I believe the store closes in ten minutes or so.', 'ok'],
+  ['SF-END-010', 'The library has a new reading room. Is it open yet?', 'ok'],
+  ['SF-END-001', 'Did you finish your spelling homework yet?', 'ok'],
+  ['SF-MIX-010', 'Yes, we finished our projects, but Leah and Nora are still painting their posters.', 'ok'],
   // WRONG: must be incorrect
   ['SF-SVA-009', 'Honeybees make honey, and each bees has a special job in the hive.', 'incorrect'],
   ['SF-SPL-024', 'Many years ago, childs walked to a small school and wrote their lessons on little chalkboards every day.', 'incorrect'],
@@ -753,16 +760,16 @@ const CLOSING = [
   ['SF-HOM-006', 'We mixed flour and water make clay for our science project.', 'incorrect'],
   ['SF-TEN-020', 'Yesterday, the power went out, so we found flashlights and told stories until the lights came back on and.', 'incorrect'],
   ['SF-POS-008', 'My two brother bikes are in the garage, but Dad\'s car isn\'t.', 'incorrect'],
-  ['SF-SVA-001', 'Maya and a friend is in the same reading group.', 'incorrect', K.compoundSubject],
-  ['SF-SVA-015', 'My brother and a friend is cleaning the garage, and Dad says we can go swimming when the job is done.', 'incorrect', K.compoundSubject],
-  ['SF-SVA-010', 'Jin and a friend plays tennis, and Jin wins most of the games.', 'incorrect', K.compoundSubject],
-  ['SF-SPL-019', 'A baby foxes were hiding under the bushes near our tent.', 'incorrect', K.farNumber],
-  ['SF-MIX-011', 'At the beach, Elena found a starfish and two tiny crab under a rock.', 'incorrect', K.farNumber],
+  ['SF-SVA-001', 'Maya and a friend is in the same reading group.', 'incorrect'],
+  ['SF-SVA-015', 'My brother and a friend is cleaning the garage, and Dad says we can go swimming when the job is done.', 'incorrect'],
+  ['SF-SVA-010', 'Jin and a friend plays tennis, and Jin wins most of the games.', 'incorrect'],
+  ['SF-SPL-019', 'A baby foxes were hiding under the bushes near our tent.', 'incorrect'],
+  ['SF-MIX-011', 'At the beach, Elena found a starfish and two tiny crab under a rock.', 'incorrect'],
   ['SF-SVA-013', 'The old tool in our museum show how farmers worked, and each one has a sign that tells about it.', 'incorrect', K.farNumber],
-  ['SF-SPL-024', 'Many years ago, children walks to a small school and wrote their lessons on little chalkboards every day.', 'incorrect', K.farNumber],
-  ['SF-END-002', 'The leafs on the maple tree turn red in the fall.', 'incorrect', K.realPluralVerb],
-  ['SF-HOM-007', 'Dad and I rode to the store to buy milk and two loafs of bread.', 'incorrect', K.realPluralVerb],
-  ['SF-CAP-002', 'My grandma, and I baked bread for the neighbors.', 'incorrect', K.commaBeforeI],
+  ['SF-SPL-024', 'Many years ago, children walks to a small school and wrote their lessons on little chalkboards every day.', 'incorrect'],
+  ['SF-END-002', 'The leafs on the maple tree turn red in the fall.', 'incorrect'],
+  ['SF-HOM-007', 'Dad and I rode to the store to buy milk and two loafs of bread.', 'incorrect'],
+  ['SF-CAP-002', 'My grandma, and I baked bread for the neighbors.', 'incorrect'],
 ];
 
 for (const [id, answer, expect, todo] of CLOSING) {
