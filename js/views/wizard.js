@@ -36,6 +36,24 @@ function wizardPage({ step, week, student, title, intro }, ...body) {
 }
 
 const wizardNav = (...children) => h('div', { class: 'wizard-nav' }, children);
+
+// Steps that edit words: a visible saving state (every change is saved as it happens) and "Save and finish later".
+function saveControls(ed) {
+  const status = h('span', { class: 'save-status', 'aria-live': 'polite' }, 'All changes saved');
+  const save = ed.save.bind(ed);
+  ed.save = (log) => {
+    status.textContent = 'Saving…';
+    const p = save(log);
+    p.then(() => { status.textContent = 'All changes saved'; });
+    return p;
+  };
+  const later = btn('Save and finish later', async () => {
+    await ed.queue;
+    toast('Saved. Continue this lesson from the first screen or the parent area.');
+    go('#/parent');
+  }, 'btn-ghost save-later');
+  return h('span', { class: 'save-group' }, status, later);
+}
 const backLink = (href, label) => link(h('span', null, h('span', { 'aria-hidden': 'true' }, '‹ '), label), href, 'btn btn-ghost wizard-back');
 
 async function loadWeek(wid) {
@@ -130,7 +148,19 @@ export async function wizardWords({ params }) {
 }
 
 class WordsStep extends Editor {
-  constructor(...a) { super(...a); this.home = stepHref(this.w.id, 'words'); this.drafts = {}; }
+  constructor(...a) { super(...a); this.home = stepHref(this.w.id, 'words'); this.drafts = {}; this.open = {}; }
+
+  // On a phone the two sections are stacked; a long word list is folded so the Spelling upload and paste buttons
+  // are not pushed far down the page. The parent opens it to edit; it stays open while they work.
+  entryList(kind, title, items) {
+    const fold = items.length > 3 && matchMedia('(max-width: 899px)').matches;
+    if (!fold) return [h('h3', null, title), h('ol', { class: 'entries' }, items)];
+    const d = h('details', { class: 'entries-fold', open: !!this.open[kind] },
+      h('summary', null, `Show the ${items.length} ${kind === 'vocab' ? 'vocabulary' : 'spelling'} words (edit, remove or reorder)`),
+      h('ol', { class: 'entries' }, items));
+    d.addEventListener('toggle', () => { this.open[kind] = d.open; });
+    return d;
+  }
 
   refreshSummary() { this.countVo.textContent = String(this.w.vocab.length); this.countSp.textContent = String(this.w.spelling.length); }
 
@@ -138,11 +168,11 @@ class WordsStep extends Editor {
     this.navMsg = h('div', { class: 'form-error', role: 'alert' });
     const empty = !this.w.vocab.length && !this.w.spelling.length;
     this.root = wizardPage({ step: 'words', week: this.w, student: this.student, title: 'Add this week\'s words',
-      intro: 'Add the vocabulary words, the spelling words, or both. Upload a photo of the teacher\'s sheet, paste a list, or type the words one at a time. Everything is saved as you go.' },
+      intro: 'Add vocabulary, spelling, or both: upload a photo of the teacher\'s sheet, paste a list, or type one word at a time. Everything is saved as you go.' },
     h('div', { class: 'subject-grid' }, this.subjectPanel('vocab'), this.subjectPanel('spelling')),
     empty ? h('p', { class: 'hint' }, 'Just trying Word Workshop? ', btn('Fill in the sample week', () => this.loadSample(), 'btn-ghost btn-small sample-btn')) : null,
     this.navMsg,
-    wizardNav(backLink(stepHref(this.w.id, 'start'), 'Back'), btn('Continue to Review ›', () => this.next(), 'btn-primary btn-big wizard-next')));
+    wizardNav(backLink(stepHref(this.w.id, 'start'), 'Back'), saveControls(this), btn('Continue to Review ›', () => this.next(), 'btn-primary btn-big wizard-next')));
     this.renderVocab(); this.renderSpelling(); this.refreshSummary();
     return this.root;
   }
@@ -199,15 +229,15 @@ class WordsStep extends Editor {
 
   renderVocab() {
     const list = this.w.vocab;
-    fill(this.vocabSection, h('h3', null, 'This week\'s vocabulary'),
-      list.length ? h('ol', { class: 'entries' }, list.map((it, i) => this.vocabRow(it, i, list))) : h('p', { class: 'hint empty-list' }, 'No vocabulary words yet. Leave this empty if there is no vocabulary this week.'));
+    fill(this.vocabSection,
+      list.length ? this.entryList('vocab', 'This week\'s vocabulary', list.map((it, i) => this.vocabRow(it, i, list))) : h('p', { class: 'hint empty-list' }, 'No vocabulary words yet. Leave this empty if there is no vocabulary this week.'));
     this.refreshSummary();
   }
 
   renderSpelling() {
     const list = this.w.spelling;
-    fill(this.spellingSection, h('h3', null, 'This week\'s spelling list'),
-      list.length ? h('ol', { class: 'entries' }, list.map((it, i) => this.spellingRow(it, i, list))) : h('p', { class: 'hint empty-list' }, 'No spelling words yet. Leave this empty if there is no spelling this week.'));
+    fill(this.spellingSection,
+      list.length ? this.entryList('spelling', 'This week\'s spelling list', list.map((it, i) => this.spellingRow(it, i, list))) : h('p', { class: 'hint empty-list' }, 'No spelling words yet. Leave this empty if there is no spelling this week.'));
     this.refreshSummary();
   }
 
@@ -292,7 +322,7 @@ class ReviewStep extends Editor {
         this.vocabSection = h('section', { class: 'card', 'aria-labelledby': 'sec-vo' }),
         this.spellingSection = h('section', { class: 'card', 'aria-labelledby': 'sec-sp' })),
       this.sourcesAside = h('aside', { class: 'editor-sources', 'aria-label': 'Source pages' })),
-    wizardNav(backLink(stepHref(this.w.id, 'words'), 'Back to Add words'), btn('Continue to Approve ›', async () => { await this.queue; go(stepHref(this.w.id, 'approve')); }, 'btn-primary btn-big wizard-next')));
+    wizardNav(backLink(stepHref(this.w.id, 'words'), 'Back to Add words'), saveControls(this), btn('Continue to Approve ›', async () => { await this.queue; go(stepHref(this.w.id, 'approve')); }, 'btn-primary btn-big wizard-next')));
     this.renderVocab(); this.renderSpelling(); this.renderSources(); this.refreshSummary();
     return this.root;
   }
@@ -353,7 +383,7 @@ export async function wizardApprove({ params }) {
         const done = await store.approveWeek(w.id);
         await store.setMeta(stepKey(w.id), null);
         toast(`Approved! ${who} can now study ${weekLabel(done)}.`);
-        go(`#/s/${w.studentId}`);
+        go(`#/s/${w.studentId}/w/${w.id}`); // the lesson's own page: Study, Practice and Test for both subjects
       } catch (e) {
         approveBtn.disabled = false;
         await alertDialog('Not approved yet', h('div', null, h('p', null, e.message), e.blockers ? h('ul', null, e.blockers.slice(0, 10).map((b) => h('li', null, b))) : null));

@@ -106,7 +106,11 @@ export default {
     await b.click('.approve-btn'); await b.wait(400); await b.settle();
     hash = await b.js('return location.hash;');
     t = await b.text();
-    check('approving returns to the student dashboard, where the lesson appears', hash === `#/s/${alex}` && /Week of Oct 19/.test(t), { hash, t: t.slice(0, 300) });
+    check('approving opens the new lesson for the student with Study, Practice and Test ready', hash === `#/s/${alex}/w/${w1}` && /Week of Oct 19/.test(t) && /Study/.test(t) && /Practice/.test(t) && /Test/.test(t), { hash, t: t.slice(0, 300) });
+    await b.go(`#/s/${alex}/w/${w1}/vocab/study`);
+    check('the student can open Study for the new lesson straight away', /Fortunate/.test(await b.text()));
+    await b.go(`#/s/${alex}/w/${w1}/vocab/test`);
+    check('the student can open the Test for the new lesson straight away', !/not ready|not available/.test(await b.text()));
     const s1 = await b.js(`return await WW.store.getApprovedLesson(${JSON.stringify(w1)});`);
     check('vocabulary-only lesson is an approved snapshot with exact definitions and no spelling',
       s1 && s1.version === 1 && s1.vocab.length === 2 && s1.spelling.length === 0 && s1.vocab[0].definition === 'Involving good luck or success' && s1.vocab[0].definitionKind === 'teacher', s1 && s1.vocab[0]);
@@ -181,7 +185,8 @@ export default {
     wk = await b.js(`return await WW.store.getWeek(${JSON.stringify(w4)});`);
     check('after adding, the parent is back in Add words with the vocabulary listed', hash.endsWith(`/${w4}/words`) && wk.vocab.length === 12 && !wk.spelling.length
       && (await b.js(`return document.querySelectorAll('.subject-panel-vocab .entry').length;`)) === 12, { hash, n: wk.vocab.length });
-    check('words from the photo show how sure the reader was', /From photo · \d+% sure/.test(await b.text()));
+    check('words from the photo show how sure the reader was', /From photo · \d+% sure/.test(await b.js(`return document.querySelector('.subject-panel-vocab .entry-notes')?.textContent || '';`)));
+    check('on a phone, a long word list is folded so both sections\' buttons stay near the top', (await b.js(`return document.querySelectorAll('.entries-fold').length;`)) === 1);
     await b.click('a.upload-spelling'); await b.settle();
     check('"Upload spelling list" opens the photo reader set to spelling only', (await b.js(`return document.getElementById('import-target').value;`)) === 'spelling');
     await b.js(pickFiles(`Promise.all([window.__makeSynthetic('spelling')])`));
@@ -216,6 +221,9 @@ export default {
     await b.js(`${type('.subject-panel-vocab .new-word', 'Melancholy')} ${type('.subject-panel-vocab .new-def', 'A feeling of sadness')} return 1;`);
     await b.click('.add-one-vocab'); await b.js(settleSaves);
     await b.js(`${type('.subject-panel-spelling .new-word', 'crashe')} return 1;`); // typed, not added yet
+    check('Add words shows that changes are saved', /All changes saved/.test(await b.text()));
+    await b.click('.save-later'); await b.wait(300); await b.settle();
+    check('"Save and finish later" goes to the parent area with the lesson listed', (await b.js('return location.hash;')) === '#/parent' && /Lessons in progress/.test(await b.text()));
     await b.reload();
     await b.js(`for (let i = 0; i < 100 && !window.WW?.ready; i++) await new Promise((r) => setTimeout(r, 50));`);
     await b.go('#/');
