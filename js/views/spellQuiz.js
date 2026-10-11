@@ -29,7 +29,7 @@ async function spellSession({ params, query }, mode) {
   const title = mode === 'test' ? 'Spelling test' : 'Spelling practice';
   const only = query.only ? query.only.split(',').filter(Boolean) : null;
   const items = only ? snap.spelling.filter((s) => only.includes(s.id)) : snap.spelling;
-  if (!items.length) return themed(st, page({ title, back: base, backLabel: 'This week' }, emptyState('No spelling words this week.')));
+  if (!items.length) return themed(st, page({ title, back: `#/s/${st.id}/spelling?w=${snap.weekId}`, backLabel: 'Spelling' }, emptyState('No spelling words this week.')));
   const audio = speechSupported();
   if (audio) getVoice(); // look up voices now so the first tap can speak at once
   const key = draftKey(st, snap, mode, query.only);
@@ -58,7 +58,7 @@ class SpellSession {
   render() {
     this.body = h('div', { class: 'quiz spell-quiz' });
     this.live = h('div', { class: 'sr-only', 'aria-live': 'assertive', role: 'status' });
-    this.root = page({ title: this.title, back: this.base, backLabel: 'This week', cls: 'student',
+    this.root = page({ title: this.title, back: `#/s/${this.st.id}/spelling?w=${this.snap.weekId}`, backLabel: 'Spelling', cls: 'student',
       subtitle: this.only ? `Missed words · ${this.words.length} word${this.words.length === 1 ? '' : 's'}` : (this.mode === 'test' ? `${this.words.length} words · ${this.teacherOrder ? 'teacher\'s order' : 'mixed-up order'}` : `${this.words.length} words`) }, this.live, this.body);
     if (this.mode === 'test') setLeaveGuard(async () => { const ok = this.finished || await confirmDialog('Leave the test?', 'Your answers so far are kept on this device, so you can come back and finish it.', 'Leave'); if (ok) stopSpeaking(); return ok; });
     else setLeaveGuard(() => { stopSpeaking(); return true; });

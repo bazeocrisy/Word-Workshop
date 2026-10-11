@@ -48,6 +48,8 @@ function validate(obj) {
   const d = obj.data;
   if (!isObj(d)) { err('The backup has no data section.'); return { errors, summary: null }; }
   for (const k of ['students', 'weeks', 'snapshots', 'attempts', 'images', 'meta']) if (!isArr(d[k])) err(`The backup is missing its "${k}" list.`);
+  // Added in Word Workshop 3.0; older backups do not have them.
+  for (const k of ['passages', 'sentencefix']) { if (d[k] == null) d[k] = []; else if (!isArr(d[k])) err(`The backup's "${k}" list is malformed.`); }
   if (errors.length) return { errors, summary: null };
 
   const ids = (list, label) => {
@@ -109,7 +111,9 @@ function validate(obj) {
     if (!isInt(a.score) || !isInt(a.total) || a.score > a.total) err(`Result "${a.id}" has an invalid score.`);
     if (a.questions != null && !isArr(a.questions)) err(`Result "${a.id}" has malformed answers.`);
   });
-  d.images.forEach((im) => { if (isObj(im) && !(isStr(im.dataUrl) && /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(im.dataUrl))) err(`Image "${im.id}" is not a valid picture.`); });
+  d.images.forEach((im) => { if (isObj(im) && !(isStr(im.dataUrl) && /^data:(image\/(png|jpeg|webp|gif)|application\/pdf);base64,[A-Za-z0-9+/=]+$/.test(im.dataUrl))) err(`Image "${im.id}" is not a valid picture or PDF.`); });
+  d.passages.forEach((p, i) => { if (!isObj(p) || !isStr(p.id) || !ID_RE.test(p.id) || !studentIds.has(p.studentId)) err(`Reading passage #${i + 1} is malformed or belongs to a student that is not in the backup.`); });
+  d.sentencefix.forEach((r, i) => { if (!isObj(r) || !isStr(r.id) || !/^[A-Za-z0-9_:@.-]{1,120}$/.test(r.id) || !studentIds.has(r.studentId)) err(`Sentence Fix record #${i + 1} is malformed or belongs to a student that is not in the backup.`); });
   d.meta.forEach((m, i) => { if (!isObj(m) || !isStr(m.key)) err(`Setting #${i + 1} is malformed.`); });
 
   const summary = {

@@ -1,8 +1,10 @@
 // Minimal promise wrapper around IndexedDB. One database; every write is a single transaction.
 
 export const DB_NAME = 'word-workshop';
-const DB_VERSION = 1;
-export const STORES = ['students', 'weeks', 'snapshots', 'attempts', 'images', 'meta'];
+// Version 2 (Word Workshop 3.0) adds 'passages' (reading passages) and 'sentencefix' (Sentence Fix progress and test
+// results). Upgrading only creates the missing stores; existing data is never touched.
+const DB_VERSION = 2;
+export const STORES = ['students', 'weeks', 'snapshots', 'attempts', 'images', 'meta', 'passages', 'sentencefix'];
 
 let dbPromise = null;
 
@@ -24,6 +26,8 @@ export function openDb() {
       mk('attempts', 'id', ['studentId', 'weekId']);
       mk('images', 'id');
       mk('meta', 'key');
+      mk('passages', 'id', ['studentId']);
+      mk('sentencefix', 'id', ['studentId']);
     };
     req.onsuccess = () => {
       const db = req.result;

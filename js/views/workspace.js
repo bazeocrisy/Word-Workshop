@@ -42,7 +42,7 @@ export async function lessonWorkspace({ params = {}, query = {} }) {
   return new Workspace(week, students, stage, query).render();
 }
 
-class Workspace extends Editor {
+export class Workspace extends Editor {
   constructor(week, students, stage, query) {
     super(week || { id: '' }, null, []);
     this.w = week; this.students = students; this.stage = stage;

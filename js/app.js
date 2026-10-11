@@ -4,18 +4,33 @@ import * as model from './model.js';
 import * as db from './db.js';
 import { h } from './ui.js';
 import { homeView } from './views/home.js';
-import { studentHome, weekHome } from './views/student.js';
+import { studentHub, vocabHub, spellingHub, weekChooser } from './views/hub.js';
 import { parentDashboard, settingsView, resultsIndex } from './views/parent.js';
 import { backupView } from './views/backupView.js';
 import { notFoundPage, parentOnly } from './views/common.js';
 
 const lazy = (path, name) => async (ctx) => (await import(path))[name](ctx);
 
-// Student
+// Student: pick a name, then four areas (Vocabulary, Spelling, Reading Passage, Sentence Fix)
 route('/', homeView);
-route('/s/:sid', studentHome);
+route('/s/:sid', studentHub);
+route('/s/:sid/vocab', vocabHub);
+route('/s/:sid/spelling', spellingHub);
+route('/s/:sid/add/:subject', lazy('./views/studentAdd.js', 'studentAdd'));
+route('/s/:sid/reading', lazy('./views/reading.js', 'readingList'));
+route('/s/:sid/reading/add', lazy('./views/reading.js', 'readingAdd'));
+route('/s/:sid/reading/:pid', lazy('./views/reading.js', 'readingView'));
+route('/s/:sid/sentence-fix', lazy('./views/sentencefix.js', 'sfMenu'));
+route('/s/:sid/sentence-fix/learn', lazy('./views/sentencefix.js', 'sfLearn'));
+route('/s/:sid/sentence-fix/practice', lazy('./views/sentencefix.js', 'sfPractice'));
+route('/s/:sid/sentence-fix/lab', lazy('./views/sentencefix.js', 'sfLab'));
+route('/s/:sid/sentence-fix/test', lazy('./views/sentencefix.js', 'sfTest'));
+route('/s/:sid/sentence-fix/results', lazy('./views/sentencefix.js', 'sfResults'));
+route('/s/:sid/sentence-fix/results/:tid', lazy('./views/sentencefix.js', 'sfResult'));
 route('/s/:sid/results', lazy('./views/results.js', 'studentResults'));
-route('/s/:sid/w/:wid', weekHome);
+route('/s/:sid/w/:wid', weekChooser);
+route('/s/:sid/w/:wid/vocab/crossword', lazy('./views/crosswordView.js', 'crosswordView'));
+route('/s/:sid/w/:wid/spell/build', lazy('./views/wordBuildView.js', 'wordBuildView'));
 route('/s/:sid/w/:wid/vocab/study', lazy('./views/vocabStudy.js', 'vocabStudy'));
 route('/s/:sid/w/:wid/vocab/practice', lazy('./views/quiz.js', 'vocabPractice'));
 route('/s/:sid/w/:wid/vocab/test', lazy('./views/quiz.js', 'vocabTest'));
