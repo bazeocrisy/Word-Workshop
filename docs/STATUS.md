@@ -1,6 +1,6 @@
 # Word Workshop — build status (checkpoint log)
 
-Branch: `claude/build-v1` · Never merged to `main`, never deployed without owner approval.
+Branches: `claude/build-v1` (v1, merged to `main` and deployed 2026-10-11 with owner approval) · `claude/ux-wizard` (landing page + lesson wizard, awaiting owner review). Never merge or deploy without owner approval.
 Architecture: `docs/ARCHITECTURE-PROPOSAL.md` (vanilla JS ES modules, IndexedDB, hash routes, no build step).
 
 ## How to resume
@@ -119,6 +119,42 @@ The owner supplied the two original photos (kept in git-ignored local-fixtures/,
 - Independent review (2026-10-11): no Critical; 3 Major fixed — (1) single-reading/position-guessed spelling words and missing-period numbers are now flagged (confidence capped), "5." beats "5 minutes", and these notes reach the week editor as spelling warnings; words found only by extra readings are recorded as photo-read with confidence; (2) table mode no longer shows a false "No words were found" alert and keeps the raw card text for the audit trail; (3) enlarged images capped at 12 MP for iPhone/iPad. Minor fixed: extra readings skipped for vocabulary-only pages and shown with progress; reading mode restored in finally blocks; corner tool focus (opens on the first handle, returns to the page button), see-through handles; stale OCR doc lines.
 - Totals: 61 unit tests, 175 browser checks (Chrome and Edge).
 - Unresolved: vocabulary photo extraction needs a better source (full-resolution photo or phone text recognition) or an owner-approved online reader.
+
+## UX correction: landing page and lesson wizard (2026-10-11, branch `claude/ux-wizard`)
+The first real parent test showed parents could not find where to upload worksheets or enter words. The learning, OCR, testing and storage engines are unchanged; the parent experience is reorganised around creating a weekly lesson. **Not merged or deployed; awaiting owner review.**
+
+**Screens**
+- **Landing page (`#/`)**: explains the purpose. *Parents: create and manage lessons* has the primary **Create this week's lesson** button, Continue buttons for up to two unfinished lessons (hidden while a parent PIN locks the parent area), and Manage lessons / Results / Settings / Backup. *Students: study and test* has the profile cards (approved lessons only, as before).
+- **Header**: Home and Parents links on every screen.
+- **Parent dashboard (`#/parent`)**: prominent *Create this week's lesson*; *Lessons in progress* (never approved, or changed since approval) with status, step and Continue; *Approved lessons* per student; *Results, backup and settings*. New results index `#/parent/results`.
+- **Wizard** (`js/views/wizard.js`, `js/views/lessonSteps.js`):
+  1. `#/parent/new` or `/parent/week/:wid/start`: **Student and week.** The student is chosen with large radio cards. Dates default to the coming Monday–Friday. Errors are explained inline. A lesson for the same student whose dates overlap is refused, and "Open that lesson" is offered instead. An approved lesson stays with its student.
+  2. `/words`: **Add words.** There are separate **Vocabulary** and **Spelling** sections. Each offers upload (the photo reader opens preset to that subject and returns here), *Paste or type a list* (preset to that subject), and *Add one word*. Vocabulary is added as word + definition exactly as written. Entries can be edited, removed and reordered. Either subject may be empty. The section counts and photo-confidence badges stay visible. Half-typed entries survive a reload or a trip to Upload. Continuing with an un-added entry asks *Add it / Leave it out*.
+  3. `/review`: **Review.** This step uses the existing editor cards, with vocabulary first. It shows teacher definitions exactly, "First captured as …", ⚠️ warnings with acknowledgements, sentences, pictures, spelling patterns, source photos beside the words, a progress bar, and *Go to the next word to check*.
+  4. `/approve`: **Approve.** It shows vocabulary, spelling, checked and open-warning counts. If anything is unfinished, it lists what is left with a button back to Review, and no approve button is shown. Otherwise the parent must tick *I have compared every word, spelling and definition with the teacher's sheets* before **Approve and give to …** is enabled. Approval goes through `store.approveWeek` (blockers and integrity checks re-run, immutable snapshot). Afterwards the app opens the student's lesson list.
+- Every change autosaves to the lesson as before. The step reached is remembered (`meta` key `wizard:<lessonId>`, removed when the lesson is deleted). The existing all-in-one lesson page (`#/parent/week/:wid`) stays for approved lessons.
+- **Visual**: wider main area (1120 px) on parent screens, with student screens kept at 880 px. Two-column layouts on desktop (landing areas, dashboard, Vocabulary/Spelling side by side). Step indicator. A sticky Back/Continue bar. Coloured section borders. Large labelled buttons.
+
+**Tests**
+- `npm test`: 61/61.
+- `npm run test:browser`: 237/237. This includes the new `wizard` suite (64 checks covering the owner's 10 acceptance scenarios plus review regressions). The `responsive` suite now covers 18 screens, including the four wizard steps, at 375, 390, 768, 1024 and 1366 px.
+- `tests/walkthrough.mjs` (Sept 28 newsletter, through the wizard) completed with no errors:
+  - **Parent: 72 actions.** 16 are navigation and upload; 26 acknowledge warnings and 22 tick words. The warning count reflects the current OCR's stricter flags; the earlier measured run had fewer.
+  - Navigation went up by about 7 compared with the old single screen. Uploading the newsletter and the vocabulary page in their own sections takes 8 actions instead of 4. On the photo page, the parent can still set "What is on these pages?" to *Let the app decide* and upload both pages at once.
+
+**Independent review (2026-10-11):** no Critical findings.
+- **Major (fixed):** a half-typed definition was lost on reload because textarea content was set as an attribute. A test was added.
+- **Minor (fixed):**
+  - Same-tick double submit could create two lessons.
+  - Same-tick double click could add a word twice.
+  - *Leave it out* did not discard the typed word.
+  - Deleting a lesson left its wizard note.
+  - Approved-then-changed lessons were not listed as in progress. They now are, with Continue to the lesson page and no Delete in that list.
+  - On a phone, the dashboard's create button was below two notices. The notices now come after it.
+  - Draft names were shown on the home page while a PIN was set. They are now hidden while locked.
+- **Not changed (owner to confirm):** after approval the parent lands in the student's lesson list, as the requirement says, not back in the parent area.
+
+**Not verified:** real phones, tablets and screen readers; a timed session with a real parent.
 
 ## Known limitations / decisions log
 - Data lives in one browser on one device; no sync (by design, documented in the UI).

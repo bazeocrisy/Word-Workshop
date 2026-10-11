@@ -2,15 +2,16 @@
 // and one for students (study and test approved lessons).
 import { h, page, link } from '../ui.js';
 import { listStudents, listWeeks } from '../store.js';
-import { weekLabel } from '../model.js';
-import { avatar, themeClass, deviceNotice } from './common.js';
+import { weekLabel, weekStatus } from '../model.js';
+import { avatar, themeClass, deviceNotice, parentLocked } from './common.js';
 import { resumeHref } from './lessonSteps.js';
 
 export async function homeView() {
   const students = await listStudents();
-  // Unfinished lessons (never approved), most recently changed first, so a parent can pick up where they left off.
+  // Unfinished lessons (never approved, or changed since approval), most recently changed first, so a parent can
+  // pick up where they left off. Not listed while a parent PIN locks the parent area.
   const drafts = [];
-  for (const s of students) for (const w of await listWeeks(s.id)) if (!w.approvedVersion) drafts.push({ s, w });
+  if (!(await parentLocked())) for (const s of students) for (const w of await listWeeks(s.id)) if (!w.approvedVersion || weekStatus(w) === 'pending-changes') drafts.push({ s, w });
   drafts.sort((a, b) => String(b.w.updatedAt).localeCompare(String(a.w.updatedAt)));
   const resume = await Promise.all(drafts.slice(0, 2).map(async ({ s, w }) => link(
     h('span', null, h('span', { class: 'resume-what' }, `Continue ${s.displayName}'s lesson`), h('span', { class: 'resume-when' }, weekLabel(w))),

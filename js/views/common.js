@@ -53,6 +53,13 @@ export async function checkPin(pin) {
   return (await hashPin(pin, p.salt)) === p.hash;
 }
 
+/** True when a PIN is set and this tab has not unlocked the parent area. */
+export async function parentLocked() {
+  let unlocked = false;
+  try { unlocked = sessionStorage.getItem(SESSION_KEY) === '1'; } catch { /* ignore */ }
+  return !unlocked && (await pinEnabled());
+}
+
 export function lockParent() { try { sessionStorage.removeItem(SESSION_KEY); } catch { /* ignore */ } }
 
 /** Wrap a parent view: shows a PIN prompt when a PIN is set and this tab has not unlocked yet. */

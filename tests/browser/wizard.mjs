@@ -237,6 +237,35 @@ export default {
     await b.go(`#/parent/week/${w5}/start`);
     check('Back to step 1 keeps the saved student and dates', await b.js(`return document.querySelector('input[name=wz-student][value="${alex}"]').checked && document.getElementById('wz-start').value === '2026-11-09';`));
 
+    // Review findings (2026-10-11): half-typed definition kept; "Leave it out" discards; no double-created lesson;
+    // changed approved lessons listed as in progress; deleting clears the wizard note; drafts hidden while PIN-locked.
+    await b.go(`#/parent/week/${w5}/words`);
+    await b.js(`${type('.subject-panel-vocab .new-word', 'Gloomy')} ${type('.subject-panel-vocab .new-def', 'Dark and sad')} return 1;`);
+    await b.reload();
+    await b.js(`for (let i = 0; i < 100 && !window.WW?.ready; i++) await new Promise((r) => setTimeout(r, 50));`);
+    await b.settle();
+    check('a half-typed definition survives a reload', (await b.js(`return document.querySelector('.subject-panel-vocab .new-def').value;`)) === 'Dark and sad');
+    await b.click('.wizard-next'); await b.wait(150);
+    await b.click('.dialog .btn', '/Leave it out/'); await b.wait(300); await b.settle();
+    await b.go(`#/parent/week/${w5}/words`);
+    check('"Leave it out" discards the typed word', (await b.js(`return document.querySelector('.subject-panel-vocab .new-word').value + document.querySelector('.subject-panel-vocab .new-def').value;`)) === ''
+      && (await b.js(`return (await WW.store.getWeek(${JSON.stringify(w5)})).vocab.length;`)) === 1);
+    await b.go('#/parent/new');
+    await b.js(`document.querySelector('input[name=wz-student][value="${jordan}"]').click(); ${type('#wz-start', '2026-11-16')} const f = document.querySelector('.wizard-form'); f.requestSubmit(); f.requestSubmit(); await new Promise((r) => setTimeout(r, 600)); return 1;`);
+    const same = await b.js(`return (await WW.store.listWeeks(${JSON.stringify(jordan)})).filter((w) => w.startDate === '2026-11-16').map((w) => w.id);`);
+    check('submitting step 1 twice at once creates only one lesson', same.length === 1, same);
+    await b.js(`await WW.store.setMeta('wizard:' + ${JSON.stringify(same[0])}, 'words'); await WW.store.deleteWeek(${JSON.stringify(same[0])}); return 1;`);
+    check('deleting a lesson removes its wizard note', (await b.js(`return await WW.store.getMeta('wizard:' + ${JSON.stringify(same[0])});`)) === null);
+    await b.js(`await WW.store.editWeek(${JSON.stringify(w1)}, (x) => { x.vocab[0].sentence = 'We felt fortunate to find a seat.'; x.vocab[0].sentenceSource = 'parent'; }, { action: 'test edit' }); return 1;`);
+    await b.go('#/parent');
+    t = await b.text();
+    check('an approved lesson changed since approval is listed as in progress (no Delete there)', /Lessons in progress \(2\)/.test(t) && /Changes not approved yet; Alex still sees version 1/.test(t)
+      && (await b.js(`return document.querySelectorAll('.lesson-row').length === 2 && document.querySelectorAll('.lesson-row .btn-ghost').length === 1;`)), t.slice(0, 900));
+    await b.js(`const c = await import('./js/views/common.js'); await c.setPin('2468'); sessionStorage.clear(); return 1;`);
+    await b.go('#/');
+    check('the home page does not list lessons in progress while the parent area is locked', !(await b.js(`return !!document.querySelector('.resume-btn');`)) && /Create this week's lesson/.test(await b.text()));
+    await b.js(`const c = await import('./js/views/common.js'); await c.setPin(null); return 1;`);
+
     // 9. Students cannot reach unapproved work.
     await b.go(`#/s/${alex}`);
     t = await b.text();

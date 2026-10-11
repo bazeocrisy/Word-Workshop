@@ -66,8 +66,14 @@ export async function wizardStart({ params = {}, query = {} }) {
   const errors = h('div', { class: 'form-error', role: 'alert' });
   const next = h('button', { type: 'submit', class: 'btn btn-primary btn-big wizard-next' }, 'Continue to Add words ›');
 
+  let busy = false; // a double tap must not create two lessons (set before the first await)
   const submit = async (e) => {
     e.preventDefault();
+    if (busy) return;
+    busy = true;
+    try { await submitOnce(); } finally { busy = false; }
+  };
+  const submitOnce = async () => {
     const sid = form.querySelector('input[name=wz-student]:checked')?.value;
     const v = { startDate: start.value, endDate: end.value || start.value, title: title.value.trim() };
     const problems = [];
@@ -87,7 +93,7 @@ export async function wizardStart({ params = {}, query = {} }) {
       if (open) go(await resumeHref(clash)); else start.focus();
       return;
     }
-    next.disabled = true; // a double tap must not create two lessons
+    next.disabled = true;
     try {
       if (!week) {
         const w = await store.createWeek(sid, v);
@@ -147,24 +153,29 @@ class WordsStep extends Editor {
     let saved = {};
     try { saved = JSON.parse(sessionStorage.getItem(draftKey) || '{}'); } catch { /* ignore */ }
     const word = h('input', { type: 'text', autocomplete: 'off', spellcheck: 'false', autocapitalize: vo ? null : 'none', class: `new-word ${vo ? 'add-vo' : 'add-sp'}`, value: saved.word || '' });
-    const def = vo ? h('textarea', { rows: 2, class: 'new-def', value: saved.def || '' }) : null;
+    const def = vo ? h('textarea', { rows: 2, class: 'new-def' }, saved.def || '') : null; // a textarea's text is its content, not a value attribute
     const keep = () => { try { sessionStorage.setItem(draftKey, JSON.stringify({ word: word.value, def: def?.value || '' })); } catch { /* ignore */ } };
     word.addEventListener('input', keep); def?.addEventListener('input', keep);
     const msg = h('p', { class: 'form-error', role: 'alert' });
+    const discard = () => { word.value = ''; if (def) def.value = ''; try { sessionStorage.removeItem(draftKey); } catch { /* ignore */ } };
+    let adding = false; // a double click must not add the word twice
     const add = async () => {
+      if (adding) return;
       const w = word.value.trim(), d = def ? def.value.trim() : '';
       if (!w) { fill(msg, vo && d ? 'Type the word for this definition.' : 'Type a word first.'); word.focus(); return; }
       fill(msg, '');
-      if (vo) this.w.vocab.push(newVocabItem({ word: w, definition: d, origin: 'typed' }));
-      else { const it = newSpellingItem({ word: w }); it.groups = suggestGroups(w); this.w.spelling.push(it); }
-      await this.save({ action: 'added', detail: `${vo ? 'vocabulary' : 'spelling'} "${w}" (typed)` });
-      word.value = ''; if (def) def.value = '';
-      try { sessionStorage.removeItem(draftKey); } catch { /* ignore */ }
-      this.rerender(kind);
-      toast(`Added "${w}".`);
-      word.focus();
+      adding = true;
+      try {
+        if (vo) this.w.vocab.push(newVocabItem({ word: w, definition: d, origin: 'typed' }));
+        else { const it = newSpellingItem({ word: w }); it.groups = suggestGroups(w); this.w.spelling.push(it); }
+        await this.save({ action: 'added', detail: `${vo ? 'vocabulary' : 'spelling'} "${w}" (typed)` });
+        discard();
+        this.rerender(kind);
+        toast(`Added "${w}".`);
+        word.focus();
+      } finally { adding = false; }
     };
-    this.drafts[kind] = () => (word.value.trim() || (def && def.value.trim()) ? { word, def, add } : null);
+    this.drafts[kind] = () => (word.value.trim() || (def && def.value.trim()) ? { word, def, add, discard } : null);
     const id = `wz-h-${kind}`;
     const count = h('span', { class: 'count-pill' }, '0');
     if (vo) this.countVo = count; else this.countSp = count;
@@ -246,7 +257,8 @@ class WordsStep extends Editor {
       const v = await dialog({ title: 'Add the word you typed?', body: `"${d.word.value.trim() || d.def?.value.trim()}" is typed in ${kind === 'vocab' ? 'Vocabulary' : 'Spelling'} but has not been added yet.`,
         buttons: [{ label: 'Leave it out', value: 'skip', cls: 'btn-ghost' }, { label: 'Add it', value: 'add' }] });
       if (!v) return;
-      if (v === 'add') { await d.add(); if (this.drafts[kind]?.()) return; }
+      if (v === 'skip') d.discard();
+      else { await d.add(); if (this.drafts[kind]?.()) return; }
     }
     await this.queue;
     if (!this.w.vocab.length && !this.w.spelling.length) {

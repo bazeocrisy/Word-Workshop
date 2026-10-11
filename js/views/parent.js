@@ -27,7 +27,11 @@ async function backupReminder() {
 export async function parentDashboard() {
   const students = await listStudents();
   const drafts = [], approved = [];
-  for (const st of students) for (const w of await listWeeks(st.id)) (w.approvedVersion ? approved : drafts).push({ st, w });
+  for (const st of students) for (const w of await listWeeks(st.id)) {
+    if (w.approvedVersion) approved.push({ st, w });
+    // In progress: never approved, or approved and then changed (the student still sees the approved version).
+    if (!w.approvedVersion || weekStatus(w) === 'pending-changes') drafts.push({ st, w });
+  }
   drafts.sort((x, y) => String(y.w.updatedAt).localeCompare(String(x.w.updatedAt)));
   const counts = (w) => `${w.vocab.length} vocabulary · ${w.spelling.length} spelling`;
 
@@ -35,10 +39,11 @@ export async function parentDashboard() {
     avatar(st),
     h('div', { class: 'lesson-main' },
       h('span', { class: 'lesson-name' }, `${st.displayName} · ${weekLabel(w)} `, statusBadge(w)),
-      h('span', { class: 'lesson-meta' }, counts(w), ' · ', stepLabel(await resumeStep(w)))),
+      h('span', { class: 'lesson-meta' }, counts(w), ' · ', w.approvedVersion ? `Changes not approved yet; ${st.displayName} still sees version ${w.approvedVersion}` : stepLabel(await resumeStep(w)))),
     h('div', { class: 'lesson-actions' },
       link('Continue', await resumeHref(w), 'btn btn-primary btn-small continue-draft', { 'aria-label': `Continue ${st.displayName}'s lesson, ${weekLabel(w)}` }),
-      btn('Delete', () => confirmDeleteWeek(w.id), 'btn-ghost btn-small', { 'aria-label': `Delete ${st.displayName}'s draft lesson, ${weekLabel(w)}` })))));
+      // An approved lesson has results; deleting it is done deliberately from the lesson page, not from this list.
+      w.approvedVersion ? null : btn('Delete', () => confirmDeleteWeek(w.id), 'btn-ghost btn-small', { 'aria-label': `Delete ${st.displayName}'s draft lesson, ${weekLabel(w)}` })))));
 
   const approvedFor = (st) => {
     const mine = approved.filter((x) => x.st.id === st.id);
@@ -54,13 +59,13 @@ export async function parentDashboard() {
 
   return page({ title: 'Parent area', back: '#/', backLabel: 'Home', cls: 'parent dashboard',
     subtitle: 'Create each week\'s lesson, check it, and approve it so your child can study it.' },
-  students.some((x) => DEMO_STUDENTS.some((d) => d.displayName === x.displayName)) ? h('div', { class: 'card notice' }, h('p', null, 'The profiles start with demo names. Change them to your children\'s names in Settings (names stay on this device).'), link('Rename in Settings', '#/parent/settings', 'btn btn-ghost btn-small')) : null,
-  await backupReminder(),
   students.length ? h('section', { class: 'card create-card', 'aria-labelledby': 'pd-create' },
     h('h2', { id: 'pd-create' }, 'New week'),
     h('p', null, 'Upload or type the teacher\'s spelling and vocabulary lists, check every word, then approve.'),
     link(h('span', null, h('span', { 'aria-hidden': 'true' }, '＋ '), 'Create this week\'s lesson'), '#/parent/new', 'btn btn-primary btn-big create-lesson'))
     : emptyState('Add a student in Settings to get started.', link('Settings', '#/parent/settings', 'btn btn-primary')),
+  students.some((x) => DEMO_STUDENTS.some((d) => d.displayName === x.displayName)) ? h('div', { class: 'card notice' }, h('p', null, 'The profiles start with demo names. Change them to your children\'s names in Settings (names stay on this device).'), link('Rename in Settings', '#/parent/settings', 'btn btn-ghost btn-small')) : null,
+  await backupReminder(),
   h('div', { class: 'dash-grid' },
     h('section', { class: 'dash-col', 'aria-labelledby': 'pd-drafts' },
       h('h2', { id: 'pd-drafts' }, `Lessons in progress (${drafts.length})`),
@@ -131,6 +136,7 @@ export async function confirmDeleteWeek(weekId) {
   const ok = await confirmDialog('Delete this week?', `Delete ${weekLabel(w)} with all its versions and results? This cannot be undone. Consider making a backup first.`, 'Delete week', true);
   if (!ok) return;
   await deleteWeek(weekId);
+  for (const kind of ['vocab', 'spelling']) { try { sessionStorage.removeItem(`ww-add:${weekId}:${kind}`); } catch { /* ignore */ } }
   toast('Week deleted.');
   go('#/parent');
 }
