@@ -77,3 +77,13 @@ test('M3 review: common silent-e words never get a non-word base (changed, ignor
   assert.equal(spellingChange('created').base, 'create');
   assert.equal(spellingChange('ignored').base, 'ignore');
 });
+
+test('M4 review: more silent-e words get a real base word', () => {
+  const expect = { tasted: 'taste', wasted: 'waste', pasted: 'paste', typed: 'type', caused: 'cause', paused: 'pause', raised: 'raise', praised: 'praise', pleased: 'please', teased: 'tease', breathed: 'breathe', bathed: 'bathe' };
+  for (const [w, base] of Object.entries(expect)) {
+    const c = spellingChange(w);
+    assert.equal(c.key, 'drop-e', w);
+    assert.equal(c.base, base, w);
+  }
+  for (const w of ['rested', 'listed', 'posted', 'lasted', 'played', 'stayed', 'rained']) assert.equal(spellingChange(w).key, 'add-ed', w);
+});

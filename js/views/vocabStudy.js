@@ -1,7 +1,7 @@
 // Vocabulary flashcards: picture, word, exact approved definition, example sentence, audio.
 import { h, fill, page, btn, link, emptyState } from '../ui.js';
 import { imageUrl } from '../store.js';
-import { speakButton, RATES } from '../speech.js';
+import { speakButton, speechSupported, RATES } from '../speech.js';
 import { fallbackLabel } from '../illustrations.js';
 import { loadLesson, themed } from './lesson.js';
 import { setLeaveGuard } from '../router.js';
@@ -58,6 +58,7 @@ export async function vocabStudy({ params, query }) {
 
   await show(i);
   return themed(st, page({ title: 'Vocabulary flashcards', back: base, backLabel: 'This week', cls: 'student' },
+    speechSupported() ? null : h('div', { class: 'card notice notice-warn' }, h('p', null, 'Sound is not available on this device, so words cannot be read aloud here.')),
     counter, cardSlot,
     h('div', { class: 'row fc-nav' }, prev, next),
     h('p', { class: 'hint' }, 'Tip: use the arrow keys to move between cards.'),

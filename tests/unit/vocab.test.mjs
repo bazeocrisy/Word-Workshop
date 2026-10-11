@@ -121,3 +121,10 @@ test('M3 review: same word twice is never in a matching round; shared definition
   const f = mixed.questions.find((q) => q.word === 'Fortunate');
   assert.ok(f && ['def-mc', 'blank'].includes(f.type), 'mixed falls back to a fair type for Fortunate');
 });
+
+test('M4 review: a word that appears twice in its sentence is hidden everywhere', async () => {
+  const { blankSentence } = await import('../../js/vocab.js');
+  assert.equal(blankSentence('I washed my hands. Washed hands are clean!', 'washed'), 'I _____ my hands. _____ hands are clean!');
+  assert.equal(blankSentence('The unwashed cup.', 'washed'), null, 'not a whole word');
+  assert.equal(blankSentence('We rushed home.', 'rushed'), 'We _____ home.');
+});

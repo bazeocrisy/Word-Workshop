@@ -33,8 +33,8 @@ export async function spellStudy({ params, query }) {
     const groups = groupItems(items, view);
     fill(slot,
       h('p', { class: 'hint' }, view === 'spelling' ? 'Grouped by how the letters change when -ed is added.' : 'Grouped by how the -ed ending sounds when you say the word.'),
-      groups.map((g) => h('section', { class: 'card spell-group', 'aria-labelledby': `g-${view}-${g.key}` },
-        h('h2', { id: `g-${view}-${g.key}` }, g.label, h('span', { class: 'count' }, ` · ${g.items.length}`)),
+      groups.map((g, gi) => h('section', { class: 'card spell-group', 'aria-labelledby': `g-${view}-${gi}` },
+        h('h2', { id: `g-${view}-${gi}` }, g.label, h('span', { class: 'count' }, ` · ${g.items.length}`)),
         g.explain ? h('p', { class: 'hint' }, g.explain) : null,
         h('ul', { class: 'spell-list', role: 'list' }, g.items.map((it) => {
           const reason = it.groups && it.groups[view] && it.groups[view].reason;

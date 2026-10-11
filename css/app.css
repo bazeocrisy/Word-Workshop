@@ -302,3 +302,38 @@ details > summary { cursor: pointer; min-height: 44px; display: flex; align-item
 .ocr-photo figcaption { font-size: .9rem; color: var(--muted); }
 .ocr-text { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 1rem; }
 .tip summary { font-weight: 700; }
+
+/* Printable sheets (screen preview) */
+.print-page .sheet { background: #fff; color: #000; border: 1px solid var(--line); border-radius: 8px; padding: 1.25rem; }
+.sheet-head { border-bottom: 2px solid #000; margin-bottom: .75rem; }
+.sheet-head h1 { font-size: 1.5rem; margin: 0; }
+.sheet-head p { margin: .2rem 0 .4rem; }
+.print-section { margin-bottom: 1.5rem; }
+.print-note { font-size: .95rem; }
+.print-words { font-size: 1.25rem; line-height: 1.9; }
+.print-words-cols { columns: 3 10rem; }
+.print-group h3 { margin: .6rem 0 .1rem; }
+.practice-grid { width: 100%; border-collapse: collapse; }
+.practice-grid td { border-bottom: 1px solid #999; height: 2.3rem; padding: .2rem .4rem; }
+.pg-num { width: 2rem; color: #555; }
+.pg-word { width: 9rem; font-weight: 700; font-size: 1.1rem; }
+.vocab-guide th, .vocab-guide td, .results-print th, .results-print td { border: 1px solid #999; padding: .4rem .5rem; color: #000; }
+.vocab-guide th, .results-print th { background: #f1f1f1; }
+.vg-word { width: 9rem; }
+.vg-pic { display: block; width: 110px; margin-top: .3rem; }
+.vg-sentence { font-style: italic; }
+.print-tag { font-size: .85em; color: #444; }
+.readaloud li { margin: .5rem 0; font-size: 1.15rem; }
+
+@media print {
+  @page { margin: 14mm; }
+  body { background: #fff; color: #000; font-size: 12pt; }
+  .site-header, .skip-link, .no-print, .toast, .overlay, .page-head .back-link, .page-actions { display: none !important; }
+  main { padding: 0; max-width: none; }
+  .print-page .sheet { border: 0; padding: 0; }
+  .card, .subject, .flashcard { box-shadow: none; border-color: #999; }
+  a { color: #000; text-decoration: none; }
+  tr, .print-group, .readaloud li { break-inside: avoid; page-break-inside: avoid; }
+  .print-section + .print-section { break-before: page; page-break-before: always; }
+  .vocab-guide th, .results-print th { background: none; }
+}

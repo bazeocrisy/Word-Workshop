@@ -15,9 +15,9 @@ Architecture: `docs/ARCHITECTURE-PROPOSAL.md` (vanilla JS ES modules, IndexedDB,
 | 1 | Core application, profiles, storage | **Complete** — reviewed; 5 Major + 7 Minor findings fixed (see below) |
 | 2 | Weekly lesson editor and approval | **Complete** — reviewed; 4 Major + 6 Minor findings fixed (see below) |
 | 3 | Vocabulary learning and assessment | **Complete** — reviewed; 4 Major + 6 Minor findings fixed (see below) |
-| 4 | Spelling learning and assessment | Built, tests passing; independent review in progress |
+| 4 | Spelling learning and assessment | **Complete** — reviewed; 1 Critical + 1 Major + 6 Minor findings fixed (see below) |
 | 5 | Photograph extraction and verification | Built and tested on synthetic pages; **real-photo accuracy BLOCKED** (photos not supplied); review pending |
-| 6 | Illustrated-card workflow and printable materials | Not started |
+| 6 | Illustrated-card workflow and printable materials | Built, tests passing; independent review (with Milestone 5) in progress |
 | 7 | Full-system testing and final audit | Not started |
 
 ## Milestone 1 — Core application, profiles, storage
@@ -67,6 +67,9 @@ No Critical findings (answer keys, leak checks on every question of a mixed test
 - No speech: buttons disabled with a clear message; tests/practice switch to teacher order with a "Grown-up: read word number N" prompt and a link to the printable read-aloud list. Speech that fails to start is reported ("did not play"), never shown as playing.
 - Tests: 44 unit, 121 browser checks.
 
+### Milestone 4 review — resolution
+Critical fixed: a spelling word appearing twice in its sentence ("I washed my hands. Washed hands…") was only blanked once, showing the answer → every whole-word, any-case occurrence is now blanked (unit-tested). Major fixed: more silent-e words had non-word bases (tasted, typed, caused, raised, pleased, breathed…) → correct bases; plain words like rested/listed/played unchanged. Minor fixed: vocab test focus starts on the question (router honours data-autofocus); custom-pattern group headings get valid ids; a failed automatic first play now says "Tap Hear the word"; voices are looked up when the spelling screen opens and remembered, so later taps start speech immediately (iOS); the word number is part of the answer box description; "sound not available" shown once per page instead of under every button. Not changed: related forms (e.g. "rush" in a "rushed" sentence) are a hint, not the spelling; the parent sees and approves every sentence.
+
 ## Milestone 5 — Photograph extraction and verification
 - Genuine on-device OCR (Tesseract.js 5.1.1, vendored in vendor/, Apache-2.0); nothing uploaded. See docs/OCR.md.
 - Upload 1–6 pages; rotate/remove; unsupported/oversized/undecodable files refused with clear messages; "no words found" and reader-load failures explained with "Type or paste instead".
@@ -74,6 +77,11 @@ No Critical findings (answer keys, leak checks on every question of a mixed test
 - Review step: each photo beside editable spelling/vocabulary text, unsure words listed, live preview; "Add to the week as drafts" (never approved). Items carry reader confidence (least certain word); <80% raises a warning. Source photos and raw reader text are kept with the week and shown beside the editor.
 - Accuracy: `npm run test:ocr`. Real photos: BLOCKED until placed in local-fixtures/. Synthetic: 15/15 spelling, 12/12 vocabulary on mild distortion; harsh distortion 11/12 words, 50% exact definitions, 97.8% character accuracy.
 - Tests: 19 browser checks (synthetic end-to-end through the UI).
+
+## Milestone 6 — Illustrated cards and printable materials
+- Pictures: bundled sample illustrations (12 hand-drawn SVGs for the sample words, labelled "Sample illustration"; installment redrawn after review), parent uploads (resized on device, describable alt text), "Picture idea" text, honest "Picture coming soon" placeholder. Every picture is approved with the week. Future generation: disabled integration point in js/illustrations.js; design and costs in docs/ILLUSTRATIONS.md. No keys, no network calls.
+- Printables (approved content only): weekly spelling list (teacher order or grouped by pattern) with write-it-twice practice grid; read-aloud list for a grown-up (no-speech fallback); vocabulary study guide (word, teacher definition, sentence; pictures optional to save ink); results with missed-word practice sheet. Print CSS hides app chrome and starts each sheet on a new page.
+- Tests: 13 print/picture browser checks. Totals: 48 unit, 151 browser.
 
 ## Known limitations / decisions log
 - Data lives in one browser on one device; no sync (by design, documented in the UI).

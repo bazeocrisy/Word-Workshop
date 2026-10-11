@@ -11,6 +11,7 @@ export function speechSupported() {
 }
 
 let voicePromise = null;
+let cachedVoice; // undefined until voices have been looked up
 /** Resolve the best English voice (or null to use the browser default). Voices load asynchronously. */
 export function getVoice() {
   if (!speechSupported()) return Promise.resolve(null);
@@ -23,13 +24,14 @@ export function getVoice() {
       const pref = ['en-US', 'en-GB', 'en-AU', 'en-CA'];
       const byLang = (l) => en.filter((v) => v.lang.replace('_', '-') === l);
       const local = (list) => list.find((v) => v.localService) || list[0];
-      resolve(pref.map(byLang).map(local).find(Boolean) || local(en) || null);
+      cachedVoice = pref.map(byLang).map(local).find(Boolean) || local(en) || null;
+      resolve(cachedVoice);
       return true;
     };
     if (pick()) return;
     const onChange = () => { if (pick()) speechSynthesis.removeEventListener?.('voiceschanged', onChange); };
     speechSynthesis.addEventListener?.('voiceschanged', onChange);
-    setTimeout(() => resolve(null), 1500); // some browsers never fire voiceschanged; the default voice still works
+    setTimeout(() => { if (cachedVoice === undefined) cachedVoice = null; resolve(null); }, 1500); // some browsers never fire voiceschanged; the default voice still works
   });
   return voicePromise;
 }
@@ -40,7 +42,8 @@ export function getVoice() {
  */
 export async function speak(text, { rate = RATES.normal, onStart } = {}) {
   if (!speechSupported()) return 'unsupported';
-  const voice = await getVoice();
+  // Use the remembered voice without waiting, so speech starts inside the tap (iOS); otherwise look it up.
+  const voice = cachedVoice !== undefined ? cachedVoice : await getVoice();
   return new Promise((resolve) => {
     try { speechSynthesis.cancel(); } catch { /* ignore */ }
     const u = new SpeechSynthesisUtterance(String(text));
@@ -65,8 +68,7 @@ export function stopSpeaking() { if (speechSupported()) { try { speechSynthesis.
 export function speakButton(label, getText, { rate = RATES.normal, cls = 'btn-ghost', ariaLabel } = {}) {
   const status = h('span', { class: 'speak-status', 'aria-live': 'polite' });
   if (!speechSupported()) {
-    return h('span', { class: 'speak-wrap' }, h('button', { type: 'button', class: `btn ${cls}`, disabled: true, 'aria-label': ariaLabel || label }, '🔇 ', label),
-      h('span', { class: 'speak-status' }, 'Sound is not available on this device.'));
+    return h('span', { class: 'speak-wrap' }, h('button', { type: 'button', class: `btn ${cls}`, disabled: true, 'aria-label': `${ariaLabel || label} (sound is not available on this device)` }, '🔇 ', label));
   }
   const b = h('button', { type: 'button', class: `btn ${cls} speak-btn`, 'aria-label': ariaLabel || label }, h('span', { 'aria-hidden': 'true' }, '🔊 '), label);
   b.addEventListener('click', async () => {

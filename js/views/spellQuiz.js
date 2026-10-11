@@ -4,7 +4,7 @@ import { h, fill, page, btn, link, progressBar, confirmDialog, toast, emptyState
 import { saveAttempt } from '../store.js';
 import { newSeed, nowIso, rng, shuffle, isCorrectAnswer } from '../model.js';
 import { blankSentence } from '../vocab.js';
-import { speak, speakButton, speechSupported, stopSpeaking, RATES } from '../speech.js';
+import { speak, speakButton, speechSupported, stopSpeaking, getVoice, RATES } from '../speech.js';
 import { loadLesson, themed } from './lesson.js';
 import { attemptDetail } from './results.js';
 import { setLeaveGuard, go } from '../router.js';
@@ -31,6 +31,7 @@ async function spellSession({ params, query }, mode) {
   const items = only ? snap.spelling.filter((s) => only.includes(s.id)) : snap.spelling;
   if (!items.length) return themed(st, page({ title, back: base, backLabel: 'This week' }, emptyState('No spelling words this week.')));
   const audio = speechSupported();
+  if (audio) getVoice(); // look up voices now so the first tap can speak at once
   const key = draftKey(st, snap, mode, query.only);
   const draft = readDraft(key);
   const seed = draft ? draft.seed : newSeed();
@@ -77,19 +78,24 @@ class SpellSession {
       h('div', { class: 'row' }, btn(this.mode === 'test' ? 'Start the test' : 'Start practice', () => { this.started = true; this.show(true); }, 'btn-primary btn-big start-btn'))));
   }
 
-  sayWord(rate = RATES.normal) { if (this.audio) speak(this.words[this.idx].word, { rate }); }
+  async sayWord(rate = RATES.normal) {
+    if (!this.audio) return;
+    const status = this.body.querySelector('.listen .speak-status');
+    const r = await speak(this.words[this.idx].word, { rate, onStart: () => { if (status) status.textContent = ''; } });
+    if (r !== 'done' && status && document.body.contains(status)) status.textContent = 'The word did not play by itself. Tap "Hear the word".';
+  }
 
   header() {
     const n = this.words.length;
     const count = this.mode === 'test' ? Object.values(this.answers).filter((a) => String(a || '').trim()).length : Object.keys(this.done).length;
-    return h('div', { class: 'quiz-head' }, h('p', { class: 'counter' }, `Word ${this.idx + 1} of ${n}`), progressBar(count, n, `${this.mode === 'test' ? 'Answered' : 'Finished'} ${count} of ${n}`));
+    return h('div', { class: 'quiz-head' }, h('p', { class: 'counter', id: 'spell-counter' }, `Word ${this.idx + 1} of ${n}`), progressBar(count, n, `${this.mode === 'test' ? 'Answered' : 'Finished'} ${count} of ${n}`));
   }
 
   show(autoplay) {
     const w = this.words[this.idx];
     const lock = this.mode === 'practice' && this.done[this.idx];
     const shown = w.sentence ? blankSentence(w.sentence, w.word) : null;
-    const input = h('input', { type: 'text', class: 'answer-input spell-input', id: 'spell-answer', autocomplete: 'off', autocapitalize: 'none', autocorrect: 'off', spellcheck: 'false', inputmode: 'text', value: this.answers[this.idx] ?? '', disabled: lock, 'aria-describedby': shown ? 'spell-sentence spell-help' : 'spell-help' });
+    const input = h('input', { type: 'text', class: 'answer-input spell-input', id: 'spell-answer', autocomplete: 'off', autocapitalize: 'none', autocorrect: 'off', spellcheck: 'false', inputmode: 'text', value: this.answers[this.idx] ?? '', disabled: lock, 'aria-describedby': shown ? 'spell-counter spell-sentence spell-help' : 'spell-counter spell-help' });
     input.addEventListener('input', () => { this.answers[this.idx] = input.value; this.persist(); if (this.mode === 'test') this.body.querySelector('.quiz-head')?.replaceWith(this.header()); });
     this.feedback = h('div', { class: 'feedback', 'aria-live': 'polite' });
     const audioRow = this.audio

@@ -96,7 +96,7 @@ class Session {
   }
 
   promptEls(q, qid) {
-    if (q.type === 'def-mc') return [h('p', { class: 'q-instruction', id: qid, tabindex: '-1' }, 'What does this word mean?'), h('p', { class: 'q-word', id: `${qid}-p` }, q.prompt),
+    if (q.type === 'def-mc') return [h('p', { class: 'q-instruction', id: qid, tabindex: '-1', 'data-autofocus': '' }, 'What does this word mean?'), h('p', { class: 'q-word', id: `${qid}-p` }, q.prompt),
       speakButton('Hear the word', () => q.prompt, { ariaLabel: 'Hear the word' })];
     if (q.type === 'word-mc' || q.type === 'write') return [h('p', { class: 'q-instruction', id: qid, tabindex: '-1' }, q.type === 'write' ? 'Type the word that means:' : 'Which word means:'),
       h('blockquote', { class: 'q-def', id: `${qid}-p` }, q.prompt, q.definitionKind === 'parent-edited' ? h('span', { class: 'badge badge-grey' }, 'parent-edited') : null),

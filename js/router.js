@@ -66,7 +66,8 @@ async function show(view, ctx, root, token) {
   root.removeAttribute('aria-busy');
   window.scrollTo(0, 0);
   const h1 = root.querySelector('h1');
-  if (h1) h1.focus({ preventScroll: true });
+  const first = root.querySelector('[data-autofocus]') || h1;
+  if (first) first.focus({ preventScroll: true });
   document.title = (h1 ? h1.textContent + ' · ' : '') + 'Word Workshop';
   document.dispatchEvent(new CustomEvent('ww:rendered', { detail: ctx }));
 }

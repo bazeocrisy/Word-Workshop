@@ -20,10 +20,14 @@ const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 const MAX_OPTIONS = 4;
 const MATCH_SIZE = 5;
 
+/**
+ * The sentence with EVERY whole-word, any-case occurrence of `word` replaced by a blank, so the answer can never
+ * show (e.g. "I washed my hands. Washed hands are clean!"). Returns null if the word is not in the sentence.
+ */
 export function blankSentence(sentence, word) {
-  const i = findWord(sentence, word);
-  if (i < 0) return null;
-  return sentence.slice(0, i) + '_____' + sentence.slice(i + word.length);
+  if (findWord(sentence, word) < 0) return null;
+  const esc = String(word).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return String(sentence).replace(new RegExp(`(^|[^\\p{L}])${esc}(?![\\p{L}])`, 'giu'), '$1_____');
 }
 
 const countIn = (sentence, word) => {
