@@ -928,20 +928,20 @@ const NET = [
   ['SF-SVA-012', 'Every Friday, Mr. Park\'s class of students takes a spelling test, and Ravi always gets every word right because he studies hard.', 'ok'],
   ['SF-SVA-015', 'My brother Max is cleaning the garage, and Dad says we can go swimming when the job is done.', 'ok'],
   ['SF-SVA-009', 'Honeybees make honey, and every bee in the hive has a special job.', 'ok'],
-  ['SF-SVA-001', 'Maya or Leo is in the same reading group.', 'ok', N.orNor],
-  ['SF-SVA-001', 'Neither Maya nor Leo is in the same reading group.', 'ok', N.orNor],
+  ['SF-SVA-001', 'Maya or Leo is in the same reading group.', 'ok'],
+  ['SF-SVA-001', 'Neither Maya nor Leo is in the same reading group.', 'ok'],
   // WRONG: certain disagreements
   ['SF-SVA-002', 'Look! Those robins is building a nest in our tree.', 'incorrect'],
   ['SF-SVA-008', 'The mail carrier comes to our street every day, and the two dogs barks at her.', 'incorrect'],
   ['SF-SVA-010', 'They plays tennis, and Jin wins most of the games.', 'incorrect'],
   ['SF-SVA-009', 'Honeybees make honey, and each of the bees have a special job in the hive.', 'incorrect'],
   ['SF-SVA-010', 'Jin and Sam plays tennis, and Jin wins most of the games.', 'incorrect'],
-  ['SF-SVA-004', 'Our new players has new jerseys this year.', 'incorrect', N.keyNounKept],
-  ['SF-SVA-015', 'My older brothers is cleaning the garage, and Dad says we can go swimming when the job is done.', 'incorrect', N.keyNounKept],
-  ['SF-SVA-002', 'Look! The baby robins is building a nest in our tree.', 'incorrect', N.keyNounKept],
-  ['SF-SVA-002', 'Look! Some robins is building a nest in our tree.', 'incorrect', N.keyNounKept],
-  ['SF-SVA-005', 'Our teacher always says that the books on the shelves in our library is for everyone.', 'incorrect', N.keyNounKept],
-  ['SF-SVA-009', 'Honeybees make honey, and both bees has a special job in the hive.', 'incorrect', N.both],
+  ['SF-SVA-004', 'Our new players has new jerseys this year.', 'incorrect'],
+  ['SF-SVA-015', 'My older brothers is cleaning the garage, and Dad says we can go swimming when the job is done.', 'incorrect'],
+  ['SF-SVA-002', 'Look! The baby robins is building a nest in our tree.', 'incorrect'],
+  ['SF-SVA-002', 'Look! Some robins is building a nest in our tree.', 'incorrect'],
+  ['SF-SVA-005', 'Our teacher always says that the books on the shelves in our library is for everyone.', 'incorrect'],
+  ['SF-SVA-009', 'Honeybees make honey, and both bees has a special job in the hive.', 'incorrect'],
 ];
 
 for (const [id, answer, expect, todo] of NET) {

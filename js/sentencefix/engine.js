@@ -419,33 +419,41 @@ function verbNumber(w, r) {
  * The head is the word before the first of/in/on… ("the family of robins", "everything in our library").
  * certain: a grammar fact ("they", "two", "X and Y", "dogs" for "dog", "everyone"), not a guess from a noun's ending.
  */
-function subjectNumber(A, aV, C, cV) {
+function subjectNumber(A, aV, C, cV, vN) {
   const back = (T, i) => {
     const out = [];
-    let compound = false;
-    for (let j = i - 1; j >= 0 && out.length < 6; j--) {
+    let compound = false, stop = '';
+    for (let j = i - 1; j >= 0 && out.length < 8; j--) {
       if (T[j] === '.' && TITLES.has(lc(T[j - 1] || ''))) continue; // Mr. Park's
       const t = lc(T[j]);
       if (t === 'and' && isWord(T[j - 1] || '') && !isPastVerb(lc(T[j - 1])) && !HELPERS.has(lc(T[j - 1]))) compound = true;
-      if (!isWord(T[j]) || CONJ.has(t) || t === 'that' || t === 'which' || t === 'who') break;
+      if (!isWord(T[j]) || CONJ.has(t) || t === 'that' || t === 'which' || t === 'who') { stop = t; break; }
       out.unshift(t);
     }
-    return { out, compound };
+    return { out, compound, stop };
   };
-  const { out: a, compound } = back(A, aV), c = back(C, cV).out;
+  const { out: a, compound, stop } = back(A, aV), { out: c, stop: cStop } = back(C, cV);
+  // "Maya or Leo is", "Neither Maya nor Leo is" for "Maya and Leo are": the verb follows the nearer name.
+  if ((stop === 'or' || stop === 'nor') && stop !== cStop) return { num: null, certain: false };
   const typed = a.filter((t) => !c.includes(t)), key = c.filter((t) => !a.includes(t));
   if (!typed.length) return null;
   const sure = (num) => ({ num, certain: true });
-  if (compound) return sure('pl'); // "Maya and a friend": two people
+  if (compound) return sure('pl'); // "Maya and a friend": two people (only "and", not or/nor)
   // Only the words before the first of/in/on… phrase name the subject ("the family of robins").
   const p = a.findIndex((t, i) => i > 0 && PREPOSITIONS.has(t));
   const region = p > 0 ? a.slice(0, p) : a;
   if (a.some((t, i) => ['each', 'one', 'every', 'none', 'either', 'neither'].includes(t) && a[i + 1] === 'of')) return sure('sg'); // "each of the students"
+  // The key's own subject noun kept unchanged, only a describing word or "some" added ("Our new players",
+  // "Some robins", "the books on the shelves in our library"): it still has the key's number.
+  const cp = c.findIndex((t, i) => i > 0 && PREPOSITIONS.has(t));
+  const cHead = (cp > 0 ? c.slice(0, cp) : c).at(-1);
+  if (vN && region.at(-1) && region.at(-1) === cHead && !typed.includes(cHead)) return sure(vN === 'sg' ? 'pl' : 'sg');
   for (const t of typed.filter((x) => region.includes(x))) {
     if (['they', 'we', 'you', 'i'].includes(t)) return sure('pl');
     if (['he', 'she', 'it'].includes(t) || ONE_PERSON.has(t)) return sure('sg'); // "everything in our library"
     for (const k of key) { const d = numberDir(k, t); if (d) return sure(d > 0 ? 'pl' : 'sg'); }
-    if (PLURAL_DET.has(t) || t === 'all') return sure('pl');
+    if (PLURAL_DET.has(t) || t === 'all') return sure('pl'); // "both bees", "two dogs"
+    if (['some', 'many', 'few', 'several'].includes(t) && /[^s']s$/.test(region.at(-1) || '')) return sure('pl'); // "some robins"
     if (SINGULAR_DET.has(t)) return sure('sg');
   }
   // A new head noun with no plural ending ("Our team", "Mr. Park's class", "the collection in our library").
@@ -753,6 +761,14 @@ function classify(h, A, C, insBag, delBag) {
     const repeated = got.length === 1 && [before, after].some((t) => t && lc(t) === lc(got[0]));
     return repeated ? ['repeated', true] : ['added', false];
   }
+  // "both bees has": a typed many-things subject (both/two/many + a plural word) right before a one-thing verb.
+  {
+    const verb = lc(A[h.aStart + got.length] || ''), words = got.map(lc);
+    const d = words.findIndex((t) => PLURAL_DET.has(t));
+    if (SINGULAR_VERBS.has(verb) && d >= 0 && d >= words.length - 3 && !words.slice(d).includes('of')
+      && !words.some((t) => ['each', 'one', 'every', 'either', 'neither', 'none'].includes(t))
+      && /^[a-z]+[^s']s$/.test(words.at(-1))) return ['agreement', true];
+  }
   // "Everyone are": a one-person word typed as the subject, with a many-things verb right after it.
   if (ONE_PERSON.has(lc(got[got.length - 1])) && PLURAL_VERBS.has(lc(A[h.aStart + got.length] || ''))) return ['agreement', true];
   if (exp.length === 1 && got.length === 1) {
@@ -903,7 +919,7 @@ export function grade(item, answer) {
     if (!vN) continue;
     let aV = -1;
     for (let i = M[sp.kL][1] + 1; i < M[sp.kR][1]; i++) if (A[i] === sp.wrongToks[0]) { aV = i; break; }
-    const subj = aV >= 0 ? subjectNumber(A, aV, C, sp.cTok[0]) : null;
+    const subj = aV >= 0 ? subjectNumber(A, aV, C, sp.cTok[0], vN) : null;
     if (subj && !(subj.certain && subj.num && subj.num !== vN)) { status[sp.index] = 'unknown'; settled.delete(sp.index); }
   }
 
