@@ -15,7 +15,7 @@ Architecture: `docs/ARCHITECTURE-PROPOSAL.md` (vanilla JS ES modules, IndexedDB,
 | 1 | Core application, profiles, storage | **Complete** — reviewed; 5 Major + 7 Minor findings fixed (see below) |
 | 2 | Weekly lesson editor and approval | **Complete** — reviewed; 4 Major + 6 Minor findings fixed (see below) |
 | 3 | Vocabulary learning and assessment | Built, tests passing; independent review in progress |
-| 4 | Spelling learning and assessment | Not started |
+| 4 | Spelling learning and assessment | Built, tests passing; review together with Milestone 3 follow-up |
 | 5 | Photograph extraction and verification | Not started |
 | 6 | Illustrated-card workflow and printable materials | Not started |
 | 7 | Full-system testing and final audit | Not started |
@@ -56,6 +56,13 @@ No Critical findings (definition integrity, approval enforcement and XSS checks 
 - Results: score, %, encouragement, every answer with the correct answer, missed words, "Practice missed words"; saved per student/week/lesson version; retakes add new results.
 - Speech: speechSynthesis with voice selection, tap-to-start, honest status ("Playing…" only after start; explanation if it did not play), disabled with a message when unsupported. Parent "Test the voice" page.
 - Grading rules: docs/GRADING.md.
+
+## Milestone 4 — Spelling learning and assessment
+- Study: teacher's order with example sentences; audio for word (normal and slow) and sentence; separate views "Spelling patterns" (how letters change) and "Ending sounds" (/t/, /d/, /id/) with the reason for each word. Sample list verified: only "stepped" doubles its consonant; /t/ 6, /d/ 4, /id/ 5.
+- Practice: hear word / slowly / in a sentence; sentence shown with the word blanked; type; Check; immediate feedback; Try again or Show the word; first-try scoring; "Practice missed words".
+- Test: mixed-up order by default (seeded, reproducible) or teacher order (parent setting); word spoken when each question opens (after a tap, as iPhone requires) with replay; sentence shown with the word removed; the correct spelling never appears in the page, title or URL before submitting (tested for every word); review screen; blanks confirmed and graded wrong; score, %, every answer; saved with version and order.
+- No speech: buttons disabled with a clear message; tests/practice switch to teacher order with a "Grown-up: read word number N" prompt and a link to the printable read-aloud list. Speech that fails to start is reported ("did not play"), never shown as playing.
+- Tests: 44 unit, 121 browser checks.
 
 ## Known limitations / decisions log
 - Data lives in one browser on one device; no sync (by design, documented in the UI).

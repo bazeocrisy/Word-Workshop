@@ -272,3 +272,18 @@ details > summary { cursor: pointer; min-height: 44px; display: flex; align-item
 .answer-wrong .answer-mark { color: var(--bad); }
 .answer-q { font-weight: 700; }
 .results-table td, .results-table th { font-size: .95rem; }
+
+/* Spelling */
+.seg { display: flex; flex-wrap: wrap; gap: .4rem; margin: .5rem 0 1rem; }
+.spell-list { list-style: none; padding: 0; margin: 0; display: grid; gap: .6rem; }
+.spell-row { display: flex; gap: .7rem; align-items: flex-start; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: .7rem .8rem; }
+.spell-main { flex: 1; min-width: 0; }
+.spell-word { font-size: 1.5rem; font-weight: 800; margin: 0; color: var(--accent); letter-spacing: .02em; }
+.spell-sentence { margin: .15rem 0 .35rem; }
+.spell-reason { margin: .1rem 0 .35rem; color: var(--muted); font-size: .95rem; }
+.spell-audio { margin: .25rem 0 0; }
+.spell-group h2 { margin-top: 0; }
+.listen { margin: 0 0 .75rem; }
+.spell-input { font-size: 1.8rem; letter-spacing: .05em; }
+.spell-reveal { font-size: 1.4rem; letter-spacing: .05em; color: var(--accent); }
+.notice-inline { background: var(--warn-soft); padding: .6rem .8rem; border-radius: 12px; font-weight: 700; }

@@ -20,7 +20,7 @@ const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 const MAX_OPTIONS = 4;
 const MATCH_SIZE = 5;
 
-function blankSentence(sentence, word) {
+export function blankSentence(sentence, word) {
   const i = findWord(sentence, word);
   if (i < 0) return null;
   return sentence.slice(0, i) + '_____' + sentence.slice(i + word.length);
