@@ -16,6 +16,7 @@ import { parseVocabText, parseSpellingText, splitPair, stripMarker } from '../pa
 import { Editor } from './weekEditor.js';
 import { avatar, themeClass } from './common.js';
 import { STAGES, stageKey, lessonHref } from './lessonSteps.js';
+import * as cloud from '../cloudOcr.js';
 import { go } from '../router.js';
 
 // Warnings about the example sentence are handled together (one "skip" per subject), not word by word.
@@ -363,20 +364,27 @@ class Workspace extends Editor {
     if (!(await this.ensureWeek())) return;
     if (this.job && !this.job.error) { toast('Wait for the photo being read to finish.', 'error'); return; }
     const subject = { vocab: 'vocabulary worksheet', spelling: 'spelling worksheet', auto: 'worksheet' }[target];
-    const job = this.job = { label: 'Opening the photo…', frac: 0, error: null, subject };
+    const job = this.job = { label: 'Opening the photo…', frac: 0, error: null, subject, online: cloud.isEnabled() };
     const redraw = () => this.drawProgress();
     redraw();
     const { openPhotos, readPhoto, draftsFromReading, saveSource, readerError } = await import('../photoImport.js');
     const { pages, errors } = await openPhotos(files);
     if (!pages.length) { job.error = errors.join(' ') || 'That file could not be opened.'; redraw(); return; }
     const added = { vocab: [], spelling: [] };
+    const warnings = []; // fallback to on-device reading, and anything the reader says the parent should know
+    let readers = new Set();
     for (const [i, p] of pages.entries()) {
       let result;
       try {
-        result = await readPhoto(p, { target, onProgress: (f, label) => { job.frac = (i + f) / pages.length; job.label = pages.length > 1 ? `Photo ${i + 1} of ${pages.length}: ${label}` : label; redraw(); } });
+        result = await readPhoto(p, { target, onProgress: (f, label) => {
+          if (job.online && /read on this device instead/.test(label)) job.online = false; // the online reader failed
+          job.frac = (i + f) / pages.length; job.label = pages.length > 1 ? `Photo ${i + 1} of ${pages.length}: ${label}` : label; redraw();
+        } });
       } catch (e) { console.warn(e); job.error = readerError(e); redraw(); return; }
       const d = draftsFromReading(result, target);
       const src = await saveSource(p, result, { target, otherText: d.other, notes: d.notes });
+      readers.add(result.online ? 'online' : 'device');
+      warnings.push(...d.notes.map((x) => (pages.length > 1 ? `${p.name}: ${x}` : x)));
       this.pagesInMemory.set(src.id, p.canvas);
       for (const it of [...d.voItems, ...d.spItems]) it.sourceId = src.id;
       added.vocab.push(...d.voItems); added.spelling.push(...d.spItems);
@@ -390,7 +398,10 @@ class Workspace extends Editor {
     if (!this.onScreen()) return; // the words are saved; the parent will see them when they come back
     [...added.vocab, ...added.spelling].forEach((it) => this.fresh.add(it.id));
     const att = [...added.vocab.map((it) => this.status('vocab', it)), ...added.spelling.map((it) => this.status('spelling', it))].filter((x) => x === 'attention').length;
-    this.done = `Read ${n} ${added.vocab.length && added.spelling.length ? '' : added.vocab.length ? 'vocabulary ' : 'spelling '}word${n === 1 ? '' : 's'} from the photo${att ? `; ${att} need${att === 1 ? 's' : ''} attention` : ''}. Compare them with the photo.`;
+    const how = readers.has('online') && !readers.has('device') ? ' with the online reader' : readers.has('device') && job.online ? ' on this device' : '';
+    const text = `Read ${n} ${added.vocab.length && added.spelling.length ? '' : added.vocab.length ? 'vocabulary ' : 'spelling '}word${n === 1 ? '' : 's'} from the photo${how}${att ? `; ${att} need${att === 1 ? 's' : ''} attention` : ''}. Compare them with the photo.`;
+    // Warnings stay on screen until the parent dismisses them; a plain success message goes away by itself.
+    if (warnings.length) this.notice = { text, warnings }; else this.done = text;
     const where = await this.commitTyping();
     this.focusKind = where ? null : added.vocab.length ? 'vocab' : 'spelling';
     await this.show('check', { focus: false });
@@ -399,10 +410,18 @@ class Workspace extends Editor {
 
   drawProgress() {
     const job = this.job;
+    if (!job && this.notice) {
+      const { text, warnings } = this.notice;
+      fill(this.progressEl, h('div', { class: 'card notice notice-warn ws-read-notice', role: 'status' },
+        h('p', null, text), h('ul', { class: 'ws-read-warnings' }, warnings.map((x) => h('li', null, x))),
+        btn('OK', () => { this.notice = null; this.drawProgress(); }, 'btn-ghost btn-small ws-read-notice-ok')));
+      return;
+    }
     if (!job && this.done) { const msg = this.done; this.done = null; fill(this.progressEl, h('div', { class: 'card notice notice-ok ws-read-done', role: 'status' }, h('p', null, msg))); return; }
     if (!job) { fill(this.progressEl, ''); return; }
     if (job.error) { fill(this.progressEl, h('div', { class: 'card notice notice-error ws-read-error', role: 'alert' }, h('p', null, job.error), btn('OK', () => { this.job = null; this.drawProgress(); }, 'btn-ghost btn-small'))); return; }
-    fill(this.progressEl, h('div', { class: 'card ws-reading' }, h('p', null, h('strong', null, `Reading the ${job.subject} on this device… `), job.label), progressBar(Math.round(job.frac * 100), 100, 'Reading the photo')));
+    const where = job.online ? `Sending the ${job.subject} to your online reader (Anthropic)… ` : `Reading the ${job.subject} on this device… `;
+    fill(this.progressEl, h('div', { class: 'card ws-reading' }, h('p', null, h('strong', null, where), job.label), progressBar(Math.round(job.frac * 100), 100, 'Reading the photo')));
   }
 
   // ── Stage 2: Check ──
@@ -763,8 +782,10 @@ class Workspace extends Editor {
         srcs.length > 1 ? h('div', { class: 'ws-photo-pick', role: 'group', 'aria-label': 'Choose a photo' }, srcs.map((x) =>
           btn(subject(x), () => { this.photoId = x.id; this.drawPhotos(); }, `btn-small ${x.id === cur.id ? 'btn-primary' : 'btn-ghost'}`, { 'aria-pressed': String(x.id === cur.id) }))) : null),
       url ? h('button', { type: 'button', class: 'ws-photo-zoom', 'aria-label': `Enlarge the photo: ${cur.name}`, onclick: () => this.photoViewer(cur.id) }, h('img', { src: url, alt: `Worksheet photo: ${cur.name}` })) : h('p', { class: 'hint' }, 'This photo is no longer stored on this device.'),
-      h('p', { class: 'ws-photo-cap' }, cur.name, cur.table ? ' · read as a table of cards' : '', ' · tap to enlarge'),
-      cur.target !== 'spelling' ? btn(cur.table ? 'Read the cards again' : 'Words in a grid of cards? Read as a table', () => this.readAsTable(cur), 'btn-ghost btn-small ws-table-mode') : null);
+      h('p', { class: 'ws-photo-cap' }, cur.name, cur.reader ? ` · read ${/^online/.test(cur.reader) ? 'by the online reader' : 'on this device'}` : '', cur.table ? ' · read as a table of cards' : '', ' · tap to enlarge'),
+      cur.notes?.length ? h('ul', { class: 'ws-photo-notes' }, cur.notes.map((x) => h('li', null, x))) : null,
+      // A table re-read uses marked corners, which only the on-device reader understands.
+      cur.target !== 'spelling' && !/^online/.test(cur.reader || '') && !cloud.isEnabled() ? btn(cur.table ? 'Read the cards again' : 'Words in a grid of cards? Read as a table', () => this.readAsTable(cur), 'btn-ghost btn-small ws-table-mode') : null);
   }
 
   /** Show the photo a row came from when the parent works on that row. */
@@ -784,7 +805,9 @@ class Workspace extends Editor {
       if (!url) continue;
       const img = h('img', { src: url, alt: `Worksheet photo: ${x.name}` });
       const zoom = btn('Zoom in', () => { const on = fig.classList.toggle('is-zoomed'); zoom.textContent = on ? 'Zoom out' : 'Zoom in'; }, 'btn-ghost btn-small');
-      const fig = h('figure', { class: 'ws-viewer-fig' }, h('div', { class: 'ws-viewer-scroll' }, img), h('figcaption', null, x.name, ' ', zoom));
+      const fig = h('figure', { class: 'ws-viewer-fig' }, h('div', { class: 'ws-viewer-scroll' }, img),
+        h('figcaption', null, h('span', null, x.name, x.reader ? ` · read ${/^online/.test(x.reader) ? 'by the online reader' : 'on this device'}` : ''), zoom),
+        x.notes?.length ? h('ul', { class: 'ws-photo-notes' }, x.notes.map((n) => h('li', null, n))) : null);
       figs.push(fig);
     }
     await dialog({ title: 'Worksheet photos', body: h('div', { class: 'ws-viewer' }, figs), buttons: [], cancel: 'Close' });

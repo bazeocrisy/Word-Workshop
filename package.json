@@ -7,6 +7,7 @@
     "test": "node --test \"tests/unit/*.test.mjs\"",
     "test:browser": "node tests/browser.test.mjs",
     "test:ocr": "node tests/ocr.eval.mjs",
+    "test:ocr:online": "node tests/ocr.online.eval.mjs",
     "test:all": "npm test && npm run test:browser"
   }
 }

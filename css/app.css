@@ -93,7 +93,7 @@ main { max-width: 1120px; margin: 0 auto; padding: 1rem max(1rem, env(safe-area-
 /* Forms */
 .field { margin: .5rem 0 .75rem; }
 .field > label { display: block; font-weight: 600; margin-bottom: .25rem; }
-input[type=text], input[type=date], input[type=password], input[type=search], input:not([type]), select, textarea {
+input[type=text], input[type=date], input[type=password], input[type=url], input[type=search], input:not([type]), select, textarea {
   width: 100%; min-height: 48px; padding: .55rem .7rem; border: 2px solid #cfcae6; border-radius: 10px; font: inherit; color: var(--ink); background: #fff; }
 textarea { min-height: 96px; resize: vertical; }
 input:focus, select:focus, textarea:focus { border-color: var(--primary); }
@@ -599,3 +599,8 @@ details[open] > summary::before { content: "▾"; }
 @media print { .ws-bar, .ws-tabs { display: none !important; } }
 
 .ws-more-link { display: inline-flex; align-items: center; min-height: 44px; }
+
+.ws-read-warnings, .ws-photo-notes { margin: .25rem 0 .5rem; padding-left: 1.2rem; }
+.ws-photo-notes { font-size: .85rem; color: var(--warn); }
+.online-reader-terms { padding-left: 1.2rem; }
+.online-reader-terms li { margin: .25rem 0; }

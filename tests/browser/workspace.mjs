@@ -15,7 +15,7 @@ const stage = 'return document.querySelector(".ws-tab.is-current .ws-tab-label")
 const upload = (target, kind) => `const f = await window.__makeSynthetic('${kind}');
   const input = document.querySelector('input[type=file][data-target="${target}"]');
   const dt = new DataTransfer(); dt.items.add(f); input.files = dt.files; input.dispatchEvent(new Event('change'));
-  await new Promise((r) => setTimeout(r, 300));
+  for (let i = 0; i < 500 && !document.querySelector('.ws-reading, .ws-read-error'); i++) await new Promise((r) => setTimeout(r, 20));
   for (let i = 0; i < 600 && (document.querySelector('.ws-reading')); i++) await new Promise((r) => setTimeout(r, 200));
   await new Promise((r) => setTimeout(r, 300));
   return { stage: document.querySelector('.ws-tab.is-current .ws-tab-label')?.textContent, error: document.querySelector('.ws-read-error')?.innerText || null };`;
@@ -163,8 +163,12 @@ export default {
     check('Escape closes the ⋯ menu', !(await b.js(`return !!document.querySelector('.ws-menu[open]');`)));
     // Looks right on each attention word.
     let n = 0;
-    for (let g = 0; g < 40; g++) { const has = await b.js(`const x = document.querySelector('.ws-looks-right'); if (x) x.click(); return !!x;`); if (!has) break; n++; await b.wait(250); }
-    check('"Looks right" resolves each uncertain word with one action', n > 0 && !(await b.js(`return !!document.querySelector('.ws-attention');`)), n);
+    for (let g = 0; g < 40; g++) {
+      const has = await b.js(`const x = document.querySelector('.ws-looks-right'); if (!x) return false; const id = x.closest('[data-item]').dataset.item; x.click();
+        for (let i = 0; i < 150 && document.querySelector('[data-item="' + id + '"] .ws-looks-right'); i++) await new Promise((r) => setTimeout(r, 20)); return true;`);
+      if (!has) break; n++;
+    }
+    check('"Looks right" resolves each uncertain word with one action', n > 0 && !(await b.js(`return !!document.querySelector('.ws-attention');`)), { n, left: await b.js(`return [...document.querySelectorAll('.ws-row.is-attention')].map((r) => r.querySelector('.ws-word').value + ': ' + r.querySelector('.ws-issues')?.innerText);`), vocab: await b.js(`return (await WW.store.getWeek(location.hash.split('/')[3].split('?')[0])).vocab.length;`) });
     // Move a word between subjects and delete one, recover from other text.
     const lastSp = wk.spelling[14].word;
     await b.js(`const rows = document.querySelectorAll('.ws-table-spelling .ws-row'); const row = rows[rows.length - 1]; row.querySelector('.ws-menu summary').click(); ${pause(50)} row.querySelector('.ws-move-subject').click(); ${pause(400)} return 1;`);
