@@ -80,6 +80,9 @@ export default {
     // 2) Spelling-only lesson, pasted.
     await b.go(`#/parent/new?student=${jordan}`);
     check('a student can be preselected', await b.js(`return document.querySelector('input[name=ws-student][value="${jordan}"]').checked;`));
+    await b.click('.add-one-vocab'); await b.wait(100);
+    check('a new lesson starts with empty fields (nothing carried over from the last one)', (await b.js(`return document.getElementById('ws-one-word-vocab').value + document.getElementById('ws-one-def-vocab').value;`)) === '');
+    await b.click('.add-one-vocab'); await b.wait(100);
     await b.js(`${type('#ws-start', '2026-10-19')} return 1;`);
     await b.click('.paste-spelling');
     await b.js(`${type('#ws-paste-spelling', 'rushed, blasted\nwashed\nwinked')} ${pause(100)} return 1;`);
@@ -113,8 +116,14 @@ export default {
       && (await b.js(`return document.querySelector('.ws-table-vocab .ws-row .ws-def').value;`)) === wk.vocab[0].sourceDefinition);
     check('the worksheet photo is shown beside the words on a wide screen, or behind a Photos button on a phone',
       (await b.js(`return document.querySelectorAll('.ws-photos img').length;`)) === 1 && (await b.js(`return !!document.querySelector('.ws-photos-btn');`)));
-    r = await b.js(upload('spelling', 'spelling'));
+    // Review M3: the parent keeps typing in a definition while the spelling photo is read; nothing is lost.
+    const typing = b.js(upload('spelling', 'spelling'));
+    await b.wait(700);
+    await b.js(`const el = document.querySelectorAll('.ws-table-vocab .ws-def')[1]; el.focus(); el.value = 'Typed while the photo was being read'; el.dispatchEvent(new Event('input', { bubbles: true })); return 1;`);
+    r = await typing;
     wk = await b.js(`return await WW.store.getWeek(${JSON.stringify(w3)});`);
+    check('text typed while a photo is being read is saved, and the cursor stays in that field', wk.vocab[1].sourceDefinition === 'Typed while the photo was being read'
+      && (await b.js(`return document.activeElement === document.querySelectorAll('.ws-table-vocab .ws-def')[1];`)), wk.vocab[1].sourceDefinition);
     check('Upload in the Spelling table adds the spelling words to the same lesson, staying in Check', r.stage === 'Check' && wk.spelling.length === 15 && wk.spelling[0].word === 'rushed' && wk.vocab.length === 12 && wk.sources.length === 2, r);
     check('text the reader could not place is kept under "Other text found", not thrown away', /Other text found in the photos/.test(await b.text()) && wk.sources.some((s) => (s.otherText || []).some((x) => /Reminders|Picture day/.test(x))));
     // Needs attention list.
@@ -128,6 +137,30 @@ export default {
     const prod = wk.vocab[pIdx];
     check('a definition corrected in its row keeps what the reader read and logs the change', prod.sourceDefinition === 'Fresh fruit and vegetables!' && prod.originalTranscription === readDef && prod.definitionLog.some((l) => l.from === readDef && l.to === 'Fresh fruit and vegetables!') && prod.reviewed);
     check('the row shows what the photo reader read', (await b.text()).includes(`Photo reader read: "${readDef}"`));
+    // Review M1: changing only a vocabulary WORD does not check the row or clear warnings about its definition.
+    const attIdx = await b.js(`return [...document.querySelectorAll('.ws-table-vocab .ws-row')].findIndex((r) => r.classList.contains('is-attention'));`);
+    if (attIdx >= 0) {
+      const attWord = wk.vocab[attIdx].word;
+      await b.js(`${type('.ws-table-vocab .ws-word', attWord + 'x', attIdx)} ${pause()} return 1;`);
+      const after = await b.js(`return { cls: document.querySelectorAll('.ws-table-vocab .ws-row')[${attIdx}].className, it: (await WW.store.getWeek(${JSON.stringify(w3)})).vocab[${attIdx}] };`);
+      check('changing only a vocabulary word leaves its definition warnings open (not auto-checked)', /is-attention/.test(after.cls) && !after.it.reviewed, after.cls);
+      await b.js(`${type('.ws-table-vocab .ws-word', attWord, attIdx)} ${pause()} return 1;`);
+    }
+    // Review M2: moving a vocabulary word to Spelling and back keeps the teacher's definition and its history.
+    const dIdx = wk.vocab.findIndex((v) => v.word === 'Distracted');
+    if (dIdx >= 0) {
+      const defBefore = wk.vocab[dIdx].sourceDefinition;
+      await b.js(`const row = document.querySelectorAll('.ws-table-vocab .ws-row')[${dIdx}]; row.querySelector('.ws-menu summary').click(); ${pause(50)} row.querySelector('.ws-move-subject').click(); ${pause(200)} return 1;`);
+      check('moving a vocabulary word with a definition asks first', /Move "Distracted" to Spelling\?/.test(await b.js(`return document.querySelector('.dialog')?.innerText || '';`)));
+      await b.click('.dialog .btn-primary', '/Move to Spelling/'); await b.wait(400);
+      await b.js(`const rows = document.querySelectorAll('.ws-table-spelling .ws-row'); const row = [...rows].find((r) => r.querySelector('.ws-word').value === 'Distracted'); row.querySelector('.ws-menu summary').click(); ${pause(50)} row.querySelector('.ws-move-subject').click(); ${pause(400)} return 1;`);
+      const back = await b.js(`return (await WW.store.getWeek(${JSON.stringify(w3)})).vocab.find((v) => v.word === 'Distracted');`);
+      check('moving it back to Vocabulary brings back the exact definition and what the reader read', back && back.sourceDefinition === defBefore && back.originalTranscription === wk.vocab[dIdx].originalTranscription, back);
+      wk = await b.js(`return await WW.store.getWeek(${JSON.stringify(w3)});`);
+    }
+    // Keyboard: Escape closes the ⋯ menu.
+    await b.js(`document.querySelector('.ws-table-vocab .ws-menu summary').click(); ${pause(50)} document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); ${pause(50)} return 1;`);
+    check('Escape closes the ⋯ menu', !(await b.js(`return !!document.querySelector('.ws-menu[open]');`)));
     // Looks right on each attention word.
     let n = 0;
     for (let g = 0; g < 40; g++) { const has = await b.js(`const x = document.querySelector('.ws-looks-right'); if (x) x.click(); return !!x;`); if (!has) break; n++; await b.wait(250); }

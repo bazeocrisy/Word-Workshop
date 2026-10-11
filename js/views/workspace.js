@@ -97,6 +97,13 @@ class Workspace extends Editor {
       this.w = await store.createWeek(sid, v);
       this.student = this.students.find((s) => s.id === sid);
       this.home = lessonHref(this.w.id);
+      for (const k of ['vocab', 'spelling']) for (const which of ['one', 'paste']) {
+        try {
+          const old = `ww-ws:new:${k}:${which}`; const v = sessionStorage.getItem(old);
+          if (v) sessionStorage.setItem(this.draftKey(k, which), v);
+          sessionStorage.removeItem(old);
+        } catch { /* ignore */ }
+      }
       history.replaceState(null, '', `${this.home}?stage=${this.stage}`);
       await this.remember();
       this.drawDetails(); this.retitle();
@@ -132,14 +139,39 @@ class Workspace extends Editor {
     this.root = page({ title: this.titleText(), back: '#/parent', backLabel: 'Parent area', cls: 'parent workspace' },
       this.details, this.tabs, this.progressEl = h('div', { class: 'ws-progress', 'aria-live': 'polite' }), this.body,
       h('div', { class: 'ws-bar' }, this.saveState, this.photoBtn = h('span'), this.nextBtn));
+    this.rendering = true;
     this.show(this.stage, { focus: false });
+    this.rendering = false;
     return this.root;
   }
 
+  /** Still the page on screen? (A photo can finish reading after the parent went elsewhere.) */
+  onScreen() { return this.rendering || this.root.isConnected; }
+
+  /** Save the field the parent is typing in (as leaving it would) and remember where they were. */
+  async commitTyping() {
+    const el = document.activeElement;
+    if (!el || !this.root.contains(el) || !/^(INPUT|TEXTAREA)$/.test(el.tagName)) return null;
+    const row = el.closest('[data-item]');
+    const where = { id: row?.dataset.item, cls: [...el.classList].find((c) => c.startsWith('ws-')), id2: el.id, start: el.selectionStart, end: el.selectionEnd };
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    await this.queue;
+    return where;
+  }
+
+  restoreTyping(where) {
+    if (!where) return;
+    const el = where.id ? this.root.querySelector(`[data-item="${where.id}"] .${where.cls}`) : where.id2 ? this.root.querySelector('#' + where.id2) : null;
+    if (!el) return;
+    el.focus({ preventScroll: true });
+    try { el.setSelectionRange(where.start, where.end); } catch { /* not a text field */ }
+  }
+
   async show(stage, { focus = true } = {}) {
+    if (!this.onScreen()) return;
     this.stage = stage;
     if (this.w) { history.replaceState(null, '', `${this.home}?stage=${stage}`); this.remember(); }
-    this.drawTabs(); this.drawDetails();
+    this.drawTabs(); this.drawDetails(); this.drawProgress();
     if (stage === 'add') this.drawAdd(); else if (stage === 'check') this.drawCheck(); else this.drawFinish();
     this.drawBar();
     if (focus) { window.scrollTo(0, 0); this.tabs.querySelector('[aria-current]')?.focus(); }
@@ -160,7 +192,7 @@ class Workspace extends Editor {
   drawBar() {
     const next = { add: ['Check the words ›', 'check'], check: ['Finish ›', 'finish'] }[this.stage];
     fill(this.nextBtn, next ? btn(next[0], async () => { if (!this.w && !(await this.ensureWeek())) return; await this.queue; this.show(next[1]); }, 'btn-primary ws-next', { disabled: !this.items.length && !!next }) : '');
-    fill(this.photoBtn, this.stage === 'check' && this.sources().length ? btn('🖼 Photos', () => this.photoViewer(), 'btn-ghost ws-photos-btn', { 'aria-label': 'View the worksheet photos' }) : '');
+    fill(this.photoBtn, this.stage === 'check' && this.sources().length ? btn('🖼 Photos', () => this.photoViewer(this.photoId), 'btn-ghost ws-photos-btn', { 'aria-label': 'View the worksheet photos' }) : '');
   }
 
   // ── Lesson details (student, week, name) ──
@@ -354,16 +386,20 @@ class Workspace extends Editor {
     }
     const n = added.vocab.length + added.spelling.length;
     if (!n) { job.error = 'No words were found in this photo. Try a clearer photo taken straight on, in good light, or type or paste the words.'; redraw(); return; }
-    this.job = null; redraw();
+    this.job = null;
+    if (!this.onScreen()) return; // the words are saved; the parent will see them when they come back
     [...added.vocab, ...added.spelling].forEach((it) => this.fresh.add(it.id));
     const att = [...added.vocab.map((it) => this.status('vocab', it)), ...added.spelling.map((it) => this.status('spelling', it))].filter((x) => x === 'attention').length;
-    toast(`Read ${n} word${n === 1 ? '' : 's'} from the photo${att ? `; ${att} need attention` : ''}. Check them against the photo.`);
-    this.focusKind = added.vocab.length ? 'vocab' : 'spelling';
-    this.show('check', { focus: false });
+    this.done = `Read ${n} ${added.vocab.length && added.spelling.length ? '' : added.vocab.length ? 'vocabulary ' : 'spelling '}word${n === 1 ? '' : 's'} from the photo${att ? `; ${att} need${att === 1 ? 's' : ''} attention` : ''}. Compare them with the photo.`;
+    const where = await this.commitTyping();
+    this.focusKind = where ? null : added.vocab.length ? 'vocab' : 'spelling';
+    await this.show('check', { focus: false });
+    this.restoreTyping(where);
   }
 
   drawProgress() {
     const job = this.job;
+    if (!job && this.done) { const msg = this.done; this.done = null; fill(this.progressEl, h('div', { class: 'card notice notice-ok ws-read-done', role: 'status' }, h('p', null, msg))); return; }
     if (!job) { fill(this.progressEl, ''); return; }
     if (job.error) { fill(this.progressEl, h('div', { class: 'card notice notice-error ws-read-error', role: 'alert' }, h('p', null, job.error), btn('OK', () => { this.job = null; this.drawProgress(); }, 'btn-ghost btn-small'))); return; }
     fill(this.progressEl, h('div', { class: 'card ws-reading' }, h('p', null, h('strong', null, `Reading the ${job.subject} on this device… `), job.label), progressBar(Math.round(job.frac * 100), 100, 'Reading the photo')));
@@ -383,6 +419,7 @@ class Workspace extends Editor {
         this.otherSection = h('div')),
       srcs.length ? (this.photosAside = h('aside', { class: 'ws-photos', 'aria-label': 'Worksheet photos' })) : null);
     fill(this.body, this.layoutEl);
+    this.layoutEl.addEventListener('focusin', (e) => this.followRow(e));
     this.renderVocab(); this.renderSpelling(); this.drawOther();
     this.fresh.clear(); // highlighted once
     if (srcs.length) this.drawPhotos();
@@ -414,7 +451,10 @@ class Workspace extends Editor {
     if (kind) {
       const row = this.body.querySelector(`[data-item="${id}"]`);
       const it = this.list(kind).find((x) => x.id === id);
+      const el = document.activeElement;
+      const inRow = row && row.contains(el) ? { cls: [...el.classList].find((c) => c.startsWith('ws-')), start: el.selectionStart, end: el.selectionEnd } : null;
       if (row && it) row.replaceWith(this.row(kind, it, this.list(kind).indexOf(it)));
+      if (inRow?.cls) this.restoreTyping({ id, ...inRow });
       this.drawTableFoot(kind);
     }
   }
@@ -487,13 +527,18 @@ class Workspace extends Editor {
     if (st === 'attention') li.append(h('ul', { class: 'ws-issues' }, issues.map((f) => h('li', null, f.message))));
     li.append(extras);
     if (it.parentDefinition != null) def?.after(h('p', { class: 'hint ws-own' }, `Students see your wording: "${it.parentDefinition}"`));
-    if (vo && it.originalTranscription !== it.sourceDefinition) (def || word).after(h('p', { class: 'hint ws-orig' }, `Photo reader read: "${it.originalTranscription}"`));
+    if (vo && it.origin === 'ocr' && it.originalTranscription && it.originalTranscription !== it.sourceDefinition) (def || word).after(h('p', { class: 'hint ws-orig' }, `Photo reader read: "${it.originalTranscription}"`));
     return li;
   }
 
   rowMenu(kind, it, idx) {
     const list = this.list(kind);
     const other = SUBJECT[kind].other;
+    if (!Workspace.menuKeys) {
+      Workspace.menuKeys = true;
+      document.addEventListener('keydown', (e) => { if (e.key !== 'Escape') return; const m = document.querySelector('.ws-menu[open]'); if (m) { m.open = false; m.querySelector('summary').focus(); } });
+      document.addEventListener('click', (e) => { document.querySelectorAll('.ws-menu[open]').forEach((m) => { if (!m.contains(e.target)) m.open = false; }); });
+    }
     const d = h('details', { class: 'ws-menu' },
       h('summary', { 'aria-label': `More for ${it.word || 'this word'}` }, '⋯'),
       h('div', { class: 'ws-menu-list' },
@@ -559,7 +604,9 @@ class Workspace extends Editor {
       if (v === it.word) return;
       const before = it.word; it.word = v;
       if (kind === 'spelling' && (!it.groups || it.groups.source === 'auto')) it.groups = v ? suggestGroups(v) : null;
-      this.typedByParent(kind, it);
+      // A spelling row is just the word, so typing it is checking it. A vocabulary row also has a definition the
+      // reader may have misread: changing only the word does not check (or clear warnings about) the definition.
+      if (kind === 'spelling') this.typedByParent(kind, it);
       await this.save({ action: 'edited', detail: `${kind === 'vocab' ? 'vocabulary' : 'spelling'} "${before}" → "${v}"` });
     } else {
       const from = it.sourceDefinition;
@@ -572,7 +619,8 @@ class Workspace extends Editor {
     this.refreshCheck(kind, it.id);
   }
 
-  /** The parent typed this text: it counts as checked, and "how the reader read it" warnings no longer apply. */
+  /** The parent typed the row's text (spelling word, or vocabulary definition): it counts as checked, and the
+   *  "how the photo reader read it" warnings no longer apply. Other warnings (duplicates, mismatch…) stay. */
   typedByParent(kind, it) {
     it.reviewed = true;
     const keys = this.flagsOf(kind, it).filter((f) => READER_CODE(f.code)).map((f) => f.key);
@@ -638,14 +686,25 @@ class Workspace extends Editor {
 
   async moveSubject(kind, it) {
     const to = SUBJECT[kind].other;
+    if (kind === 'vocab' && (it.sourceDefinition || '').trim()
+      && !(await confirmDialog(`Move "${it.word}" to Spelling?`, `Spelling words have no definition, so "${it.sourceDefinition}" will not be used. It is kept, and comes back if you move the word back to Vocabulary.`, 'Move to Spelling'))) return;
     const from = this.list(kind);
     from.splice(from.indexOf(it), 1);
     let moved;
-    if (to === 'spelling') { moved = newSpellingItem({ word: it.word, origin: it.origin, ocrConfidence: it.ocrConfidence }); moved.groups = suggestGroups(it.word); }
-    else { const p = splitPair(stripMarker(it.word).text); moved = newVocabItem({ word: p ? p.word : it.word, definition: p ? p.definition : '', origin: it.origin, ocrConfidence: it.ocrConfidence }); }
+    if (to === 'spelling') {
+      moved = newSpellingItem({ word: it.word, origin: it.origin, ocrConfidence: it.ocrConfidence, sentence: it.sentence, sentenceSource: it.sentenceSource });
+      moved.groups = suggestGroups(it.word);
+      // Everything about the vocabulary item is kept with it (definition, what the reader read, corrections, picture).
+      moved.movedFrom = { vocab: JSON.parse(JSON.stringify(it)) };
+    } else if (it.movedFrom?.vocab) {
+      moved = { ...it.movedFrom.vocab, word: it.word, reviewed: false, ackKeys: [] };
+    } else {
+      const p = splitPair(stripMarker(it.word).text);
+      moved = newVocabItem({ word: p ? p.word : it.word, definition: p ? p.definition : '', origin: it.origin, ocrConfidence: it.ocrConfidence, sentence: it.sentence, sentenceSource: it.sentenceSource });
+    }
     moved.sourceId = it.sourceId;
     this.list(to).push(moved);
-    await this.save({ action: 'moved', detail: `"${it.word}" moved from ${kind} to ${to}` });
+    await this.save({ action: 'moved', detail: `"${it.word}" moved from ${kind} to ${to}${kind === 'vocab' && it.sourceDefinition ? ` (definition kept: "${it.sourceDefinition}")` : ''}` });
     this.drawTable('vocab'); this.drawTable('spelling'); this.refreshCheck();
     toast(`"${it.word}" moved to ${SUBJECT[to].name}.`);
     this.body.querySelector(`[data-item="${moved.id}"] .ws-word`)?.focus();
@@ -694,21 +753,40 @@ class Workspace extends Editor {
   // ── Source photos: beside the words on wide screens; a viewer on phones that keeps the parent's place ──
   async drawPhotos() {
     const srcs = this.sources();
-    const figs = [];
-    for (const s of srcs) {
-      const url = await store.imageUrl(s.imageRef);
-      if (!url) continue;
-      figs.push(h('figure', { class: 'ws-photo' },
-        h('a', { href: url, target: '_blank', rel: 'noopener', 'aria-label': `Open ${s.name} full size` }, h('img', { src: url, alt: `Worksheet photo: ${s.name}` })),
-        h('figcaption', null, s.name, s.table ? ' · read as a table of cards' : ''),
-        s.target !== 'spelling' ? btn(s.table ? 'Read the cards again' : 'Words in a grid of cards? Read as a table', () => this.readAsTable(s), 'btn-ghost btn-small ws-table-mode') : null));
-    }
-    if (this.photosAside) fill(this.photosAside, h('h2', { class: 'ws-photos-h' }, 'Worksheet photos'), figs);
+    if (!srcs.length || !this.photosAside) return;
+    if (!srcs.some((x) => x.id === this.photoId)) this.photoId = srcs[0].id;
+    const cur = srcs.find((x) => x.id === this.photoId);
+    const url = await store.imageUrl(cur.imageRef);
+    const subject = (x) => ({ vocab: 'Vocabulary sheet', spelling: 'Spelling sheet' }[x.target] || 'Worksheet');
+    fill(this.photosAside,
+      h('div', { class: 'ws-photo-head' }, h('h2', { class: 'ws-photos-h' }, 'Worksheet photo'),
+        srcs.length > 1 ? h('div', { class: 'ws-photo-pick', role: 'group', 'aria-label': 'Choose a photo' }, srcs.map((x) =>
+          btn(subject(x), () => { this.photoId = x.id; this.drawPhotos(); }, `btn-small ${x.id === cur.id ? 'btn-primary' : 'btn-ghost'}`, { 'aria-pressed': String(x.id === cur.id) }))) : null),
+      url ? h('button', { type: 'button', class: 'ws-photo-zoom', 'aria-label': `Enlarge the photo: ${cur.name}`, onclick: () => this.photoViewer(cur.id) }, h('img', { src: url, alt: `Worksheet photo: ${cur.name}` })) : h('p', { class: 'hint' }, 'This photo is no longer stored on this device.'),
+      h('p', { class: 'ws-photo-cap' }, cur.name, cur.table ? ' · read as a table of cards' : '', ' · tap to enlarge'),
+      cur.target !== 'spelling' ? btn(cur.table ? 'Read the cards again' : 'Words in a grid of cards? Read as a table', () => this.readAsTable(cur), 'btn-ghost btn-small ws-table-mode') : null);
   }
 
-  async photoViewer() {
+  /** Show the photo a row came from when the parent works on that row. */
+  followRow(e) {
+    const row = e.target.closest?.('[data-item]');
+    if (!row) return;
+    const it = [...(this.w?.vocab || []), ...(this.w?.spelling || [])].find((x) => x.id === row.dataset.item);
+    if (it?.sourceId && it.sourceId !== this.photoId && this.sources().some((x) => x.id === it.sourceId)) { this.photoId = it.sourceId; this.drawPhotos(); }
+  }
+
+  async photoViewer(startId) {
     const figs = [];
-    for (const s of this.sources()) { const url = await store.imageUrl(s.imageRef); if (url) figs.push(h('figure', { class: 'ws-viewer-fig' }, h('img', { src: url, alt: `Worksheet photo: ${s.name}` }), h('figcaption', null, s.name, ' · ', h('a', { href: url, target: '_blank', rel: 'noopener' }, 'Open full size')))); }
+    const srcs = this.sources();
+    const order = startId ? [...srcs.filter((x) => x.id === startId), ...srcs.filter((x) => x.id !== startId)] : srcs;
+    for (const x of order) {
+      const url = await store.imageUrl(x.imageRef);
+      if (!url) continue;
+      const img = h('img', { src: url, alt: `Worksheet photo: ${x.name}` });
+      const zoom = btn('Zoom in', () => { const on = fig.classList.toggle('is-zoomed'); zoom.textContent = on ? 'Zoom out' : 'Zoom in'; }, 'btn-ghost btn-small');
+      const fig = h('figure', { class: 'ws-viewer-fig' }, h('div', { class: 'ws-viewer-scroll' }, img), h('figcaption', null, x.name, ' ', zoom));
+      figs.push(fig);
+    }
     await dialog({ title: 'Worksheet photos', body: h('div', { class: 'ws-viewer' }, figs), buttons: [], cancel: 'Close' });
   }
 
@@ -739,8 +817,11 @@ class Workspace extends Editor {
     src.table = { corners: v.corners, cols: v.cols, rows: v.rows };
     src.otherText = d.other;
     await this.save({ action: 'photo read again as a table', detail: `${src.name}: ${mine.length} vocabulary replaced by ${d.voItems.length} from the cards` });
-    toast(`Read ${d.voItems.length} cards. Check them against the photo.`);
-    this.drawCheck(); this.drawTabs(); this.drawBar();
+    if (!this.onScreen()) return;
+    this.done = `Read ${d.voItems.length} word cards. Compare them with the photo.`;
+    const where = await this.commitTyping();
+    this.drawProgress(); this.drawCheck(); this.drawTabs(); this.drawBar();
+    this.restoreTyping(where);
   }
 
   // ── Stage 3: Finish ──
