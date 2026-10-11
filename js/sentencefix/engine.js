@@ -443,6 +443,11 @@ function subjectNumber(A, aV, C, cV, vN) {
   const p = a.findIndex((t, i) => i > 0 && PREPOSITIONS.has(t));
   const region = p > 0 ? a.slice(0, p) : a;
   if (a.some((t, i) => ['each', 'one', 'every', 'none', 'either', 'neither'].includes(t) && a[i + 1] === 'of')) return sure('sg'); // "each of the students"
+  // "some/both/many/few/several/all/most of the robins": plural only when the last noun has a plural ending
+  // ("all of Mr. Park's class" or "some of the bread" can take either verb).
+  if (p > 0 && a[p] === 'of' && ['some', 'both', 'many', 'few', 'several', 'all', 'most'].includes(region.at(-1))) {
+    return /^[a-z]+[^s']s$/.test(a.at(-1)) ? sure('pl') : { num: null, certain: false };
+  }
   // The key's own subject noun kept unchanged, only a describing word or "some" added ("Our new players",
   // "Some robins", "the books on the shelves in our library"): it still has the key's number.
   const cp = c.findIndex((t, i) => i > 0 && PREPOSITIONS.has(t));
@@ -452,6 +457,7 @@ function subjectNumber(A, aV, C, cV, vN) {
     if (['they', 'we', 'you', 'i'].includes(t)) return sure('pl');
     if (['he', 'she', 'it'].includes(t) || ONE_PERSON.has(t)) return sure('sg'); // "everything in our library"
     for (const k of key) { const d = numberDir(k, t); if (d) return sure(d > 0 ? 'pl' : 'sg'); }
+    if (t === 'many' && ['a', 'an'].includes(region[region.indexOf(t) + 1])) return sure('sg'); // "many a robin" is one
     if (PLURAL_DET.has(t) || t === 'all') return sure('pl'); // "both bees", "two dogs"
     if (['some', 'many', 'few', 'several'].includes(t) && /[^s']s$/.test(region.at(-1) || '')) return sure('pl'); // "some robins"
     if (SINGULAR_DET.has(t)) return sure('sg');
@@ -768,6 +774,9 @@ function classify(h, A, C, insBag, delBag) {
     if (SINGULAR_VERBS.has(verb) && d >= 0 && d >= words.length - 3 && !words.slice(d).includes('of')
       && !words.some((t) => ['each', 'one', 'every', 'either', 'neither', 'none'].includes(t))
       && /^[a-z]+[^s']s$/.test(words.at(-1))) return ['agreement', true];
+    // "both of the bees has", "some of the robins is": some/both/all… + of + a plural word before a one-thing verb.
+    const tail = words.slice(words.lastIndexOf('of') - 1).join(' ');
+    if (SINGULAR_VERBS.has(verb) && /^(both|some|many|few|several|all|most|two|three|four|five|six|seven|eight|nine|ten) of ((the|these|those|my|our|your|his|her|their) )?[a-z]+[^s' ]s$/.test(tail)) return ['agreement', true];
   }
   // "Everyone are": a one-person word typed as the subject, with a many-things verb right after it.
   if (ONE_PERSON.has(lc(got[got.length - 1])) && PLURAL_VERBS.has(lc(A[h.aStart + got.length] || ''))) return ['agreement', true];

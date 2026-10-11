@@ -974,16 +974,16 @@ const CLOSE = [
   ['SF-SVA-009', 'Honeybees make honey, and some of the bees have a special job in the hive.', 'ok'],
   ['SF-SVA-015', 'None of my brothers is cleaning the garage, and Dad says we can go swimming when the job is done.', 'ok'],
   ['SF-SVA-004', 'Every one of our players has new jerseys this year.', 'ok'],
-  ['SF-SVA-002', 'Look! Many a robin is building a nest in our tree.', 'ok', Q.manyA],
-  ['SF-SVA-012', 'Every Friday, all of Mr. Park\'s class takes a spelling test, and Ravi always gets every word right because he studies hard.', 'ok', Q.allOfCollective],
+  ['SF-SVA-002', 'Look! Many a robin is building a nest in our tree.', 'ok'],
+  ['SF-SVA-012', 'Every Friday, all of Mr. Park\'s class takes a spelling test, and Ravi always gets every word right because he studies hard.', 'ok'],
   // WRONG
   ['SF-SVA-002', 'Look! Many robins is building a nest in our tree.', 'incorrect'],
   ['SF-SVA-004', 'Our few players has new jerseys this year.', 'incorrect'],
   ['SF-SVA-015', 'My two brothers is cleaning the garage, and Dad says we can go swimming when the job is done.', 'incorrect'],
   ['SF-SVA-001', 'Maya and Leo and Sam is in the same reading group.', 'incorrect'],
   ['SF-SVA-004', 'Either the coach or the players has new jerseys this year.', 'incorrect', Q.proximity],
-  ['SF-SVA-002', 'Look! Some of the robins is building a nest in our tree.', 'incorrect', Q.someBothOf],
-  ['SF-SVA-009', 'Honeybees make honey, and both of the bees has a special job in the hive.', 'incorrect', Q.someBothOf],
+  ['SF-SVA-002', 'Look! Some of the robins is building a nest in our tree.', 'incorrect'],
+  ['SF-SVA-009', 'Honeybees make honey, and both of the bees has a special job in the hive.', 'incorrect'],
 ];
 
 for (const [id, answer, expect, todo] of CLOSE) {
