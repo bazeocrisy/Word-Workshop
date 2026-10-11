@@ -1,6 +1,6 @@
 # Sentence Fix — Independent Educational Audit (Agent 5)
 
-> **FINAL status (section 18):** **Content bank: APPROVED. All 150 items PASS.** **Grading engine: NOT APPROVED, one narrow issue left** (fd0a87b). L-1 and L-2 are verified fixed, the new rules do not misfire, and no Major issue remains. One older Critical case remains (M-1): a new subject followed by an of/in phrase, such as "everything in our library is", "the collection in our library is" or "The family of robins is", is marked incorrect. The engine is APPROVED once M-1 is fixed. Audit tests: 722 tests, 712 pass, 0 fail, 10 todo.
+> **FINAL status (section 19):** **Content bank: APPROVED. All 150 items PASS.** **Grading engine: NOT APPROVED** (f304309). M-1 is verified fixed. N-2 (Major) is a regression: the safety net now sends "Our new players has", "My older brothers is" and "Some robins is" to review. N-1 (Critical, older and narrow): "Maya or Leo is" and "Neither Maya nor Leo is" are marked incorrect. The engine is APPROVED once N-1 and N-2 are fixed. Audit tests: 745 tests, 731 pass, 0 fail, 14 todo.
 
 Branch `claude/student-first-v3`. Audited: `data/sentence-fix/bank.json` (all 150 items read one by one), `docs/SENTENCE-FIX-CURRICULUM.md`, `js/sentencefix/engine.js`. Independent grading tests: `tests/unit/sentencefix-grading-audit.test.mjs`. Nothing in the bank, the engine, or other app code was changed.
 
@@ -979,3 +979,61 @@ These wrong answers are incorrect: "does it opens", "Everybody are", "Nobody are
 - **Grading engine: NOT APPROVED, one narrow issue left.** No Major issue remains, and nothing in fd0a87b caused a problem. The only Critical item is M-1: a new subject followed by an *of/in* phrase, with the planted verb kept, is marked incorrect even though the sentence is valid. M-1 is older behaviour and needs a small change to how `subjectNumber` finds the subject.
 
   When M-1's 3 todo tests pass, only Minor review-direction items will remain, and the grading engine is **APPROVED**.
+
+---
+
+## 19. Safety-net check (commit f304309: M-1 and the "changed subject + kept verb" safety net)
+
+**This section supersedes the engine verdict in section 18.**
+
+**M-1 is confirmed fixed.** "everything in our library is", "the collection in our library is" and "The family of robins is" all go to review.
+
+**Method.** I wrote 23 fresh answers of my own, without reusing anyone else's tests: 12 valid and 11 wrong. They are in the `NET` cases in `tests/unit/sentencefix-grading-audit.test.mjs`, and they probe the safety net in both directions. I compared every result with the engine as it was just before f304309.
+
+**What works.**
+- These valid answers go to review: "Each of our players has", "one of the dogs barks", "the pair of dogs barks", "A flock of robins is", "Mr. Park's class of students takes", "My brother Max is", "every bee in the hive has".
+- These certain disagreements are incorrect: "Those robins is", "the two dogs barks", "They plays", "each of the bees have", "Jin and Sam plays".
+
+### Critical: valid answers marked incorrect (older behaviour, narrow)
+- **N-1.** Subjects joined by "or" or "nor" take the verb of the nearest noun, so these sentences are valid:
+  - SVA-001 "**Maya or Leo is** in the same reading group."
+  - SVA-001 "**Neither Maya nor Leo is** in the same reading group."
+
+  The engine treats them like an "and" compound, so they are marked incorrect.
+
+  **Fix:** count only "and" (not "or" or "nor") as a compound when deciding that a subject is certainly plural. Otherwise, let "or"/"nor" fall through to review.
+
+### Major: clearly wrong answers sent to review (regression in f304309)
+- **N-2.** The child keeps the key's own **plural** noun unchanged and only adds a describing word or determiner. The disagreement is certain, but the safety net now sends these to review. All five were incorrect before f304309:
+  - SVA-004 "Our **new players has**…"
+  - SVA-015 "My **older brothers is**…"
+  - SVA-002 "The **baby robins is**…"
+  - SVA-002 "**Some robins is**…"
+  - SVA-005 "the **books on the shelves** in our library **is**…"
+
+  **Fix:** add "the head noun is the key's own noun, unchanged" to the list of certain cases (that noun's number is known from the key). Also count "both" and "some + plural noun" as certainly plural. "both bees has" goes to review and was already like that before f304309.
+
+### Minor (review direction only, unchanged)
+- "a tiny crabs"
+- "for breakfasts."
+- "very tireds"
+- SVA-013 "tool … show"
+- "The robins family is"
+- G-8: a dropped "the" (by design)
+
+### Tests
+`node --test tests/unit/sentencefix-grading-audit.test.mjs` gives `tests 745, pass 731, fail 0, todo 14`. I ran it on its own. The 14 todos are:
+- N-1: 2 cases
+- N-2: 5 cases
+- "both bees has": 1 case
+- the 6 Minor cases above
+
+Every todo currently fails, so each one is a real finding. I did not change `engine.js` or `bank.json`.
+
+### FINAL VERDICTS
+- **Content bank: APPROVED.** All 150 items pass, with no Critical or Major findings (section 12.7).
+- **Grading engine: NOT APPROVED.**
+  - **Major, new in f304309:** N-2. The safety net sends clear agreement errors with the key's own plural noun to review.
+  - **Critical, older and narrow:** N-1 ("Maya or Leo is").
+
+  Both fixes are local to the safety net. One adds "key noun unchanged", "both" and "some + plural" as certain cases. The other stops treating "or"/"nor" as "and". When the 8 todo tests for N-1, N-2 and "both" pass, only Minor review-direction items will remain, and the grading engine is **APPROVED**.
