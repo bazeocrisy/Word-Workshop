@@ -78,7 +78,7 @@ export async function wizardStart({ params = {}, query = {} }) {
   const locked = !!week?.approvedVersion; // an approved lesson belongs to its student for good (its snapshots and scores do)
   const choices = students.map((s) => h('label', { class: `student-choice ${themeClass(s)}` },
     h('input', { type: 'radio', name: 'wz-student', value: s.id, checked: s.id === chosen, disabled: locked && s.id !== chosen }),
-    avatar(s), h('span', { class: 'choice-name' }, s.displayName), s.grade ? h('span', { class: 'muted' }, `Grade ${s.grade}`) : null));
+    avatar(s), h('span', { class: 'choice-text' }, h('span', { class: 'choice-name' }, s.displayName), s.grade ? h('span', { class: 'muted' }, `Grade ${s.grade}`) : null)));
   const start = h('input', { type: 'date', value: week ? week.startDate : def.startDate, required: true, id: 'wz-start' });
   const end = h('input', { type: 'date', value: week ? week.endDate : def.endDate, id: 'wz-end' });
   start.addEventListener('change', () => { if (start.value) end.value = plusDays(start.value, 4); });
