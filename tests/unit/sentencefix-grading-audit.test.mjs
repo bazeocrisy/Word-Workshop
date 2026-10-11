@@ -378,6 +378,23 @@ const RULE_CASES = [
   ['SF-COM-011', 'Lucia, you can paint the sign, and Omar can hang it up.', 'correct'],
   ['SF-COM-014', 'Mom, I packed crayons, glue, and paper, but I forgot the scissors.', 'correct'],
   ['SF-SPL-022', 'Every morning, our teacher writes a question on the board, and we write our answers in our journals.', 'correct'],
+  ['SF-TEN-008', 'Last week, we planted seeds in cups, and we watched them sprout.', 'ok'], // ", and" + new subject
+  ['SF-HOM-007', 'Dad and I rode to the store to buy milk, and eggs.', 'incorrect'], // two items, no clause
+  // ", and" + a second verb for the same subject: some teachers accept the comma → a grown-up checks it
+  ['SF-TEN-008', 'Last week, we planted seeds in cups, and watched them sprout.', 'review'],
+  ['SF-TEN-011', 'Last summer, my sister and I swam in the lake, and found a smooth rock.', 'review'],
+  ['SF-TEN-015', 'When the bell rang, Sofia grabbed her lunch, and sat with her friends.', 'review'],
+  ['SF-TEN-018', 'At the swim meet yesterday, Hana jumped into the pool, and swam so fast that she won a blue ribbon.', 'review'],
+  ['SF-TEN-020', 'Yesterday, the power went out, so we found flashlights, and told stories until the lights came back on.', 'review'],
+  ['SF-COM-007', 'Ms. Lee smiled, and said, "Yes, we can have extra recess today."', 'review'],
+  // ", and" joining just two things stays wrong
+  ['SF-HOM-006', 'We mixed flour, and water to make clay for our science project.', 'incorrect'],
+  ['SF-SPL-003', 'The butterfly had beautiful orange, and black wings.', 'incorrect'],
+  // real words are never misspellings (F-1/F-2); small words may be left out in a rewrite (F-3)
+  ['SF-SPL-013', 'Diego was sprinting so fast that he almost tripped on the grass.', 'ok'],
+  ['SF-CAP-001', 'Our class visited the libary on Monday.', 'incorrect'], // non-word stays a misspelling
+  ['SF-SVA-010', 'Jin and his brother play tennis, and Jin wins most of games.', 'ok'],
+  ['SF-HOM-015', 'Do you know where the moon is during the day? Sometimes it is still up there in sky.', 'ok'],
 ];
 
 for (const [id, answer, expect] of RULE_CASES) {
@@ -436,15 +453,15 @@ const F = {
 
 const FOLLOWUP = [
   // VALID: a real word near the key in the mistake's spot (the e-R1 rule)
-  ['SF-SPL-013', 'Diego was racing so fast that he almost tripped on the grass.', 'ok', F.realWordSlot],
-  ['SF-SPL-019', 'Two baby foxes were hiding under the benches near our tent.', 'ok', F.realWordSlot],
-  ['SF-SPL-010', 'We found a piece of shell and a lively crab in the sand.', 'ok', F.realWordSlot],
-  ['SF-SPL-025', 'Our neighborhood is planting trees in the park, so we need people who are wanting to help on Saturday.', 'ok', F.realWordSlot],
+  ['SF-SPL-013', 'Diego was racing so fast that he almost tripped on the grass.', 'ok'],
+  ['SF-SPL-019', 'Two baby foxes were hiding under the benches near our tent.', 'ok'],
+  ['SF-SPL-010', 'We found a piece of shell and a lively crab in the sand.', 'ok'],
+  ['SF-SPL-025', 'Our neighborhood is planting trees in the park, so we need people who are wanting to help on Saturday.', 'ok'],
   ['SF-SPL-022', 'Every Monday, our teacher writes a question on the board, and we write our answers in our journals.', 'ok'],
   ['SF-SPL-008', 'Ms. Diaz said we could choose a difficult book to read.', 'ok'],
   // VALID: real words 1–2 letters away (older rule)
-  ['SF-TEN-008', 'Last week, we placed seeds in cups and watched them sprout.', 'ok', F.realWordNear],
-  ['SF-HOM-005', 'Our team won the game, and the players threw their hats in the air.', 'ok', F.realWordNear],
+  ['SF-TEN-008', 'Last week, we placed seeds in cups and watched them sprout.', 'ok'],
+  ['SF-HOM-005', 'Our team won the game, and the players threw their hats in the air.', 'ok'],
   // VALID: tag questions and questions written another way
   ['SF-POS-011', 'Abraham Lincoln\'s face is on the penny, is it not?', 'ok'],
   ['SF-POS-011', 'Abraham Lincoln\'s face is on the penny, right?', 'ok'],
@@ -473,7 +490,7 @@ const FOLLOWUP = [
   ['SF-TEN-020', 'Yesterday, the power went out, so we found candles and told stories until the lights came back on.', 'ok'],
   ['SF-TEN-015', 'When the bell rang, Sofia grabbed her lunchbox and sat with her friends.', 'ok'],
   ['SF-SVA-015', 'My brothers were cleaning the garage, and Dad said we could go swimming when the job was done.', 'ok'],
-  ['SF-SVA-010', 'Jin and his brother play tennis, and Jin wins most games.', 'ok', F.droppedWords],
+  ['SF-SVA-010', 'Jin and his brother play tennis, and Jin wins most games.', 'ok'],
   // WRONG: must be incorrect
   ['SF-SPL-013', 'Diego was runnig so fast that he almost tripped on the grass.', 'incorrect'],
   ['SF-SPL-018', 'I was so exsighted to open my birthday presents.', 'incorrect'], // misspelling 3 letters off
@@ -485,7 +502,7 @@ const FOLLOWUP = [
   ['SF-SVA-001', 'Maya and Leo our in the same reading group.', 'incorrect'],
   ['SF-TEN-007', 'Yesterday, Ms. Chen read us a story, and than we drew pictures about it.', 'incorrect'],
   ['SF-SPL-010', 'We found a piece off shell and a little crab in the sand.', 'incorrect'],
-  ['SF-HOM-006', 'We mixed flour, and water to make clay for our science project.', 'incorrect', F.twoItemLongTail],
+  ['SF-HOM-006', 'We mixed flour, and water to make clay for our science project.', 'incorrect'],
 ];
 
 for (const [id, answer, expect, todo] of FOLLOWUP) {

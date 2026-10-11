@@ -6,6 +6,8 @@
 //  • picks seeded, repeat-avoiding sessions and keeps a small per-student progress record;
 //  • builds hints, explanations, highlight segments and step-by-step fixes for Learn mode.
 
+import { WORD_FILTER } from '../../vendor/english-words/words.js'; // English word list (public domain ENABLE)
+
 const MAX_CHARS = 400; // longest answer we align (longer input is cut, never crashes)
 const DEFAULT_SIZE = { learn: 3, practice: 10, lab: 10, test: 15 };
 const DIFFICULTIES = ['easy', 'medium', 'hard'];
@@ -198,12 +200,20 @@ const IRREGULAR_PAST = {
   led: 'lead', hit: 'hit', cut: 'cut', put: 'put', shut: 'shut', let: 'let', bit: 'bite', slid: 'slide',
   swung: 'swing', stuck: 'stick', spun: 'spin', drank: 'drink', rang: 'ring', sank: 'sink', shone: 'shine',
 };
+// Past participles: "swum" for "swam" is a wrong verb form, not a rewrite.
+const PARTICIPLE = {
+  swam: 'swum', sang: 'sung', drank: 'drunk', rang: 'rung', began: 'begun', sank: 'sunk', ate: 'eaten', wrote: 'written',
+  rode: 'ridden', saw: 'seen', took: 'taken', gave: 'given', went: 'gone', threw: 'thrown', drew: 'drawn', grew: 'grown',
+  knew: 'known', flew: 'flown', blew: 'blown', broke: 'broken', chose: 'chosen', froze: 'frozen', spoke: 'spoken',
+  woke: 'woken', wore: 'worn', shook: 'shaken', forgot: 'forgotten', hid: 'hidden', fell: 'fallen', drove: 'driven',
+  rose: 'risen', bit: 'bitten',
+};
 // Homophones (and near-homophones) children mix up. Typing one for another is a mistake, not a rewrite.
 const HOMOPHONES = new Set(('there their they\'re to too two your you\'re its it\'s no know new knew by buy bye ' +
-  'hear here right write pair pear pare sea see one won ate eight for four whole hole hour our week weak ' +
+  'hear here right write rite pair pear pare sea see one won ate eight for four whole hole hour our week weak ' +
   'through threw blue blew son sun flour flower which witch wood would tail tale meet meat road rode mail male ' +
   'plain plane peace piece sale sail bear bare dear deer wear where we\'re were whose who\'s than then ' +
-  'principal principle break brake cent sent scent knot not made maid night knight red read road rowed ' +
+  'principal principle break brake cent sent scent knot not made maid night knight red read reed road rowed ' +
   'some sum tide tied toe tow wait weight way weigh wore war allowed aloud ant aunt be bee berry bury cell sell ' +
   'flew flu grown groan hair hare herd heard hi high hole knows nose pail pale passed past rain reign rein ' +
   'sew so sow stair stare steal steel tail waist waste').split(' '));
@@ -221,6 +231,40 @@ const REAL_WORDS = new Set(('a an the is are am was were be been being has have 
   'theirs there then than this that these those what when where who whom why how all any some one more most ' +
   'very just also each every both few many much said says see saw seen go goes went gone get got come came ' +
   'make made take took give gave run ran find found know knew grow grew').split(' '));
+// Rare dictionary words that are really common misspellings ("stoped" for "stopped"): never count them as real.
+const KNOWN_MISSPELLINGS = new Set(['wich', 'stoped', 'watter', 'wiling']);
+// Helper verbs that take "n't" (can't → "ca", won't → "wo").
+const NT_VERBS = new Set(['do', 'does', 'did', 'is', 'are', 'was', 'were', 'has', 'have', 'had', 'could', 'would',
+  'should', 'must', 'need', 'might', 'ca', 'wo', 'sha', 'ai']);
+let wordBits = null;
+/** Is `w` (lowercase, no apostrophe) in the English word list? (Bloom filter: never misses a listed word.) */
+function inWordList(w) {
+  if (!wordBits) wordBits = Uint8Array.from(atob(WORD_FILTER.bits), (c) => c.charCodeAt(0));
+  const fnv = (seed) => {
+    let h = seed;
+    for (const ch of w) { h ^= ch.codePointAt(0); h = Math.imul(h, 0x01000193); }
+    return h >>> 0;
+  };
+  const { m, k } = WORD_FILTER, h1 = fnv(0x811c9dc5), h2 = fnv(0x050c5d1f) | 1;
+  for (let i = 0; i < k; i++) {
+    const b = ((h1 + Math.imul(i, h2)) >>> 0) % m;
+    if (!(wordBits[b >> 3] & (1 << (b & 7)))) return false;
+  }
+  return true;
+}
+/** A real English word (or a contraction/possessive of one), as far as the word list can tell. */
+function isRealWord(word) {
+  const w = lc(String(word));
+  if (!w || KNOWN_MISSPELLINGS.has(w)) return false;
+  if (REAL_WORDS.has(w)) return true;
+  if (w.includes('-')) return w.split('-').every(isRealWord);
+  let m;
+  if ((m = w.match(/^(.+)n't$/))) return NT_VERBS.has(m[1]);
+  if ((m = w.match(/^(.+)'(s|re|ll|ve|d|m)$/)) || (m = w.match(/^(.+s)'$/))) return !m[1].includes("'") && inWordList(m[1]);
+  return !w.includes("'") && inWordList(w);
+}
+// Small words a fair rewrite may leave out ("most games" for "most of the games").
+const SMALL_WORDS = new Set(['of', 'the', 'a', 'an', 'that', 'very', 'really', 'just', 'also', 'all', 'still', 'some']);
 // Contractions and their long forms count as the same words when checking equivalence.
 const PRONOUN_IS = new Set(['it', 'he', 'she', 'that', 'there', 'here', 'what', 'who', 'where', 'how']);
 const SUBJECTS = new Set(['i', 'you', 'he', 'she', 'it', 'we', 'they']);
@@ -277,29 +321,42 @@ function stems(w) {
 /**
  * Typed word `got` where the key has `exp`: a clear mistake ('capital', 'article', 'homophone', 'verb',
  * 'agreement', 'spelling') or null (could be a fair rewrite). `inSlot`: this is where a planted mistake was,
- * so another form of the same word (cook/cooked, want/wants) is also a mistake.
+ * so another form of the same word (cook/cooked, want/wants) is also a mistake. `planted`: the planted mistake there.
  */
-function wrongWord(exp, got, next, inSlot) {
+function wrongWord(exp, got, next, inSlot, planted) {
   const e = lc(exp), g = lc(got);
   if (e === g) return exp === got ? null : 'capital';
   if ((e === 'a' || e === 'an') && (g === 'a' || g === 'an')) return articleFits(got, next) ? null : 'article';
   if (HOMOPHONES.has(e) && HOMOPHONES.has(g)) return 'homophone';
+  // The same with an ending ("reeds" for "reads", "pairs" for "pears"), when the spellings are close.
+  const homStem = (w) => [...stems(w)].some((x) => HOMOPHONES.has(x));
+  if (homStem(e) && homStem(g) && editDistance(e, g) <= 2) return 'homophone';
   if (CONFUSABLES.some((set) => set.includes(e) && set.includes(g))) return 'homophone';
   if (AGREEMENT_SETS.some((set) => set.includes(e) && set.includes(g))) return 'agreement';
   const base = IRREGULAR_PAST[e];
   if (base) {
-    const forms = [base, `${base}s`, `${base}es`, `${base}ed`, `${base}d`, `${base}${base.at(-1)}ed`, `${e}ed`, `${base}ing`];
+    const forms = [base, `${base}s`, `${base}es`, `${base}ed`, `${base}d`, `${base}${base.at(-1)}ed`, `${e}ed`, `${base}ing`, PARTICIPLE[e]];
     if (forms.includes(g)) return 'verb';
   }
   if (inSlot && [...stems(e)].some((x) => stems(g).has(x))) return 'verb';
-  if (!REAL_WORDS.has(g) && nearMiss(exp, got)) return 'spelling';
-  // In a mistake's spot, a long word a few letters off the fix ("dosent" for "doesn't") is a misspelled try.
-  if (inSlot && !REAL_WORDS.has(g) && e[0] === g[0] && Math.min(e.length, g.length) >= 6 && editDistance(e, g) <= 3) return 'spelling';
+  const noApos = (x) => x.replace(/'/g, '');
+  if (noApos(e) === noApos(g)) return 'spelling'; // apostrophe left out or misplaced: "cant", "does'nt"
+  if (g.includes('our') && g.replace('our', 'or') === e) return 'spelling'; // British "colours" in a US bank
+  // Plural and possessive forms of the same noun mixed up ("fox's" for "foxes", "coaches'" for "coach's").
+  if ((e.includes("'") || g.includes("'")) && [...stems(noApos(e))].some((x) => stems(noApos(g)).has(x))) return 'spelling';
+  // One where the key has more than one, or the other way round ("dog" for "dogs"): a changed number, not a rewrite.
+  if (Math.min(e.length, g.length) >= 3 && (g === `${e}s` || g === `${e}es` || e === `${g}s` || e === `${g}es`)) return 'number';
+  // A real word ("placed" for "planted", "hats" for "caps") may be a fair rewrite: never call it a misspelling,
+  // unless it is one letter from both the fix and the planted mistake ("now" where "no" → "know").
+  if (isRealWord(g)) return inSlot && planted && lc(planted) !== e && editDistance(e, g) === 1 && editDistance(lc(planted), g) === 1 ? 'spelling' : null;
+  if (nearMiss(exp, got)) return 'spelling';
+  // In a mistake's spot, a non-word a few letters off the fix ("dosent", "exsighted") is a misspelled try.
+  if (inSlot && e[0] === g[0] && Math.min(e.length, g.length) >= 6 && editDistance(noApos(e), noApos(g)) <= 3) return 'spelling';
   return null;
 }
 
 /** Compare the key's tokens with the typed tokens word by word: a clear mistake kind, 'same', or null. */
-function wordVerdict(exp, got, after, inSlot) {
+function wordVerdict(exp, got, after, inSlot, planted) {
   if (exp.length !== got.length) {
     const squash = (toks) => lc(toks.join('')).replace(/-/g, '');
     return exp.length && squash(exp) === squash(got) ? 'spelling' : null;
@@ -308,7 +365,7 @@ function wordVerdict(exp, got, after, inSlot) {
   for (let i = 0; i < exp.length; i++) {
     if (exp[i] === got[i]) continue;
     if (!isWord(exp[i]) || !isWord(got[i])) return null;
-    const k = wrongWord(exp[i], got[i], got[i + 1] ?? after, inSlot);
+    const k = wrongWord(exp[i], got[i], got[i + 1] ?? after, inSlot, planted?.length === exp.length ? planted[i] : undefined);
     if (!k) return null;
     if (kind === 'same') kind = k;
   }
@@ -331,6 +388,10 @@ const STATES = new Set(('alabama alaska arizona arkansas california colorado con
 const CONJ = new Set(['and', 'or', 'but', 'so', 'yet', 'nor']);
 const TAG_VERBS = new Set(['is', 'are', 'was', 'were', 'do', 'does', 'did', 'can', 'will', 'has', 'have', 'should', 'could', 'would']);
 const TITLES = new Set(['mr', 'mrs', 'ms', 'dr', 'st', 'jr']);
+// Words that can start a new clause after ", and" (a subject or its determiner, or "then"/"there").
+const CLAUSE_STARTS = new Set(['i', 'you', 'he', 'she', 'it', 'we', 'they', 'the', 'a', 'an', 'my', 'our', 'your',
+  'his', 'her', 'their', 'its', 'this', 'that', 'these', 'those', 'each', 'every', 'both', 'all', 'some', 'many',
+  'then', 'there', 'here', 'now', 'later', 'soon', 'so', 'one', 'two']);
 const isCap = (t) => !!t && isWord(t) && t[0] !== lc(t[0]);
 
 /** Is the opening phrase before index k (no marks, ≤ 4 words, starts with an opener word)? */
@@ -379,6 +440,23 @@ function commaRequired(C, k) {
   return false;
 }
 
+/** A past-tense verb: ends in -ed ("watched") or a known irregular past ("swam", "told"). */
+const isPastVerb = (t) => !isCap(t) && (/^[a-z]{2,}ed$/.test(t) || Object.hasOwn(IRREGULAR_PAST, t));
+/** Could be a present-tense verb with -s ("runs", "watches"). */
+const isPresentS = (t) => !isCap(t) && /^[a-z]{2,}[^s']s$/.test(t);
+/** Does the part before index k have a present-tense verb ("is", "has", "does", or "he runs", "the dog barks")? */
+function presentBefore(A, k) {
+  for (let i = 1; i < k; i++) {
+    const t = lc(A[i]);
+    if (t === 'is' || t === 'has' || t === 'does') return true;
+    if (!isPresentS(A[i])) continue;
+    const p = lc(A[i - 1]);
+    if (['he', 'she', 'it'].includes(p) || isCap(A[i - 1])) return true;
+    if (isWord(A[i - 1]) && ['the', 'a', 'my', 'our', 'his', 'her', 'their', 'each', 'every', 'this', 'that'].includes(lc(A[i - 2] || ''))) return true;
+  }
+  return false;
+}
+
 /** A comma typed at index k of the answer where the model has none: fine only in an optional spot. */
 function commaAllowed(A, k) {
   const next = A[k + 1] || '';
@@ -388,11 +466,15 @@ function commaAllowed(A, k) {
     let words = 0, i = k - 1;
     while (i >= 0 && isWord(A[i]) && words <= 3) { words++; i--; }
     if (A[i] === ',' && words >= 1 && words <= 3) return true;
-    // Compound sentence: a clause follows ("..., and Omar can hang it up"), not just one more item ("pears, and peaches").
+    // Compound sentence: a new clause with its own subject follows ("..., and Omar can hang it up", "..., and the
+    // dogs bark"), not just one more item ("pears, and peaches", "flour, and water to make clay").
     let tail = 0;
     for (let j = k + 2; j < A.length && isWord(A[j]); j++) tail++;
     const subj = A[k + 2] || '';
-    return tail >= 3 || (tail >= 2 && (SUBJECTS.has(lc(subj)) || isCap(subj)));
+    if (tail >= 2 && (CLAUSE_STARTS.has(lc(subj)) || isCap(subj))) return true;
+    // A second verb for the same subject ("smiled, and said", "jumps in, and swims"): some teachers accept this
+    // comma, so it goes to a grown-up rather than being marked wrong.
+    return tail >= 1 && (isPastVerb(subj) || (isPresentS(subj) && presentBefore(A, k)));
   }
   if (afterOpener(A, k)) return true;
   if (next === '"') return true; // before speech
@@ -421,6 +503,7 @@ const TIPS = {
   homophone: 'Check words that sound the same but are spelled differently.',
   verb: 'Check the form of each action word.',
   agreement: 'Check that each action word matches who is doing it.',
+  number: 'Check whether each word means one or more than one.',
 };
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
@@ -431,6 +514,8 @@ function classify(h, A, C, insBag, delBag) {
   if (!got.length) {
     if (inBag(insBag, exp)) return ['moved', false];
     if (exp.length === 1 && exp[0] === ',') return ['comma', h.cStart != null && commaRequired(C, h.cStart)];
+    // Leaving out only small words ("most games" for "most of the games") can be a fair rewrite.
+    if (exp.every((t) => SMALL_WORDS.has(lc(t)))) return ['dropped', false];
     return ['dropped', true];
   }
   if (!exp.length) {
@@ -496,7 +581,7 @@ function judgeSlot(winA, winC, winW, after) {
     if (sameList(expandWords([...winA, ...tail], false), expandWords([...winC, ...tail], false))) return 'wrong'; // "is not it?"
     if (sameList(xa, expandWords([...winW, ...tail]))) return 'wrong';
   }
-  const k = wordVerdict(winC, winA, after, true);
+  const k = wordVerdict(winC, winA, after, true, winW);
   return k && k !== 'same' ? 'wrong' : null;
 }
 

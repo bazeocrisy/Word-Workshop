@@ -98,12 +98,25 @@ test('partly fixed: incorrect with the right counts', () => {
   assert.deepEqual([c.result, c.fixed, c.unfixed], ['incorrect', [1], [0]]);
 });
 
+test('a comma before "and" + a second verb is review; joining two things is incorrect', () => {
+  const NOW = {
+    id: 'T-COM-1', skill: 'commas', difficulty: 'easy', accepted: [],
+    incorrect: 'sam eats lunch and runs outside.', correct: 'Sam eats lunch and runs outside.',
+    errors: [{ category: 'capitalization', wrong: 'sam', right: 'Sam', explanation: 'Names start with a capital.' }],
+  };
+  assert.equal(grade(NOW, 'Sam eats lunch, and runs outside.').result, 'review'); // present verb, present sentence
+  const PAST = { ...NOW, id: 'T-COM-2', incorrect: 'sam ate lunch and ran outside.', correct: 'Sam ate lunch and ran outside.' };
+  assert.equal(grade(PAST, 'Sam ate lunch, and ran outside.').result, 'review'); // irregular past verb
+  const TWO = { ...NOW, id: 'T-COM-3', incorrect: 'sam ate bread and cheese.', correct: 'Sam ate bread and cheese.' };
+  assert.equal(grade(TWO, 'Sam ate bread, and cheese.').result, 'incorrect'); // two things, no verb
+});
+
 test('every planted mistake fixed but a new misspelling: incorrect', () => {
   const g = grade(CAP, 'My teacher, Ms. Lopez, reeds to us every Friday.');
   assert.equal(g.result, 'incorrect');
   assert.deepEqual(g.unfixed, []);
   assert.deepEqual(g.extraChanges.filter((x) => x.clear).map((x) => [x.expected, x.got]), [['reads', 'reeds']]);
-  assert.match(g.message, /spelling/);
+  assert.match(g.message, /spell/); // "reeds" is a real word: a sound-alike mix-up ("…spelled differently")
   assert.equal(grade(MIX, 'The dog were barking at their neighbor.').result, 'incorrect');
 });
 
