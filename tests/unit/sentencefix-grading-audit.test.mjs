@@ -604,3 +604,83 @@ for (const [id, answer, expect, todo] of FINAL) {
 }
 
 test('final re-check: 30+ fresh answers', () => assert.ok(FINAL.length >= 30));
+
+// ================================================================ LAST ENGINE CHECK (commit b4c62a8)
+// Fresh answers (not the engine agent's) that stress numberBreaks / coordinatedNumber, the possessive
+// number switch, REAL_WORD_TYPOS, SMALL_WORDS and nounPhraseOnly. VALID answers must never be 'incorrect';
+// clearly WRONG answers must be 'incorrect'.
+
+const H = {
+  subjectSide: 'engine defect (Critical, pre-existing; same principle as the lead\'s G-2 decision): the child fixed the agreement by changing the SUBJECT ("The robin is", "Our player has", "hawks hunt", "they win") and left the planted verb as it was. The sentence is valid, but the kept verb counts as "unfixed" → incorrect. It should be review.',
+  homophonePlural: 'engine defect (Critical, pre-existing, rare): the plural of the homophone fix ("across the seas") is a valid answer, but the stem rule calls it a wrong verb form',
+  brokenAgreement: 'engine defect (Major, regression in b4c62a8): changing a noun\'s number so that it no longer agrees with the unchanged verb after it ("the dog bark", "their cows gives", "the store close") now goes to review; before b4c62a8 it was incorrect',
+  namesComma: 'engine (Major, pre-existing): a comma before "and" between two names ("Maya, and Leo are", "Uncle Ray, and Aunt Bea") is read as a new clause → review',
+  irregularPlural: 'engine (minor): "two loaf" is not caught because loaf/loaves is not an -s/-es pair',
+  droppedSlotWord: 'engine (minor): leaving out the word that was the fix ("forget bring" with no "to") goes to review',
+  realTypoUnlisted: 'engine (minor): real-word or informal misspellings not on the lists ("tipped" for tripped, "soap" for soup, "tonite") go to review',
+  strayAnd: 'engine (minor): stray ", and." at the end goes to review',
+};
+
+const LAST = [
+  // VALID: number or possessive changed on purpose, words dropped or added, ", and" + a verb
+  ['SF-SPL-019', 'A baby fox was hiding under the bushes near our tent.', 'ok'],
+  ['SF-CAP-011', 'For Thanksgiving, we drove to my aunts\' house in Ohio.', 'ok'],
+  ['SF-POS-012', 'They\'re hanging all the students\' drawings in the hallways, and Ms. Lee\'s class can\'t wait to see them.', 'ok'],
+  ['SF-MIX-005', 'On Friday, Tariq and his friend practiced their soccer moves at the park until dark.', 'ok'],
+  ['SF-TEN-016', 'Last Tuesday, our class went outside at noon, and we traced our shadow with chalk while Mr. Ross took pictures.', 'ok'],
+  ['SF-SPL-005', 'We will test the magnet again tomorrow.', 'ok'],
+  ['SF-SPL-017', 'Our class wrote a thank-you letter to the lunch workers because they work so hard.', 'ok'],
+  ['SF-SPL-024', 'Many years ago, children walked to a small school and wrote their lessons on a little chalkboard every day.', 'ok'],
+  ['SF-HOM-014', 'When we went to the market, we saw a sign for a sale on fresh pears and a peach.', 'ok'],
+  ['SF-COM-009', 'On our hike, we saw deer, rabbits, a turkey and a red fox.', 'ok'],
+  ['SF-CAP-008', 'My cousins Jada and Kim are flying to Chicago on Thursday.', 'ok'],
+  ['SF-TEN-020', 'Yesterday, the power went out, so we found flashlights and told a story until the lights came back on.', 'ok'],
+  ['SF-HOM-012', 'There are many leaves in the yard, so we will rake them in a big pile over here.', 'ok'],
+  ['SF-END-014', 'Is the game at noon? I packed snacks and water. Should we bring chairs?', 'ok'],
+  ['SF-SVA-006', 'A spider has eight legs, but an insect has six.', 'ok'],
+  ['SF-POS-006', 'We\'re going to visit the zoo, and I\'m excited.', 'ok'],
+  ['SF-SPL-002', 'We stayed inside because it was raining so hard.', 'ok'],
+  ['SF-SPL-001', 'My best friend Jamal sits next to me in class.', 'ok'],
+  ['SF-END-012', 'My puppy ran away this morning. Can you please help me look for him?', 'ok'],
+  ['SF-TEN-009', 'Long ago, people sewed their own clothes, and grew their own food.', 'ok'],
+  ['SF-SPL-021', 'On Sunday, my family went to the beach, and stayed until the sun went down because it was really warm.', 'ok'],
+  // VALID: agreement fixed from the subject side
+  ['SF-SVA-002', 'Look! The robin is building a nest in our tree.', 'ok', H.subjectSide],
+  ['SF-SVA-004', 'Our player has new jerseys this year.', 'ok', H.subjectSide],
+  ['SF-SVA-014', 'Owls hunt at night, but hawks hunt during the day, and both birds have sharp claws.', 'ok', H.subjectSide],
+  ['SF-SVA-010', 'Jin and his brother play tennis, and they win most of the games.', 'ok', H.subjectSide],
+  ['SF-SVA-009', 'Honeybees make honey, and all bees have a special job in the hive.', 'ok', H.subjectSide],
+  ['SF-SVA-005', 'Our teacher always says that the book in our library is for everyone.', 'ok', H.subjectSide],
+  ['SF-HOM-009', 'Long ago, sailors used the stars to find their way across the seas.', 'ok', H.homophonePlural],
+  // WRONG: must be incorrect
+  ['SF-SPL-024', 'Many year ago, children walked to a small school and wrote their lessons on little chalkboards every day.', 'incorrect'],
+  ['SF-SPL-016', 'The two bird carried twigs and grass together to build a nest.', 'incorrect'],
+  ['SF-SVA-002', 'Look! The robin are building a nest in our tree.', 'incorrect'],
+  ['SF-SVA-012', 'Every Friday, Mr. Parks\' students take a spelling test, and Ravi always gets every word right because he studies hard.', 'incorrect'],
+  ['SF-POS-014', 'I\'m sure Grandpa\'s old photo\'s are in the attic, but it\'s too dark to look today.', 'incorrect'],
+  ['SF-SPL-010', 'We found a piece of shell, and a little crab in the sand.', 'incorrect'],
+  ['SF-HOM-002', 'I have two pencils, and an eraser in my desk.', 'incorrect'],
+  ['SF-SPL-016', 'The two birds carried twigs, and grass together to build a nest.', 'incorrect'],
+  ['SF-SPL-021', 'On Sunday, my family went to the beech and stayed until the sun went down because it was really warm.', 'incorrect'],
+  ['SF-COM-005', 'We planted bean, peas, carrots and lettuce in the school garden.', 'incorrect'],
+  ['SF-SPL-023', 'Aisha was hoping to win the race, but she stopped to help a freind who fell.', 'incorrect'],
+  ['SF-POS-015', 'The foxes den is under a log, and we can\'t see it, but we know it\'s there.', 'incorrect'],
+  ['SF-HOM-015', 'Do you know were the moon is during the day? Sometimes it is still up there in the sky.', 'incorrect'],
+  ['SF-SVA-008', 'The mail carrier comes to our street every day, and the dog bark at her.', 'incorrect', H.brokenAgreement],
+  ['SF-SVA-007', 'My grandparents live on a farm, and their cows gives lots of milk.', 'incorrect', H.brokenAgreement],
+  ['SF-SPL-012', 'Dad and I believe the store close in ten minutes.', 'incorrect', H.brokenAgreement],
+  ['SF-SVA-001', 'Maya, and Leo are in the same reading group.', 'incorrect', H.namesComma],
+  ['SF-CAP-012', 'Last June, my family camped at Yellowstone National Park with Uncle Ray, and Aunt Bea.', 'incorrect', H.namesComma],
+  ['SF-HOM-007', 'Dad and I rode to the store to buy milk and two loaf of bread.', 'incorrect', H.irregularPlural],
+  ['SF-MIX-003', 'Please don\'t forget bring your lunch to school tomorrow.', 'incorrect', H.droppedSlotWord],
+  ['SF-SPL-013', 'Diego was running so fast that he almost tipped on the grass.', 'incorrect', H.realTypoUnlisted],
+  ['SF-SPL-004', 'Grandma made my favorite soap for dinner tonight.', 'incorrect', H.realTypoUnlisted],
+  ['SF-SPL-006', 'The library is open until eight o\'clock tonite.', 'incorrect', H.realTypoUnlisted],
+  ['SF-TEN-012', 'Last Sunday morning, the sun came up, and the birds sang in the trees, and.', 'incorrect', H.strayAnd],
+];
+
+for (const [id, answer, expect, todo] of LAST) {
+  test(`last ${id}: ${JSON.stringify(answer)} → ${expect}`, todo ? { todo } : {}, () => check(id, answer, expect));
+}
+
+test('last engine check: 30+ fresh answers', () => assert.ok(LAST.length >= 30));

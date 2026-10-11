@@ -1,6 +1,6 @@
 # Sentence Fix — Independent Educational Audit (Agent 5)
 
-> **FINAL status (section 14):** **Content bank: APPROVED. All 150 items PASS.** **Grading engine: NOT APPROVED.** After 82020b0, valid singular/plural rewrites with a matching verb (G-1), "bush" in the plural slot (G-3), "brothers'" (G-4) and "has just six" (G-5) are still marked incorrect. G-2 (a changed noun number) needs an owner decision. G-6 and G-7 are Major: clear real-word misspellings and two-item ", and" commas go to review. Audit tests: 520 tests, 500 pass, 0 fail, 20 todo.
+> **FINAL status (section 15):** **Content bank: APPROVED. All 150 items PASS.** **Grading engine: NOT APPROVED** at b4c62a8. Critical: valid answers that fix the agreement by changing the subject are marked incorrect (H-1, such as "The robin is" and "Our player has"), and so is "seas" (H-2). Major: b4c62a8 now sends "the dog bark", "their cows gives" and "the store close" to review (H-3), and a comma between two names goes to review (H-4). G-1 to G-7 are fixed. Audit tests: 579 tests, 560 pass, 0 fail, 19 todo.
 
 Branch `claude/student-first-v3`. Audited: `data/sentence-fix/bank.json` (all 150 items read one by one), `docs/SENTENCE-FIX-CURRICULUM.md`, `js/sentencefix/engine.js`. Independent grading tests: `tests/unit/sentencefix-grading-audit.test.mjs`. Nothing in the bank, the engine, or other app code was changed.
 
@@ -715,3 +715,80 @@ Every todo currently fails, so each one is a real finding. I did not change `eng
   - **G-2 is an owner decision:** either confirm that a changed noun number is a copying mistake, or send it to review.
 
   The engine can be approved once G-1, G-3, G-4 and G-5 are fixed and G-2 is either decided by the owner or fixed. G-6 and G-7 (Major) should also be fixed, because they reverse correct "incorrect" results that worked before. Nothing grades an invalid answer as correct, because "correct" still requires an exact match with the key or an accepted answer.
+
+---
+
+## 15. Last engine check (commit b4c62a8: numberBreaks, coordinatedNumber, possessive number, REAL_WORD_TYPOS, nounPhraseOnly)
+
+**This section supersedes the engine verdict in section 14.**
+
+**Method.** I wrote 53 fresh answers of my own, without reusing the engine agent's tests: 28 valid and 25 wrong. They are in the `LAST` cases in `tests/unit/sentencefix-grading-audit.test.mjs`. To tell new behaviour from old, I compared every result with the engine as it was just before b4c62a8.
+
+**G-1 to G-7 are fixed, and the lead's G-2 decision is applied.** All of these valid answers go to review:
+- **Number changes:**
+  - a word that was not a mistake: "a baby fox was", "his friend", "our shadow", "the magnet", "a thank-you letter", "a little chalkboard", "a peach", "a turkey", "my cousins Jada and Kim";
+  - an added or removed "a": "told a story".
+- **Possessive number switches:** "my aunts' house", "the hallways".
+- **Dropped small words:** "too", "only", "so".
+- **Added words:** "best", "please".
+- **", and" + a second verb:** "…clothes, and grew…", "…beach, and stayed…".
+
+These wrong answers are still incorrect:
+- **Number slips that break agreement:** "Many year ago", "The two bird", "The robin are", "planted bean".
+- **"Mr. Parks'"** (a name) and **"photo's"**.
+- **Two-item ", and" commas:** "shell, and a little crab", "pencils, and an eraser", "twigs, and grass".
+- **"beech"**, which is on the typo list.
+- **Planted mistakes left in place:** "freind", "foxes den", "were" for where.
+
+### Critical: valid answers marked incorrect (both are older behaviour)
+- **H-1: agreement fixed from the subject side.** The child makes the sentence agree by changing the *subject* and leaves the planted verb as it was. The sentence is fully valid, but the kept verb counts as "unfixed", so the answer is incorrect. Examples:
+  - SVA-002 "Look! The **robin is** building a nest in our tree."
+  - SVA-004 "Our **player has** new jerseys this year."
+  - SVA-014 "…but **hawks hunt** during the day…"
+  - SVA-010 "…and **they win** most of the games."
+  - SVA-009 "…and **all bees have** a special job…"
+  - SVA-005 "…the **book** in our library **is** for everyone."
+
+  This is the same principle as the lead's G-2 decision: a grammatically valid change to a word the child wasn't asked to fix should go to review.
+
+  **Fix:** in a grammar (agreement) slot where the planted verb is unchanged, check the typed subject just before it. If the subject's number or pronoun changed and the subject and verb now agree, mark the mistake "unknown", which leads to review.
+
+  **Lead decision option:** if the lead rules that in subject-verb items the verb itself must be corrected, these can stay incorrect. In that case the explanation shown to the child should say so.
+- **H-2: HOM-009 "…across the **seas**."** This is the plural of the homophone fix, and it is valid. The stem rule calls it a wrong verb form. **Fix:** in a homophone slot, the -s/-es form of the key should be judged by `numberBreaks`, like other number changes.
+
+### Major: clearly wrong answers sent to review
+- **H-3 (regression in b4c62a8).** If the child changes a noun's number so it no longer agrees with the unchanged verb right after it, the answer now goes to review. These were incorrect before b4c62a8:
+  - SVA-008 "the **dog bark** at her"
+  - SVA-007 "their **cows gives**"
+  - SPL-012 "the **store close**"
+
+  `numberBreaks` only looks at helper verbs (is/are/has/have…). **Fix:** if the next typed word is the key's own verb, unchanged, and it agreed with the key's noun, then changing the noun's number alone breaks agreement and should be marked `number`, so the answer is incorrect. This is the mirror case of `coordinatedNumber`.
+- **H-4 (older behaviour).** A comma before "and" between two names goes to review. Examples: SVA-001 "**Maya, and Leo** are…" and CAP-012 "…with **Uncle Ray, and Aunt Bea**." **Fix:** after ", and", a capitalized name followed by a plural verb, a preposition or the end of the sentence is one more item, not a new clause.
+
+### Minor (these go to a grown-up for review; no valid answer is marked wrong)
+- **H-5:** "two **loaf**". Irregular plurals (loaf/loaves, leaf/leaves) are not -s/-es pairs.
+- **H-6:** "Please don't forget **bring**…". The child left out the fix word "to".
+- **H-7:** real-word or informal misspellings that are not on any list: "tipped" for tripped, "soap" for soup, "tonite". Consider adding tonite, nite, lite and thru to `KNOWN_MISSPELLINGS`.
+- **H-8:** a stray ", and." at the end.
+- **G-8, by design:** a dropped "the".
+
+### Tests
+`node --test tests/unit/sentencefix-grading-audit.test.mjs` gives `tests 579, pass 560, fail 0, todo 19`. I ran it on its own. The 19 todos are:
+- H-1: 6 cases
+- H-2: 1 case
+- H-3: 3 cases
+- H-4: 2 cases
+- H-5 and H-6: 1 case each
+- H-7: 3 cases
+- H-8: 1 case
+- G-8: 1 case
+
+Every todo currently fails, so each one is a real finding. I did not change `engine.js` or `bank.json`.
+
+### FINAL VERDICTS
+- **Content bank: APPROVED.** All 150 items pass, with no Critical or Major findings (section 12.7).
+- **Grading engine: NOT APPROVED.**
+  - **Critical:** H-1 (agreement fixed from the subject side) and H-2 ("seas") mark valid answers incorrect. Both are older behaviour. H-1 needs either the fix above or an explicit lead decision.
+  - **Major:** H-3 (b4c62a8 made "the dog bark", "their cows gives" and "the store close" go to review instead of incorrect) and H-4 (a comma between two names).
+
+  Once H-1 to H-4 are resolved, the engine meets the approval bar. H-5 to H-8 and G-8 are Minor and can stay as todos. No invalid answer is ever graded correct.
