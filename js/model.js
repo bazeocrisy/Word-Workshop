@@ -196,8 +196,23 @@ export function buildSnapshot(week, version, approvedAt = nowIso()) {
 export function snapshotIntegrityErrors(snap) {
   const errs = [];
   for (const v of snap.vocab || []) {
+    if (!v || typeof v !== 'object') { errs.push('A vocabulary entry is malformed.'); continue; }
     if (v.definitionKind === 'teacher' && v.definition !== v.teacherDefinition) errs.push(`"${v.word}": definition differs from the teacher's wording but is not marked parent-edited.`);
     if (!['teacher', 'parent-edited'].includes(v.definitionKind)) errs.push(`"${v.word}": unknown definition kind.`);
+  }
+  return errs;
+}
+
+/**
+ * Working-copy integrity: the verified teacher wording may differ from the original capture only through a
+ * logged "transcription corrected" entry whose final value is the current wording.
+ */
+export function itemIntegrityErrors(week) {
+  const errs = [];
+  for (const it of week.vocab || []) {
+    if (it.sourceDefinition === it.originalTranscription) continue;
+    const log = (it.definitionLog || []).filter((e) => e.field === 'sourceDefinition');
+    if (!log.length || log[log.length - 1].to !== it.sourceDefinition) errs.push(`"${it.word}": the teacher's definition was changed without a recorded correction.`);
   }
   return errs;
 }

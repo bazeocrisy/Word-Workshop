@@ -1,7 +1,7 @@
 // Domain operations on top of IndexedDB. Student-facing code reads lessons only through
 // getApprovedLesson()/listApprovedWeeks(), which return frozen snapshots — never working drafts.
 import { transact, get, getAll, getAllBy, put, del, STORES } from './db.js';
-import { uid, nowIso, newWeek, buildSnapshot, approvalBlockers, snapshotIntegrityErrors, weekStatus } from './model.js';
+import { uid, nowIso, newWeek, buildSnapshot, approvalBlockers, snapshotIntegrityErrors, itemIntegrityErrors, weekStatus } from './model.js';
 
 export const DEMO_STUDENTS = [
   { displayName: 'Alex', grade: 3, color: 'sky' },
@@ -69,14 +69,16 @@ export async function listWeeks(studentId) {
 export const getWeek = (id) => get('weeks', id);
 
 /**
- * Change a week's working copy atomically. `mutate(week)` edits in place; `log` describes the change
- * ({ action, detail }). Any change bumps the revision, which moves an approved week to "Changes pending".
+ * Change a week's working copy atomically. `mutate(week)` must be SYNCHRONOUS (do async work such as image
+ * saving before calling); it edits in place. `log` describes the change ({ action, detail }).
+ * Any change bumps the revision, which moves an approved week to "Changes pending".
  */
 export async function editWeek(id, mutate, log) {
   return transact(['weeks'], 'readwrite', async (s, d) => {
     const w = await d(s.weeks.get(id));
     if (!w) throw new Error('Week not found.');
-    const r = await mutate(w);
+    const r = mutate(w);
+    if (r && typeof r.then === 'function') throw new Error('Internal error: week changes must be synchronous.');
     if (r === false) return w; // mutator decided nothing changed
     w.revision += 1;
     w.updatedAt = nowIso();
@@ -106,7 +108,7 @@ export async function approveWeek(id) {
     if (weekStatus(w) === 'approved') return w;
     const version = (w.approvedVersion || 0) + 1;
     const snap = buildSnapshot(w, version);
-    const errs = snapshotIntegrityErrors(snap);
+    const errs = [...itemIntegrityErrors(w), ...snapshotIntegrityErrors(snap)];
     if (errs.length) throw new Error('Definition check failed: ' + errs.join(' '));
     w.approvedVersion = version;
     w.approvedRevision = w.revision;

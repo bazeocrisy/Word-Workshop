@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-labelledby="t">
+  <title id="t">A child at a desk who has stopped doing homework to turn and watch a butterfly at the window</title>
+  <rect x="8" y="8" width="304" height="224" rx="28" fill="#eef7ee"/>
+  <!-- window -->
+  <rect x="200" y="24" width="96" height="92" rx="6" fill="#bfe3f7" stroke="#ffffff" stroke-width="6"/>
+  <path d="M248 24 V116 M200 70 H296" stroke="#ffffff" stroke-width="5"/>
+  <circle cx="276" cy="46" r="10" fill="#ffd34d"/>
+  <!-- butterfly flight trail -->
+  <path d="M290 110 Q262 140 236 118 Q218 100 222 82" stroke="#c78bd8" stroke-width="3" stroke-dasharray="5 6" fill="none"/>
+  <!-- butterfly -->
+  <g transform="translate(214 70) rotate(-15)">
+    <path d="M0 0 Q-24 -26 -26 -4 Q-24 8 0 2 Z" fill="#f28c38"/>
+    <path d="M0 0 Q24 -26 26 -4 Q24 8 0 2 Z" fill="#f28c38"/>
+    <path d="M0 2 Q-18 4 -16 18 Q-6 18 0 4 Z" fill="#e5677d"/>
+    <path d="M0 2 Q18 4 16 18 Q6 18 0 4 Z" fill="#e5677d"/>
+    <rect x="-2.5" y="-10" width="5" height="26" rx="2.5" fill="#3a2a20"/>
+    <path d="M-1 -10 Q-6 -20 -10 -20 M1 -10 Q6 -20 10 -20" stroke="#3a2a20" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </g>
+  <!-- child body -->
+  <path d="M60 176 V140 Q60 116 90 114 H118 Q148 116 148 140 V176 Z" fill="#3fae5a"/>
+  <rect x="96" y="100" width="16" height="18" rx="5" fill="#c68642"/>
+  <!-- head turned toward the butterfly -->
+  <circle cx="106" cy="80" r="30" fill="#c68642"/>
+  <path d="M76 80 Q72 46 104 46 Q138 46 136 74 Q120 60 100 62 Q82 66 76 80 Z" fill="#3a2414"/>
+  <path d="M78 70 Q66 74 70 88" stroke="#3a2414" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <circle cx="114" cy="76" r="5" fill="#ffffff"/><circle cx="132" cy="74" r="5" fill="#ffffff"/>
+  <circle cx="117" cy="74" r="3" fill="#2b2b3a"/><circle cx="135" cy="72" r="3" fill="#2b2b3a"/>
+  <path d="M110 66 Q115 62 120 65 M128 63 Q133 60 138 63" stroke="#3a2414" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <ellipse cx="128" cy="92" rx="4" ry="5" fill="#7a3a2a"/>
+  <!-- desk -->
+  <rect x="24" y="170" width="200" height="12" rx="5" fill="#a8672a"/>
+  <rect x="36" y="182" width="12" height="44" rx="4" fill="#8a5226"/>
+  <rect x="200" y="182" width="12" height="44" rx="4" fill="#8a5226"/>
+  <!-- homework paper with unfinished lines -->
+  <path d="M92 168 L104 140 L176 146 L170 172 Z" fill="#ffffff" stroke="#b8c4b8" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M106 150 L160 154 M104 157 L150 160 M101 164 L124 166" stroke="#7d9bd1" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- resting arm, pencil put down -->
+  <path d="M70 140 Q76 162 96 164" stroke="#3fae5a" stroke-width="14" stroke-linecap="round" fill="none"/>
+  <circle cx="98" cy="164" r="8" fill="#c68642"/>
+  <g transform="rotate(-8 180 162)">
+    <rect x="150" y="158" width="44" height="7" rx="2" fill="#f5c542"/>
+    <path d="M194 158 L204 161.5 L194 165 Z" fill="#e8c9a0"/>
+    <rect x="146" y="158" width="6" height="7" rx="2" fill="#e5677d"/>
+  </g>
+</svg>

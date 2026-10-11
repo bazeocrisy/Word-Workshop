@@ -77,7 +77,7 @@ export async function settingsView() {
     const color = h('select', null, COLORS.map((c) => h('option', { value: c, selected: st.color === c }, c[0].toUpperCase() + c.slice(1))));
     return h('div', { class: 'card student-edit' },
       h('div', { class: 'card-head' }, avatar(st), h('h2', null, st.displayName)),
-      h('div', { class: 'three-col' }, field('Name', name), field('Grade', grade), field('Colour', color)),
+      h('div', { class: 'three-col' }, field(`Name (${st.displayName})`, name), field(`Grade (${st.displayName})`, grade), field(`Colour (${st.displayName})`, color)),
       h('div', { class: 'row' },
         btn('Save', async () => {
           if (!name.value.trim()) { toast('Enter a name.', 'error'); return; }

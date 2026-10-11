@@ -48,10 +48,13 @@ export async function transact(names, mode, fn) {
     const t = db.transaction(names, mode);
     const stores = Object.fromEntries(names.map((n) => [n, t.objectStore(n)]));
     let result;
-    t.oncomplete = () => resolve(result);
-    t.onerror = () => reject(t.error);
+    let settled = false;
+    // If fn is still running when the transaction commits, it awaited something that was not an IndexedDB
+    // request and its later writes would be lost — treat that as an error instead of silently succeeding.
+    t.oncomplete = () => (settled ? resolve(result) : reject(new Error('Internal error: the save finished before all changes were written.')));
+    t.onerror = (ev) => reject((ev && ev.target && ev.target.error) || t.error || new Error('Could not save.'));
     t.onabort = () => reject(t.error || new Error('Save was cancelled.'));
-    Promise.resolve().then(() => fn(stores, done)).then((r) => { result = r; }, (e) => { try { t.abort(); } catch { /* already done */ } reject(e); });
+    Promise.resolve().then(() => fn(stores, done)).then((r) => { result = r; settled = true; }, (e) => { settled = true; try { t.abort(); } catch { /* already done */ } reject(e); });
   });
 }
 

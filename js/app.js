@@ -39,6 +39,9 @@ fallback(notFoundPage);
 // Exposed for the automated browser tests and for debugging. Not used by the app itself.
 window.WW = { store, model, db, render, whenRendered };
 
+// The skip link must not change the hash (the router would treat '#app' as a page).
+document.querySelector('.skip-link')?.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('app').focus(); });
+
 async function boot() {
   try {
     await store.ensureSetup();

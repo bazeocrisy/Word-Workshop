@@ -162,3 +162,31 @@ test('backup: malformed files are rejected with reasons', () => {
   const lostSnap = validBackup(); lostSnap.data.snapshots = [];
   assert.equal(validateBackup(lostSnap).ok, false);
 });
+
+test('backup: hostile or incomplete records are rejected without crashing (review M2/M3)', () => {
+  const nullItem = validBackup(); nullItem.data.snapshots[0].vocab.push(null);
+  assert.equal(validateBackup(nullItem).ok, false);
+  const thinItem = validBackup(); thinItem.data.weeks[0].spelling.push({ id: 'x' });
+  assert.match(validateBackup(thinItem).errors.join(' '), /bad fields/);
+  const noLog = validBackup(); delete noLog.data.weeks[0].editLog; noLog.data.weeks[0].revision = 'x';
+  assert.equal(validateBackup(noLog).ok, false);
+  const neg = validBackup(); neg.schemaVersion = -3;
+  assert.equal(validateBackup(neg).ok, false);
+  const wrongOwner = validBackup(); wrongOwner.data.students.push({ id: 'st2', displayName: 'B' }); wrongOwner.data.snapshots[0].studentId = 'st2';
+  assert.match(validateBackup(wrongOwner).errors.join(' '), /different student/);
+  const slashId = validBackup(); slashId.data.students[0].id = 'a/b';
+  assert.equal(validateBackup(slashId).ok, false);
+  const silentEdit = validBackup(); silentEdit.data.weeks[0].vocab[0].sourceDefinition = 'Changed quietly';
+  assert.match(validateBackup(silentEdit).errors.join(' '), /without a recorded correction/);
+  assert.doesNotThrow(() => validateBackup({ app: 'word-workshop', schemaVersion: 1, data: { students: [1, null, 'x'], weeks: [null, 5], snapshots: [{ id: 'q@1', version: 1, vocab: [1], spelling: 'x' }], attempts: [[]], images: [{}], meta: [null] } }));
+});
+
+test('integrity: a logged transcription correction is accepted', async () => {
+  const { itemIntegrityErrors } = await import('../../js/model.js');
+  const w = sampleWeek();
+  const it = w.vocab[0];
+  it.sourceDefinition = 'Fresh fruits and vegetables.';
+  assert.equal(itemIntegrityErrors(w).length, 1);
+  it.definitionLog.push({ field: 'sourceDefinition', from: 'Fresh fruits and vegetables', to: 'Fresh fruits and vegetables.', at: 'x' });
+  assert.equal(itemIntegrityErrors(w).length, 0);
+});

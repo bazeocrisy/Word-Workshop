@@ -28,6 +28,9 @@ export function append(el, children) {
 
 export const clear = (el) => { while (el.firstChild) el.firstChild.remove(); return el; };
 
+/** Replace an element's children, skipping null/false (unlike the native replaceChildren, which prints "null"). */
+export const fill = (el, ...children) => append(clear(el), children);
+
 export function btn(label, onclick, cls = '', attrs = {}) {
   return h('button', { type: 'button', class: `btn ${cls}`.trim(), onclick, ...attrs }, label);
 }
@@ -61,20 +64,41 @@ export function toast(message, kind = 'info') {
 }
 
 /** Accessible modal dialog. Resolves with the value of the clicked button (or null on cancel / Escape). */
+let dialogCount = 0;
 export function dialog({ title, body, buttons = [{ label: 'OK', value: true, cls: 'btn-primary' }], cancel = 'Cancel' }) {
   return new Promise((resolve) => {
     const prev = document.activeElement;
-    const close = (v) => { overlay.remove(); document.removeEventListener('keydown', onKey); if (prev && prev.focus) prev.focus(); resolve(v); };
-    const onKey = (e) => { if (e.key === 'Escape') close(null); };
-    const box = h('div', { class: 'dialog', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'dlg-title' },
-      h('h2', { id: 'dlg-title' }, title),
+    const behind = [...document.body.children].filter((el) => !el.classList.contains('overlay') && !el.inert);
+    const titleId = `dlg-title-${++dialogCount}`;
+    const value = (b) => (typeof b.value === 'function' ? b.value() : b.value);
+    const close = (v) => {
+      overlay.remove(); document.removeEventListener('keydown', onKey, true);
+      behind.forEach((el) => { el.inert = false; });
+      if (prev && prev.focus) prev.focus();
+      resolve(v);
+    };
+    const focusables = () => [...box.querySelectorAll('button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])')].filter((el) => !el.disabled);
+    const onKey = (e) => {
+      if (!document.body.contains(overlay) || overlay !== [...document.querySelectorAll('.overlay')].pop()) return;
+      if (e.key === 'Escape' && cancel) { e.preventDefault(); close(null); }
+      if (e.key === 'Tab') { // keep keyboard focus inside the dialog
+        const f = focusables(); if (!f.length) return;
+        if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
+        else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
+      }
+    };
+    const main = buttons[buttons.length - 1];
+    // A form so that Enter in a text field triggers the main button.
+    const box = h('form', { class: 'dialog', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': titleId, onsubmit: (e) => { e.preventDefault(); if (main) close(value(main)); } },
+      h('h2', { id: titleId }, title),
       typeof body === 'string' ? h('p', null, body) : body,
       h('div', { class: 'dialog-buttons' },
         cancel ? btn(cancel, () => close(null), 'btn-ghost') : null,
-        buttons.map((b) => btn(b.label, () => close(typeof b.value === 'function' ? b.value() : b.value), b.cls || 'btn-primary'))));
+        buttons.map((b) => btn(b.label, () => close(value(b)), b.cls || 'btn-primary'))));
     const overlay = h('div', { class: 'overlay', onclick: (e) => { if (e.target === overlay && cancel) close(null); } }, box);
     document.body.append(overlay);
-    document.addEventListener('keydown', onKey);
+    behind.forEach((el) => { el.inert = true; });
+    document.addEventListener('keydown', onKey, true);
     const first = box.querySelector('input, textarea, select') || box.querySelector('.dialog-buttons .btn:last-child');
     if (first) first.focus();
   });

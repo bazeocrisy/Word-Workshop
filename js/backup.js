@@ -69,15 +69,19 @@ export async function restoreBackup(text) {
   const records = await toRecords(parsed.obj);
   const current = await dumpAll();
   current.meta = current.meta.filter((m) => m.key !== UNDO_KEY);
+  if (!records.meta.some((m) => m.key === 'setup')) records.meta.push({ key: 'setup', value: true });
   records.meta.push({ key: UNDO_KEY, value: { at: new Date().toISOString(), data: current } });
   await replaceAll(records);
   return parsed.summary;
 }
 
+export async function undoInfo() { const u = await getMeta(UNDO_KEY); return u ? { at: u.at } : null; }
 export async function hasUndo() { return !!(await getMeta(UNDO_KEY)); }
+export async function discardUndo() { await setMeta(UNDO_KEY, null); }
 
 export async function undoRestore() {
   const u = await getMeta(UNDO_KEY);
   if (!u) throw new Error('There is nothing to undo.');
   await replaceAll(u.data);
+  // replaceAll wrote the old meta, which has no undo copy, so there is nothing left to undo.
 }

@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-labelledby="t">
+  <title id="t">A shop worker in an apron and name badge behind a counter, being handed their pay</title>
+  <rect x="8" y="8" width="304" height="224" rx="28" fill="#e6f6f7"/>
+  <!-- shelves -->
+  <rect x="24" y="44" width="76" height="6" rx="3" fill="#9ccfd3"/>
+  <rect x="24" y="96" width="76" height="6" rx="3" fill="#9ccfd3"/>
+  <rect x="32" y="22" width="16" height="22" rx="4" fill="#f4a259"/>
+  <rect x="54" y="28" width="16" height="16" rx="4" fill="#5fb87a"/>
+  <rect x="76" y="20" width="16" height="24" rx="4" fill="#e5677d"/>
+  <rect x="32" y="76" width="18" height="20" rx="4" fill="#6c8ed8"/>
+  <rect x="56" y="70" width="16" height="26" rx="4" fill="#f5c542"/>
+  <rect x="78" y="78" width="16" height="18" rx="4" fill="#f4a259"/>
+  <!-- worker body -->
+  <path d="M104 190 V136 Q104 112 130 108 H170 Q196 112 196 136 V190 Z" fill="#3d7cc9"/>
+  <path d="M124 112 L132 104 H168 L176 112 V190 H124 Z" fill="#2e9e6a"/>
+  <path d="M136 110 Q150 124 164 110" stroke="#3d7cc9" stroke-width="5" fill="none"/>
+  <rect x="134" y="126" width="22" height="14" rx="3" fill="#ffffff" stroke="#1f6e48" stroke-width="2"/>
+  <rect x="134" y="126" width="22" height="5" rx="2" fill="#e5484d"/>
+  <rect x="138" y="134" width="14" height="3" rx="1.5" fill="#9aa"/>
+  <!-- neck and head -->
+  <rect x="142" y="94" width="16" height="16" rx="4" fill="#b97a4a"/>
+  <circle cx="150" cy="76" r="26" fill="#b97a4a"/>
+  <g fill="#2e1d14">
+    <circle cx="132" cy="60" r="11"/><circle cx="146" cy="52" r="12"/><circle cx="162" cy="53" r="12"/><circle cx="172" cy="64" r="10"/><circle cx="127" cy="72" r="7"/>
+  </g>
+  <circle cx="141" cy="76" r="3.2" fill="#2e1d14"/>
+  <circle cx="159" cy="76" r="3.2" fill="#2e1d14"/>
+  <path d="M141 86 Q150 95 159 86" stroke="#2e1d14" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <circle cx="134" cy="85" r="4" fill="#d9906a"/><circle cx="166" cy="85" r="4" fill="#d9906a"/>
+  <!-- worker arm reaching out -->
+  <path d="M190 128 Q210 140 222 132" stroke="#3d7cc9" stroke-width="16" stroke-linecap="round" fill="none"/>
+  <circle cx="226" cy="130" r="9" fill="#b97a4a"/>
+  <!-- pay handed over from the right -->
+  <path d="M312 104 H276 V124 H312 Z" fill="#7a8597"/>
+  <circle cx="272" cy="114" r="10" fill="#f0c9a0"/>
+  <g transform="rotate(-8 246 118)">
+    <rect x="220" y="104" width="54" height="30" rx="4" fill="#7cc957" stroke="#3f8f2a" stroke-width="3"/>
+    <circle cx="247" cy="119" r="9" fill="#bfe8a8" stroke="#3f8f2a" stroke-width="2"/>
+  </g>
+  <circle cx="226" cy="130" r="9" fill="#b97a4a"/>
+  <!-- counter -->
+  <rect x="20" y="168" width="280" height="56" rx="8" fill="#b5713a"/>
+  <rect x="14" y="160" width="292" height="14" rx="7" fill="#8a5226"/>
+  <!-- coins on counter -->
+  <g>
+    <ellipse cx="60" cy="158" rx="13" ry="4.5" fill="#c98500"/><ellipse cx="60" cy="155" rx="13" ry="4.5" fill="#f5b915"/>
+    <ellipse cx="60" cy="150" rx="13" ry="4.5" fill="#c98500"/><ellipse cx="60" cy="147" rx="13" ry="4.5" fill="#f5b915"/>
+    <ellipse cx="86" cy="158" rx="13" ry="4.5" fill="#c98500"/><ellipse cx="86" cy="155" rx="13" ry="4.5" fill="#f5b915"/>
+  </g>
+  <path d="M60 192 H260" stroke="#9b5d2c" stroke-width="4" stroke-linecap="round"/>
+</svg>

@@ -1,5 +1,5 @@
-import { h, page, btn, toast, dialog, alertDialog } from '../ui.js';
-import { exportBackup, parseBackupText, restoreBackup, hasUndo, undoRestore } from '../backup.js';
+import { h, fill, page, btn, toast, dialog, alertDialog } from '../ui.js';
+import { exportBackup, parseBackupText, restoreBackup, undoInfo, undoRestore, discardUndo } from '../backup.js';
 import { getMeta } from '../store.js';
 import { fmtDateTime } from '../ui.js';
 import { go } from '../router.js';
@@ -10,7 +10,7 @@ export async function backupView() {
   const out = h('div', { 'aria-live': 'polite' });
 
   file.addEventListener('change', async () => {
-    out.replaceChildren();
+    fill(out, );
     const f = file.files[0];
     if (!f) return;
     const text = await f.text().catch(() => '');
@@ -39,13 +39,16 @@ export async function backupView() {
       }, 'btn-danger')));
   });
 
-  const undo = (await hasUndo()) ? h('section', { class: 'card' },
+  const info = await undoInfo();
+  const undo = info ? h('section', { class: 'card' },
     h('h2', null, 'Undo last restore'),
-    h('p', { class: 'hint' }, 'Put back the data that was on this device before the last restore.'),
-    btn('Undo restore', async () => {
-      if (!(await dialog({ title: 'Undo restore?', body: 'This replaces the current data with what was here before the last restore.', buttons: [{ label: 'Undo restore', value: true, cls: 'btn-danger' }] }))) return;
-      await undoRestore(); toast('Previous data restored.'); go('#/parent');
-    }, 'btn-ghost')) : null;
+    h('p', { class: 'hint' }, `A backup was restored on ${fmtDateTime(info.at)}. You can put back the data that was here before it. Anything added since then (new weeks or results) would be lost.`),
+    h('div', { class: 'row' },
+      btn('Undo restore', async () => {
+        if (!(await dialog({ title: 'Undo restore?', body: `This replaces the current data with what was on this device before ${fmtDateTime(info.at)}. Weeks and results added since then will be lost.`, buttons: [{ label: 'Undo restore', value: true, cls: 'btn-danger' }] }))) return;
+        await undoRestore(); toast('Previous data restored.'); go('#/parent');
+      }, 'btn-ghost'),
+      btn('Forget the old data', async () => { await discardUndo(); toast('Old data removed.'); go('#/parent/backup'); }, 'btn-ghost'))) : null;
 
   return page({ title: 'Backup & restore', back: '#/parent', backLabel: 'Parent area', cls: 'parent' },
     h('div', { class: 'card notice' },

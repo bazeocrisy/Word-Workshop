@@ -41,7 +41,9 @@ export async function render() {
   for (const r of routes) {
     const m = r.re.exec(path);
     if (!m) continue;
-    const params = Object.fromEntries(r.keys.map((k, i) => [k, decodeURIComponent(m[i + 1])]));
+    let params;
+    try { params = Object.fromEntries(r.keys.map((k, i) => [k, decodeURIComponent(m[i + 1])])); }
+    catch { break; } // malformed %-encoding → not found
     rendering = show(r.view, { params, query, path }, root, token);
     return rendering;
   }
