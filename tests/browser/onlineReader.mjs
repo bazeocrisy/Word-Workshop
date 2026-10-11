@@ -14,7 +14,7 @@ const upload = (target, kind) => `const f = await window.__makeSynthetic('${kind
   await new Promise((r) => setTimeout(r, 300));
   return { stage: document.querySelector('.ws-tab.is-current .ws-tab-label')?.textContent, error: document.querySelector('.ws-read-error')?.innerText || null };`;
 
-const READER = 'https://reader.example.workers.dev/';
+const READER = 'https://word-workshop-reader.bazeocrisy.workers.dev/'; // the stub below answers instead of the real server
 // Stub server: answers like server/ocr-worker/worker.js. status 200 with the reply, or an error status.
 const stub = (status, reply) => `window.__readerCalls = [];
   const realFetch = window.__realFetch || (window.__realFetch = window.fetch);
@@ -58,11 +58,17 @@ export default {
     await b.click('.online-reader .btn-primary', '/Save/'); await b.wait(200);
     check('settings: a short passphrase is refused', (await b.js(`return JSON.parse(localStorage.getItem('ww-online-reader')).passphrase;`)) === 'family-reader-pass-2026-oct');
     const backupText = await b.js(`const m = await import(new URL('js/backup.js', location.href).href); return JSON.stringify(await m.buildBackup());`);
-    const csp = await b.js(`const seen = []; const on = (e) => seen.push(e.violatedDirective); document.addEventListener('securitypolicyviolation', on);
-      try { await (window.__realFetch || fetch)('https://word-workshop-reader.example.workers.dev/', { method: 'POST', body: '{}' }); } catch { /* no such server: fine */ }
+    // The page's security policy allows the family's reader only; any other address is blocked (checked without network).
+    const policy = await b.js(`return document.querySelector('meta[http-equiv="Content-Security-Policy"]').content.match(/connect-src[^;]*/)[0];`);
+    check('security policy: the reader\'s exact address is allowed, no wildcard', policy.includes('https://word-workshop-reader.bazeocrisy.workers.dev') && !policy.includes('*'), policy);
+    const blocked = await b.js(`const seen = []; const on = (e) => seen.push(e.blockedURI); document.addEventListener('securitypolicyviolation', on);
+      try { await (window.__realFetch || fetch)('https://someone-else.example.workers.dev/', { method: 'POST', body: '{}' }); } catch { /* blocked */ }
       await new Promise((r) => setTimeout(r, 300)); document.removeEventListener('securitypolicyviolation', on); return seen;`);
-    check('the page may contact a Cloudflare Workers reader (not blocked by its security policy)', csp.length === 0, csp);
-    check('settings: the passphrase is not in backups', backupText.length > 100 && !backupText.includes('family-reader-pass-2026-oct') && !backupText.includes('reader.example'));
+    check('security policy: any other workers.dev address is blocked', blocked.some((u) => /someone-else/.test(u)), blocked);
+    // That blocked request was on purpose: remove it from the error log so the global "no JavaScript errors" check stays meaningful.
+    await b.wait(100);
+    for (let i = b.errors.length - 1; i >= 0; i--) if (/CSP violation: connect-src https:\/\/someone-else\.example\.workers\.dev/.test(b.errors[i])) b.errors.splice(i, 1);
+    check('settings: the passphrase is not in backups', backupText.length > 100 && !backupText.includes('family-reader-pass-2026-oct') && !backupText.includes('word-workshop-reader'));
 
     // Reading a vocabulary photo online.
     await b.js(SYNTHETIC + ' return 1;');

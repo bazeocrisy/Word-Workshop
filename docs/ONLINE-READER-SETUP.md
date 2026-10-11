@@ -12,6 +12,8 @@ Critical or Major problems (docs/STATUS.md). Expected cost:
 
 The Cloudflare Worker is free.
 
+> **Status (2026-10-11):** steps 1–5 are done. The reader runs at https://word-workshop-reader.bazeocrisy.workers.dev and read both real photos perfectly (docs/OCR.md). On this PC, if PowerShell says "running scripts is disabled", type `npx.cmd` / `npm.cmd` instead of `npx` / `npm`.
+
 ## 1. Accounts and the spending limit (about 10 minutes, in the browser)
 1. **Anthropic** (console.anthropic.com): sign in, add billing, then go to **Settings → Limits** and set a
    **monthly spend limit of $5**.
@@ -85,8 +87,8 @@ correct. The reader is worth turning on if it gets:
 If it does much worse, leave it off: nothing changes for the family.
 
 ## 6. If the results are good: finishing (needs your approval)
-1. I narrow the app's security setting from `https://*.workers.dev` to your reader's exact address, re-run the
-   tests, and you approve merging PR #4.
+1. Done: the app's security setting now allows only `https://word-workshop-reader.bazeocrisy.workers.dev`.
+   Next, you approve merging PR #4.
 2. After the site updates, open **Parent area → Settings → Online photo reader** in each browser you use:
    1. Paste the address and passphrase.
    2. Tick **Read worksheet photos online**.

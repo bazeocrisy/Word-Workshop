@@ -5,6 +5,9 @@
 // arrives unchecked and the parent compares it with the photo before approval.
 
 const KEY = 'ww-online-reader';
+// The family's reader server (server/ocr-worker), deployed 2026-10-11. The page's security policy (index.html,
+// connect-src) allows only this address, so Settings accepts only this address.
+export const READER_ORIGIN = 'https://word-workshop-reader.bazeocrisy.workers.dev';
 const UNSURE_CONF = 60;  // below the app's 80% warning threshold: the parent must look at it
 const SURE_CONF = 95;
 const MAX_ITEMS = 100, MAX_CHARS = 500; // a worksheet never has more; protects the app from an oversized reply

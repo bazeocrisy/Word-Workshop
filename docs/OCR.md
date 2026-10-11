@@ -94,4 +94,14 @@ It is **off until the parent sets it up** (Settings → Online photo reader).
 - Privacy: with the reader on, worksheet photos leave the device and go to the owner's Worker and to Anthropic. The settings text says so and states the cost (a few cents per photo).
 - Tests: `tests/unit/cloudOcr.test.mjs` (conversion, worker origin/passphrase/size checks, request to the API with a stubbed network) and the browser suite `onlineReader` (settings, a vocabulary photo read through a stubbed server into Check, fallback to on-device reading on a refusal).
 
-**Accuracy on the real photos: not measured yet.** No API key exists in this environment. After deploying, run `READER_URL=… READER_PASSPHRASE=… npm run test:ocr:online` with the photos in `local-fixtures/` and record the results here. Note the vocabulary photo itself is low resolution (1152 × 1536, definitions about 8–9 px tall); a full-resolution phone photo will help any reader.
+### Accuracy on the real photos (measured 2026-10-11)
+Deployed reader `https://word-workshop-reader.bazeocrisy.workers.dev` (Cloudflare Worker, model `claude-sonnet-5-5`). Measured with `npm run test:ocr:online` on the owner's two original photos (1152 × 1536 JPEGs in git-ignored `local-fixtures/`), compared with the transcription in `sample-data/`:
+
+| Photo | Online reader | On-device reader |
+|---|---|---|
+| Spelling newsletter | **15/15 words exact, order 100%**, none flagged, 5.1 s | 14/15 (one word flagged) |
+| Vocabulary table (12 cards, at an angle) | **12/12 words, 12/12 definitions exact, 12/12 pairs**, character accuracy 100%, none flagged, 4.1 s | as taken 3/12 words, 0/12 definitions; table mode at best 9/12 words, 4/12 definitions, 7/12 pairs |
+
+The reader's notes were sensible: on the newsletter, it said the vocabulary words are not on this page; on the vocabulary sheet, it said the RACES writing-strategy box was left out and the photo was taken at an angle. Cost about 10 cents for both photos. One measurement on two photos: other sheets may do worse, so every word still arrives as an unchecked draft for the parent to compare with the photo.
+
+The page's security policy now allows only this reader's address (`connect-src 'self' data: blob: https://word-workshop-reader.bazeocrisy.workers.dev`), and Settings accepts only this address.

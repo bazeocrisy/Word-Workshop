@@ -276,3 +276,21 @@ Applied and checked on Windows (2026-10-11): 67 unit tests and 241 browser check
   - Cloudflare Workers free plan: $0.
 - **Deployment checklist and accuracy test:** docs/ONLINE-READER-SETUP.md. `npm run test:ocr:online` now does a free connection check first, asks for the passphrase at a hidden prompt, and prints a summary against the on-device results.
 - **Tests:** 69 unit; 251 browser. The "Looks right" loops in the tests and the walkthrough now wait for each row to save, which fixes an intermittent failure under load. The measured counts are unchanged (Sept 28: 25 actions).
+
+**Reader deployed and measured (2026-10-11, owner-approved; Worker only, website and PR #4 unchanged)**
+- Worker `word-workshop-reader` at https://word-workshop-reader.bazeocrisy.workers.dev, from commit 9719802.
+- The owner entered both secrets at Wrangler's hidden prompts in their own PowerShell; the values never appeared in a file, a command or this repository.
+- Checks:
+  - Without secrets the Worker answered "reader not configured"; with them, a wrong passphrase gets 401.
+  - The free connection check passed (key and model accepted).
+- **Real photos** (`npm run test:ocr:online`, about 10 cents):
+  - spelling **15/15** exact in order (on device 14/15);
+  - vocabulary **12/12** words and **12/12** exact definitions and pairs (on device at best 4/12 exact definitions).
+  - About 4–5 s per photo; details in docs/OCR.md.
+- **Security policy narrowed:** `connect-src` now allows only `https://word-workshop-reader.bazeocrisy.workers.dev` (no wildcard).
+  - Settings pre-fills and accepts only that address.
+  - Browser checks confirm the reader's address is allowed and any other workers.dev address is blocked.
+  - A real-browser probe showed no policy violation for the reader.
+- Tests: 69 unit tests, 252 browser checks.
+- Owner's tip: on this PC, PowerShell blocks `npx.ps1`/`npm.ps1`; use `npx.cmd` / `npm.cmd`.
+- **Still open:** merging PR #4 (owner decision). After it is merged and the site updates, turn the reader on in Settings in each browser and set a parent PIN.
