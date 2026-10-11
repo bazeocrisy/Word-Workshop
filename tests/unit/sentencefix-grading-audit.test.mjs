@@ -949,3 +949,45 @@ for (const [id, answer, expect, todo] of NET) {
 }
 
 test('safety-net check: 15+ fresh answers', () => assert.ok(NET.length >= 15));
+
+// ================================================================ CLOSING VERDICT CHECK (commit b1e26f4)
+// Fresh answers for or/nor (proximity agreement), "the number of", "one of the two", "many a", "all of",
+// "both of", "some of", "none of", plus certain-wrong ones.
+
+const Q = {
+  manyA: 'engine (minor, pre-existing, edge): "Many a robin is" is valid but literary, not a grade-3 answer. "many" is read as a certain plural → incorrect. Fix: "many a" + singular noun is one.',
+  allOfCollective: 'engine (minor, pre-existing, disputed usage): "all of Mr. Park\'s class takes" → incorrect. "all of" + a collective noun can take either verb, so this should be review.',
+  proximity: 'engine (minor, by design): or/nor subjects always go to review, so "Either the coach or the players has" (proximity rule: have) is not marked incorrect',
+  someBothOf: 'engine (minor, pre-existing): "some of the robins is" / "both of the bees has" — some/both + "of" + plural is a certain plural, but goes to review',
+};
+
+const CLOSE = [
+  // VALID
+  ['SF-SVA-001', 'Either the twins or Maya is in the same reading group.', 'ok'],
+  ['SF-SVA-001', 'Neither Maya nor the twins are in the same reading group.', 'ok'],
+  ['SF-SVA-004', 'Either the coach or the players have new jerseys this year.', 'ok'],
+  ['SF-SVA-004', 'Neither the players nor the coach has new jerseys this year.', 'ok'],
+  ['SF-SVA-002', 'Look! The number of robins is growing in our tree.', 'ok'],
+  ['SF-SVA-002', 'Look! One of the two robins is building a nest in our tree.', 'ok'],
+  ['SF-SVA-008', 'The mail carrier comes to our street every day, and one of the two dogs barks at her.', 'ok'],
+  ['SF-SVA-009', 'Honeybees make honey, and both of them have a special job in the hive.', 'ok'],
+  ['SF-SVA-009', 'Honeybees make honey, and some of the bees have a special job in the hive.', 'ok'],
+  ['SF-SVA-015', 'None of my brothers is cleaning the garage, and Dad says we can go swimming when the job is done.', 'ok'],
+  ['SF-SVA-004', 'Every one of our players has new jerseys this year.', 'ok'],
+  ['SF-SVA-002', 'Look! Many a robin is building a nest in our tree.', 'ok', Q.manyA],
+  ['SF-SVA-012', 'Every Friday, all of Mr. Park\'s class takes a spelling test, and Ravi always gets every word right because he studies hard.', 'ok', Q.allOfCollective],
+  // WRONG
+  ['SF-SVA-002', 'Look! Many robins is building a nest in our tree.', 'incorrect'],
+  ['SF-SVA-004', 'Our few players has new jerseys this year.', 'incorrect'],
+  ['SF-SVA-015', 'My two brothers is cleaning the garage, and Dad says we can go swimming when the job is done.', 'incorrect'],
+  ['SF-SVA-001', 'Maya and Leo and Sam is in the same reading group.', 'incorrect'],
+  ['SF-SVA-004', 'Either the coach or the players has new jerseys this year.', 'incorrect', Q.proximity],
+  ['SF-SVA-002', 'Look! Some of the robins is building a nest in our tree.', 'incorrect', Q.someBothOf],
+  ['SF-SVA-009', 'Honeybees make honey, and both of the bees has a special job in the hive.', 'incorrect', Q.someBothOf],
+];
+
+for (const [id, answer, expect, todo] of CLOSE) {
+  test(`close ${id}: ${JSON.stringify(answer)} → ${expect}`, todo ? { todo } : {}, () => check(id, answer, expect));
+}
+
+test('closing verdict check: 15+ fresh answers', () => assert.ok(CLOSE.length >= 15));

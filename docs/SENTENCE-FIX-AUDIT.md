@@ -1,6 +1,6 @@
 # Sentence Fix — Independent Educational Audit (Agent 5)
 
-> **FINAL status (section 19):** **Content bank: APPROVED. All 150 items PASS.** **Grading engine: NOT APPROVED** (f304309). M-1 is verified fixed. N-2 (Major) is a regression: the safety net now sends "Our new players has", "My older brothers is" and "Some robins is" to review. N-1 (Critical, older and narrow): "Maya or Leo is" and "Neither Maya nor Leo is" are marked incorrect. The engine is APPROVED once N-1 and N-2 are fixed. Audit tests: 745 tests, 731 pass, 0 fail, 14 todo.
+> **FINAL status (section 20):** **Content bank: APPROVED. All 150 items PASS.** **Grading engine: APPROVED** at b1e26f4. N-1 and N-2 are verified fixed, and no Critical or Major issue remains. 11 Minor items are recorded as todo tests: review-direction cases, plus two edge cases ("Many a robin is" and "all of Mr. Park's class takes"). Audit tests: 766 tests, 755 pass, 0 fail, 11 todo.
 
 Branch `claude/student-first-v3`. Audited: `data/sentence-fix/bank.json` (all 150 items read one by one), `docs/SENTENCE-FIX-CURRICULUM.md`, `js/sentencefix/engine.js`. Independent grading tests: `tests/unit/sentencefix-grading-audit.test.mjs`. Nothing in the bank, the engine, or other app code was changed.
 
@@ -1037,3 +1037,47 @@ Every todo currently fails, so each one is a real finding. I did not change `eng
   - **Critical, older and narrow:** N-1 ("Maya or Leo is").
 
   Both fixes are local to the safety net. One adds "key noun unchanged", "both" and "some + plural" as certain cases. The other stops treating "or"/"nor" as "and". When the 8 todo tests for N-1, N-2 and "both" pass, only Minor review-direction items will remain, and the grading engine is **APPROVED**.
+
+---
+
+## 20. Closing verdict (commit b1e26f4: N-1 and N-2)
+
+**This section supersedes all earlier engine verdicts.**
+
+**N-1 and N-2 are confirmed fixed.** All 8 of my N todo cases now pass:
+- "Maya or Leo is" and "Neither Maya nor Leo is" go to review;
+- "Our new players has", "My older brothers is", "The baby robins is", "Some robins is", "the books on the shelves … is" and "both bees has" are incorrect.
+
+**Method.** I wrote 20 fresh answers of my own, without reusing anyone else's tests: 13 valid and 7 wrong. They are in the `CLOSE` cases in `tests/unit/sentencefix-grading-audit.test.mjs`. I compared every result with the engine as it was just before b1e26f4, and **b1e26f4 changed none of them**.
+
+**What works.**
+- **Proximity agreement with or/nor goes to review.** "Either the twins or Maya is", "Neither Maya nor the twins are", "Either the coach or the players have", "Neither the players nor the coach has".
+- **Other subjects go to review.** "The number of robins is", "One of the two robins is", "one of the two dogs barks", "both of them have", "some of the bees have", "None of my brothers is", "Every one of our players has".
+- **Certain disagreements are incorrect.** "Many robins is", "Our few players has", "My two brothers is", "Maya and Leo and Sam is".
+
+### Remaining findings, all Minor
+- **Valid answers still marked incorrect.** Both are older behaviour and edge cases, so I grade them Minor.
+  - SF-SVA-002 "Look! **Many a robin is** building a nest…" is literary English that a third grader would almost never write. **Fix:** treat "many a" + a singular noun as one.
+  - SF-SVA-012 "Every Friday, **all of Mr. Park's class takes**…": usage guides disagree on whether "all of" + a collective noun takes a singular or a plural verb. **Fix:** send it to review.
+
+  A stricter reading of the rubric could call these Critical. I don't, because neither is a realistic grade-3 answer with one clearly right reading. **If the lead wants zero valid-marked-incorrect edge cases, these two are the next fixes.**
+- **Wrong answers that go to review** (older behaviour, uncommon):
+  - "Either the coach or the players **has**". Proximity agreement is beyond grade 3, and or/nor going to review is by design.
+  - "**Some of** the robins **is**" and "**both of** the bees **has**". **Fix:** count some/both/many/few + "of" + plural as certainly plural.
+- **Unchanged from earlier rounds:**
+  - "a tiny crabs"
+  - "for breakfasts."
+  - "very tireds"
+  - SVA-013 "tool … show"
+  - "The robins family is"
+  - G-8: a dropped "the" (by design)
+
+### Tests
+`node --test tests/unit/sentencefix-grading-audit.test.mjs` gives `tests 766, pass 755, fail 0, todo 11`. I ran it on its own. The 11 todos are the Minor cases listed above: 2 valid edge cases, 3 review-direction cases from this round, and 6 from earlier rounds. Every todo currently fails, so each one documents a real finding. I did not change `engine.js` or `bank.json`.
+
+### FINAL VERDICTS
+- **Content bank: APPROVED.** All 150 items pass, with no Critical or Major findings (section 12.7).
+- **Grading engine: APPROVED** at b1e26f4. No Critical or Major issue remains.
+  - Every realistic valid answer I wrote over seven rounds (more than 380 fresh answers) goes to correct or review.
+  - "Correct" still requires an exact match with the key or an accepted answer, so no invalid answer is graded correct.
+  - The remaining items are Minor: mostly review-direction cases, plus the two literary or disputed-usage edge cases above. They are recorded as `todo` tests for later polish.
