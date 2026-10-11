@@ -404,6 +404,15 @@ const RULE_CASES = [
   // ", and" + the/two + a noun with no verb is one more item (G-7)
   ['SF-HOM-002', 'I have two pencils, and an eraser in my desk.', 'incorrect'],
   ['SF-SVA-008', 'The mail carrier comes to our street every day, and the dogs bark at her!', 'ok'],
+  // H round: valid number changes stay review; agreement breaks with the key's verb are incorrect
+  ['SF-POS-001', 'I can\'t find my other socks anywhere.', 'ok'],
+  ['SF-MIX-005', 'On Friday, Tariq and his friends practiced their soccer move at the park until dark.', 'ok'],
+  ['SF-TEN-008', 'Last week, we planted seed in cups and watched them sprout.', 'ok'],
+  ['SF-CAP-007', 'Dr. Kim showed our class how bean plants grow towards sunlight in April.', 'ok'],
+  ['SF-CAP-015', 'My brother\'s team, the Hilltop Hawks, won the big games against the Lakeview Lions on Saturday.', 'ok'],
+  ['SF-COM-002', 'Priya, please hand me the tape, and Mrs. Lee will bring the scissors.', 'ok'], // ", and" + a title name + verb
+  ['SF-CAP-010', 'Every Wednesday, Ms. Rivera teach us songs in Spanish.', 'incorrect'],
+  ['SF-CAP-007', 'Dr. Kim showed our class how bean plant grow toward sunlight in April.', 'incorrect'],
 ];
 
 for (const [id, answer, expect] of RULE_CASES) {
@@ -645,13 +654,13 @@ const LAST = [
   ['SF-TEN-009', 'Long ago, people sewed their own clothes, and grew their own food.', 'ok'],
   ['SF-SPL-021', 'On Sunday, my family went to the beach, and stayed until the sun went down because it was really warm.', 'ok'],
   // VALID: agreement fixed from the subject side
-  ['SF-SVA-002', 'Look! The robin is building a nest in our tree.', 'ok', H.subjectSide],
-  ['SF-SVA-004', 'Our player has new jerseys this year.', 'ok', H.subjectSide],
-  ['SF-SVA-014', 'Owls hunt at night, but hawks hunt during the day, and both birds have sharp claws.', 'ok', H.subjectSide],
-  ['SF-SVA-010', 'Jin and his brother play tennis, and they win most of the games.', 'ok', H.subjectSide],
-  ['SF-SVA-009', 'Honeybees make honey, and all bees have a special job in the hive.', 'ok', H.subjectSide],
-  ['SF-SVA-005', 'Our teacher always says that the book in our library is for everyone.', 'ok', H.subjectSide],
-  ['SF-HOM-009', 'Long ago, sailors used the stars to find their way across the seas.', 'ok', H.homophonePlural],
+  ['SF-SVA-002', 'Look! The robin is building a nest in our tree.', 'ok'],
+  ['SF-SVA-004', 'Our player has new jerseys this year.', 'ok'],
+  ['SF-SVA-014', 'Owls hunt at night, but hawks hunt during the day, and both birds have sharp claws.', 'ok'],
+  ['SF-SVA-010', 'Jin and his brother play tennis, and they win most of the games.', 'ok'],
+  ['SF-SVA-009', 'Honeybees make honey, and all bees have a special job in the hive.', 'ok'],
+  ['SF-SVA-005', 'Our teacher always says that the book in our library is for everyone.', 'ok'],
+  ['SF-HOM-009', 'Long ago, sailors used the stars to find their way across the seas.', 'ok'],
   // WRONG: must be incorrect
   ['SF-SPL-024', 'Many year ago, children walked to a small school and wrote their lessons on little chalkboards every day.', 'incorrect'],
   ['SF-SPL-016', 'The two bird carried twigs and grass together to build a nest.', 'incorrect'],
@@ -666,17 +675,17 @@ const LAST = [
   ['SF-SPL-023', 'Aisha was hoping to win the race, but she stopped to help a freind who fell.', 'incorrect'],
   ['SF-POS-015', 'The foxes den is under a log, and we can\'t see it, but we know it\'s there.', 'incorrect'],
   ['SF-HOM-015', 'Do you know were the moon is during the day? Sometimes it is still up there in the sky.', 'incorrect'],
-  ['SF-SVA-008', 'The mail carrier comes to our street every day, and the dog bark at her.', 'incorrect', H.brokenAgreement],
-  ['SF-SVA-007', 'My grandparents live on a farm, and their cows gives lots of milk.', 'incorrect', H.brokenAgreement],
-  ['SF-SPL-012', 'Dad and I believe the store close in ten minutes.', 'incorrect', H.brokenAgreement],
-  ['SF-SVA-001', 'Maya, and Leo are in the same reading group.', 'incorrect', H.namesComma],
-  ['SF-CAP-012', 'Last June, my family camped at Yellowstone National Park with Uncle Ray, and Aunt Bea.', 'incorrect', H.namesComma],
-  ['SF-HOM-007', 'Dad and I rode to the store to buy milk and two loaf of bread.', 'incorrect', H.irregularPlural],
-  ['SF-MIX-003', 'Please don\'t forget bring your lunch to school tomorrow.', 'incorrect', H.droppedSlotWord],
-  ['SF-SPL-013', 'Diego was running so fast that he almost tipped on the grass.', 'incorrect', H.realTypoUnlisted],
-  ['SF-SPL-004', 'Grandma made my favorite soap for dinner tonight.', 'incorrect', H.realTypoUnlisted],
-  ['SF-SPL-006', 'The library is open until eight o\'clock tonite.', 'incorrect', H.realTypoUnlisted],
-  ['SF-TEN-012', 'Last Sunday morning, the sun came up, and the birds sang in the trees, and.', 'incorrect', H.strayAnd],
+  ['SF-SVA-008', 'The mail carrier comes to our street every day, and the dog bark at her.', 'incorrect'],
+  ['SF-SVA-007', 'My grandparents live on a farm, and their cows gives lots of milk.', 'incorrect'],
+  ['SF-SPL-012', 'Dad and I believe the store close in ten minutes.', 'incorrect'],
+  ['SF-SVA-001', 'Maya, and Leo are in the same reading group.', 'incorrect'],
+  ['SF-CAP-012', 'Last June, my family camped at Yellowstone National Park with Uncle Ray, and Aunt Bea.', 'incorrect'],
+  ['SF-HOM-007', 'Dad and I rode to the store to buy milk and two loaf of bread.', 'incorrect'],
+  ['SF-MIX-003', 'Please don\'t forget bring your lunch to school tomorrow.', 'incorrect'],
+  ['SF-SPL-013', 'Diego was running so fast that he almost tipped on the grass.', 'incorrect'],
+  ['SF-SPL-004', 'Grandma made my favorite soap for dinner tonight.', 'incorrect'],
+  ['SF-SPL-006', 'The library is open until eight o\'clock tonite.', 'incorrect'],
+  ['SF-TEN-012', 'Last Sunday morning, the sun came up, and the birds sang in the trees, and.', 'incorrect'],
 ];
 
 for (const [id, answer, expect, todo] of LAST) {

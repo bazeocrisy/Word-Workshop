@@ -242,7 +242,7 @@ const REAL_WORD_TYPOS = {
   angle: ['angel'], breathe: ['breath'], breath: ['breathe'], finally: ['finely'], later: ['latter'], every: ['very'],
   since: ['sense'], wander: ['wonder'], wonder: ['wander'], picture: ['pitcher'], pictures: ['pitchers'],
   costume: ['custom'], advice: ['advise'], beach: ['beech'], minute: ['minuet'], from: ['form'], form: ['from'], united: ['untied'], trail: ['trial'], aunt: ['ant'],
-  little: ['lite'], when: ['wen'], were: ['wear'], whole: ['hole'],
+  little: ['lite'], when: ['wen'], tripped: ['tipped'], soup: ['soap'], tonight: ['tonite'], were: ['wear'], whole: ['hole'],
 };
 // Helper verbs that take "n't" (can't → "ca", won't → "wo").
 const NT_VERBS = new Set(['do', 'does', 'did', 'is', 'are', 'was', 'were', 'has', 'have', 'had', 'could', 'would',
@@ -280,6 +280,12 @@ const SMALL_WORDS = new Set(['of', 'the', 'a', 'an', 'that', 'very', 'really', '
 // Words that say "more than one" or "just one" before a noun.
 const PLURAL_DET = new Set(['two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'many', 'several',
   'these', 'those', 'both', 'few']);
+const ADVERBS = new Set(('anywhere everywhere somewhere nowhere today tonight tomorrow yesterday again together away ' +
+  'home here there now then later soon outside inside upstairs downstairs too also very always never often first last ' +
+  'once twice ago around back forward instead').split(' '));
+const OBJECTS = new Set(['me', 'us', 'him', 'her', 'them', 'it', 'you']);
+const BARE_AFTER = new Set(['can', "can't", 'cannot', 'will', "won't", 'could', 'should', 'would', 'may', 'might', 'must',
+  'do', 'does', 'did', "don't", "doesn't", "didn't", 'please', "let's"]);
 const SINGULAR_DET = new Set(['a', 'an', 'one', 'this', 'that', 'each', 'every', 'another']);
 const PLURAL_VERBS = new Set(['are', 'were', 'have', 'do', "aren't", "weren't", "haven't", "don't"]);
 const SINGULAR_VERBS = new Set(['is', 'was', 'has', 'does', "isn't", "wasn't", "hasn't", "doesn't"]);
@@ -288,10 +294,30 @@ const SINGULAR_VERBS = new Set(['is', 'was', 'has', 'does', "isn't", "wasn't", "
  * agreement with the word before or after it ("two pencil", "player have", "he give"); otherwise the sentence can
  * still be fine ("the neighbor", "the dog barks") and a grown-up decides.
  */
-function numberBreaks(g, typedPlural, prev, next) {
-  const p = lc(prev || ''), n = lc(next || '');
+/** Looks like a describing word (it has a "-est" form: big → biggest, little → littlest). */
+const describing = (w) => isRealWord(`${w}est`) || isRealWord(`${w}${w.at(-1)}est`) || isRealWord(`${w}st`)
+  || (w.endsWith('y') && isRealWord(`${w.slice(0, -1)}iest`));
+function numberBreaks(g, typedPlural, prev, next, prev2) {
+  const p = lc(prev || ''), n = lc(next || ''), pp = lc(prev2 || '');
   if (typedPlural ? SINGULAR_DET.has(p) : PLURAL_DET.has(p)) return true; // "a dogs", "two pencil"
   if (typedPlural ? SINGULAR_VERBS.has(n) : PLURAL_VERBS.has(n)) return true; // "dogs is", "player have"
+  if (!typedPlural && !n.endsWith('s') && verbBase(n)) return true; // "the dog bark"
+  // A verb that lost its -s after a one-thing subject ("the store close", "our teacher write a"), when the word
+  // before is not a describing word ("the big box in") and a little word follows (in, the, us).
+  if (!typedPlural && verbBase(g) && p && !p.endsWith('s') && !p.includes("'") && !SUBJECTS.has(p) && !describing(p)
+    && !REAL_WORDS.has(p) && !PREPOSITIONS.has(p) && !DETERMINERS.has(p) && !SMALL_WORDS.has(p)
+    && !isPastVerb(p) && !/ing$/.test(p) && !p.includes('-') && !['a', 'an', 'my', 'our', 'your', 'his', 'her', 'their', 'its'].includes(pp) // "planted seed", "their soccer move"
+    && (PREPOSITIONS.has(n) || DETERMINERS.has(n) || OBJECTS.has(n))) return true;
+  // After "to" or a helper verb a verb has no -s ("to sees", "can't waits", "Please writes").
+  if (typedPlural && BARE_AFTER.has(p)) return true;
+  if (typedPlural && p === 'to' && (DETERMINERS.has(n) || OBJECTS.has(n))) return true; // "to helps a friend", not "to schools"
+  // A describing word with -s before a thing ("reds car", "news library"): the next word is a content word
+  // that cannot be a verb, so this word is not a plural subject.
+  if (typedPlural && isWord(next || '') && !isCap(next) && !PREPOSITIONS.has(n) && !CONJ.has(n) && !DETERMINERS.has(n)
+    && !SUBJECTS.has(n) && !OBJECTS.has(n) && !SMALL_WORDS.has(n) && !REAL_WORDS.has(n) && !ADVERBS.has(n) && !n.includes("'")
+    && !verbBase(n) && !isPastVerb(n) && !/(ing|ly)$/.test(n) && !/[^s]s$/.test(n)
+    && (isRealWord(`${n}s`) || isRealWord(`${n}es`) || (n.endsWith('y') && isRealWord(`${n.slice(0, -1)}ies`)))) return true;
+  if (typedPlural && /[^s]s$/.test(n) && (verbBase(n.slice(0, -1)) || (n.endsWith('es') && verbBase(n.slice(0, -2))))) return true; // "cows gives"
   if (typedPlural && ['he', 'she', 'it'].includes(p)) return false; // "he runs"
   if (!typedPlural && ['he', 'she', 'it'].includes(p) && !g.endsWith('s')) return true; // "he run"
   if (typedPlural && ['i', 'you', 'we', 'they'].includes(p)) return true; // "they runs"
@@ -350,8 +376,57 @@ function stems(w) {
   return s;
 }
 
-/** Same word, one ↔ more than one (dog/dogs, box/boxes, give/gives). */
-const numberPair = (e, g) => Math.min(e.length, g.length) >= 3 && (g === `${e}s` || g === `${e}es` || e === `${g}s` || e === `${g}es`);
+const IRREGULAR_PLURAL = {
+  loaf: 'loaves', leaf: 'leaves', child: 'children', man: 'men', woman: 'women', mouse: 'mice', foot: 'feet',
+  tooth: 'teeth', goose: 'geese', knife: 'knives', wolf: 'wolves', half: 'halves', life: 'lives', shelf: 'shelves',
+  person: 'people', calf: 'calves', thief: 'thieves',
+};
+/** Same word, one ↔ more than one (dog/dogs, box/boxes, loaf/loaves, give/gives): +1 if g is the "more" form, -1 if the "one" form, else 0. */
+function numberDir(e, g) {
+  if (IRREGULAR_PLURAL[e] === g) return 1;
+  if (IRREGULAR_PLURAL[g] === e) return -1;
+  if (Math.min(e.length, g.length) < 3) return 0;
+  if (g === `${e}s` || g === `${e}es`) return 1;
+  if (e === `${g}s` || e === `${g}es`) return -1;
+  return 0;
+}
+const numberPair = (e, g) => numberDir(e, g) !== 0;
+const IRREGULAR_BASES = new Set(Object.values(IRREGULAR_PAST));
+/** Could be the plain form of a verb ("bark", "close", "bring"): it has a past form, and is not a small linking word. */
+const verbBase = (w) => /^[a-z]{2,}$/.test(w) && !PREPOSITIONS.has(w) && !DETERMINERS.has(w) && !SMALL_WORDS.has(w)
+  && (IRREGULAR_BASES.has(w) || isRealWord(`${w}ed`) || (w.endsWith('e') && isRealWord(`${w}d`)));
+/** Number of a planted verb: 'sg' ("is", "has", "hunts") or 'pl' ("are", "have", "hunt"), given its fix. */
+function verbNumber(w, r) {
+  if (SINGULAR_VERBS.has(w)) return 'sg';
+  if (PLURAL_VERBS.has(w)) return 'pl';
+  const d = numberDir(r, w);
+  return d > 0 ? 'sg' : d < 0 ? 'pl' : null;
+}
+/**
+ * The subject just before the verb at A[aV] (key verb at C[cV]), as typed: 'sg', 'pl', or null when the child
+ * did not change it. Looks back a few words ("the book in our library is"), stopping at a mark, "and"/"but", "that".
+ */
+function subjectNumber(A, aV, C, cV) {
+  const back = (T, i) => {
+    const out = [];
+    for (let j = i - 1; j >= 0 && out.length < 6; j--) {
+      const t = lc(T[j]);
+      if (!isWord(T[j]) || CONJ.has(t) || t === 'that' || t === 'which' || t === 'who') break;
+      out.unshift(t);
+    }
+    return out;
+  };
+  const a = back(A, aV), c = back(C, cV);
+  const typed = a.filter((t) => !c.includes(t)), key = c.filter((t) => !a.includes(t));
+  for (const t of typed) {
+    if (['they', 'we', 'you', 'i'].includes(t)) return 'pl';
+    if (['he', 'she', 'it'].includes(t)) return 'sg';
+    for (const k of key) { const d = numberDir(k, t); if (d) return d > 0 ? 'pl' : 'sg'; }
+    if (PLURAL_DET.has(t) || t === 'all') return 'pl';
+    if (SINGULAR_DET.has(t)) return 'sg';
+  }
+  return null;
+}
 /**
  * A noun and the verb after it both switched number so they still agree ("the dog barks" for "the dogs bark",
  * "their cows give" for "their cow gives"): a deliberate rewrite, not a mistake.
@@ -361,7 +436,8 @@ function coordinatedNumber(winA, winC) {
   return winA.some((_, i) => {
     if (i + 1 >= winA.length) return false;
     const [a0, a1, c0, c1] = [winA[i], winA[i + 1], winC[i], winC[i + 1]].map(lc);
-    return numberPair(c0, a0) && numberPair(c1, a1) && (a0.length > c0.length) !== (a1.length > c1.length);
+    const d0 = numberDir(c0, a0), d1 = numberDir(c1, a1);
+    return d0 !== 0 && d1 !== 0 && d0 !== d1;
   });
 }
 
@@ -370,14 +446,23 @@ function coordinatedNumber(winA, winC) {
  * 'agreement', 'spelling') or null (could be a fair rewrite). `inSlot`: this is where a planted mistake was,
  * so another form of the same word (cook/cooked, want/wants) is also a mistake. `planted`: the planted mistake there.
  */
-function wrongWord(exp, got, next, inSlot, planted, prev) {
+function wrongWord(exp, got, next, inSlot, planted, prev, prev2) {
   const e = lc(exp), g = lc(got);
   const pl = planted ? lc(planted) : '';
   // Another form of the key word typed where a SPELLING mistake was planted ("bush" where "bushs" → "bushes"):
   // judged like any other word. Where a word-form mistake was planted ("cooks" → "cooked"), any other form is wrong.
-  const spellingSlot = inSlot && pl && pl !== e && !isRealWord(pl) && !pl.includes("'");
+  const spellingSlot = inSlot && pl && pl !== e && !pl.includes("'")
+    && (!isRealWord(pl) || (HOMOPHONES.has(pl) && HOMOPHONES.has(e))); // "bushs" → "bushes", "see" → "sea"
   if (e === g) return exp === got ? null : 'capital';
   if ((e === 'a' || e === 'an') && (g === 'a' || g === 'an')) return articleFits(got, next) ? null : 'article';
+  const plural = numberPair(e, g);
+  // (Not for small closed-class words "our"/"ours", "two"/"twos", or past forms "won"/"wons": those are plain mistakes.)
+  if (plural && !g.includes("'") && isRealWord(g) && (!inSlot || spellingSlot)) {
+    if ((e === 'toward' && g === 'towards') || (e === 'towards' && g === 'toward')) return null;
+    if (REAL_WORDS.has(e) || REAL_WORDS.has(g) || PLURAL_DET.has(e) || PREPOSITIONS.has(e) || IRREGULAR_PAST[e] || e.endsWith('ed')) return 'number';
+    // One ↔ more than one: clear only when it breaks agreement ("two pencil", "player have").
+    return numberBreaks(g, numberDir(e, g) > 0, prev, next, prev2) ? 'number' : null;
+  }
   if (HOMOPHONES.has(e) && HOMOPHONES.has(g)) return 'homophone';
   // The same with an ending ("reeds" for "reads", "pairs" for "pears"), when the spellings are close.
   const homStem = (w) => [...stems(w)].some((x) => HOMOPHONES.has(x));
@@ -388,11 +473,6 @@ function wrongWord(exp, got, next, inSlot, planted, prev) {
   if (base) {
     const forms = [base, `${base}s`, `${base}es`, `${base}ed`, `${base}d`, `${base}${base.at(-1)}ed`, `${e}ed`, `${base}ing`, PARTICIPLE[e]];
     if (forms.includes(g)) return 'verb';
-  }
-  const plural = numberPair(e, g);
-  if (plural && !g.includes("'") && isRealWord(g) && (!inSlot || spellingSlot)) {
-    // One ↔ more than one: clear only when it breaks agreement ("two pencil", "player have").
-    return numberBreaks(g, g.length > e.length, prev, next) ? 'number' : null;
   }
   if (inSlot && !spellingSlot && [...stems(e)].some((x) => stems(g).has(x))) return 'verb';
   if (REAL_WORD_TYPOS[e]?.includes(g)) return 'spelling'; // "diner" for "dinner", "fiend" for "friend"
@@ -415,7 +495,7 @@ function wrongWord(exp, got, next, inSlot, planted, prev) {
 }
 
 /** Compare the key's tokens with the typed tokens word by word: a clear mistake kind, 'same', or null. */
-function wordVerdict(exp, got, after, inSlot, planted, before) {
+function wordVerdict(exp, got, after, inSlot, planted, before, before2) {
   if (exp.length !== got.length) {
     const squash = (toks) => lc(toks.join('')).replace(/-/g, '');
     return exp.length && squash(exp) === squash(got) ? 'spelling' : null;
@@ -424,7 +504,7 @@ function wordVerdict(exp, got, after, inSlot, planted, before) {
   for (let i = 0; i < exp.length; i++) {
     if (exp[i] === got[i]) continue;
     if (!isWord(exp[i]) || !isWord(got[i])) return null;
-    const k = wrongWord(exp[i], got[i], got[i + 1] ?? after, inSlot, planted?.length === exp.length ? planted[i] : undefined, got[i - 1] ?? before);
+    const k = wrongWord(exp[i], got[i], got[i + 1] ?? after, inSlot, planted?.length === exp.length ? planted[i] : undefined, got[i - 1] ?? before, i >= 2 ? got[i - 2] : i === 1 ? before : before2);
     if (!k) return null;
     if (kind === 'same') kind = k;
   }
@@ -554,8 +634,15 @@ function commaAllowed(A, k) {
     // Compound sentence: a new clause with its own subject follows ("..., and Omar can hang it up", "..., and the
     // dogs bark"), not just one more item ("pears, and peaches", "flour, and water to make clay").
     let tail = 0;
-    for (let j = k + 2; j < A.length && isWord(A[j]); j++) tail++;
+    for (let j = k + 2; j < A.length && (isWord(A[j]) || (A[j] === '.' && TITLES.has(lc(A[j - 1] || '')))); j++) if (isWord(A[j])) tail++;
     const subj = A[k + 2] || '';
+    if (isCap(subj) && !SUBJECTS.has(lc(subj))) {
+      // Names: "Uncle Ray, and Aunt Bea" (one more item) or "Maya, and Leo are" (two names as one subject).
+      let j = k + 2;
+      while (j < A.length && (isCap(A[j]) || (A[j] === '.' && TITLES.has(lc(A[j - 1] || ''))))) j++;
+      if (!isWord(A[j] || '') || PREPOSITIONS.has(lc(A[j]))) return false;
+      if (A.slice(0, k).every((t, i) => isCap(t) || (t === '.' && TITLES.has(lc(A[i - 1] || ''))))) return false;
+    }
     if (tail >= 2 && (CLAUSE_STARTS.has(lc(subj)) || isCap(subj))) return !(DETERMINERS.has(lc(subj)) && nounPhraseOnly(A, k + 2));
     // A second verb for the same subject ("smiled, and said", "jumps in, and swims"): some teachers accept this
     // comma, so it goes to a grown-up rather than being marked wrong.
@@ -580,6 +667,7 @@ const TIPS = {
   'end-mark': "Don't forget the mark at the end of the sentence.",
   punctuation: 'Check your punctuation marks.',
   'double-mark': 'A sentence ends with just one mark.',
+  'stray-word': 'Check the end of the sentence: a word is left over.',
   comma: 'Check where your commas go.',
   dropped: 'It looks like a word or mark went missing.',
   repeated: 'A word is written twice.',
@@ -614,7 +702,7 @@ function classify(h, A, C, insBag, delBag) {
     const [e] = exp, [g] = got;
     if (isWord(e) && isWord(g)) {
       if (lc(e) === lc(g)) return h.expAtStart !== (h.aStart === 0) ? ['moved', false] : ['capital', true];
-      const k = wrongWord(e, g, A[h.aStart + 1], false, undefined, A[h.aStart - 1]);
+      const k = wrongWord(e, g, A[h.aStart + 1], false, undefined, A[h.aStart - 1], A[h.aStart - 2]);
       return k ? [k, true] : ['different-word', false];
     }
     if (!isWord(e) && !isWord(g)) {
@@ -648,8 +736,9 @@ const endMark = (toks) => {
  * mistake left in, winA = what was typed. Returns 'fixed' | 'unfixed' | 'wrong' (a different mistake there) |
  * 'equal' (same words, e.g. "cannot" for "can't") | 'alt' ("!" for ".": a grown-up should check) | null.
  */
-function judgeSlot(winA, winC, winW, after, before) {
+function judgeSlot(winA, winC, winW, after, before, before2) {
   if (sameList(winA, winC)) return 'fixed';
+  if (!winA.length && winC.length === 1 && lc(winC[0]) === 'to' && verbBase(lc(after || ''))) return 'wrong'; // "forget bring"
   if (sameList(winA, winW)) return 'unfixed';
   if (winA.length === winC.length) {
     const diffs = winA.map((t, i) => i).filter((i) => winA[i] !== winC[i]);
@@ -666,7 +755,7 @@ function judgeSlot(winA, winC, winW, after, before) {
     if (sameList(expandWords([...winA, ...tail], false), expandWords([...winC, ...tail], false))) return 'wrong'; // "is not it?"
     if (sameList(xa, expandWords([...winW, ...tail]))) return 'wrong';
   }
-  const k = wordVerdict(winC, winA, after, true, winW, before);
+  const k = wordVerdict(winC, winA, after, true, winW, before, before2);
   return k && k !== 'same' ? 'wrong' : null;
 }
 
@@ -724,12 +813,12 @@ export function grade(item, answer) {
     if ((pre || post) && winA.length > pre + post
       && [...Array(pre).keys()].every((i) => lines(cFrom + i, aFrom + i))
       && [...Array(post).keys()].every((i) => lines(cTo - 1 - i, aFrom + winA.length - 1 - i))) {
-      verdict = judgeSlot(winA.slice(pre, winA.length - post), r, w, winA[winA.length - post] ?? after, pre ? winA[pre - 1] : A[M[sp.kL][1]]);
+      verdict = judgeSlot(winA.slice(pre, winA.length - post), r, w, winA[winA.length - post] ?? after, pre ? winA[pre - 1] : A[M[sp.kL][1]], pre > 1 ? winA[pre - 2] : pre === 1 ? A[M[sp.kL][1]] : A[M[sp.kL][1] - 1]);
     }
     // 2. The right form is there (the child changed something next to it).
     if (!verdict && rightFirst && indexOfRun(winA, r) >= 0) verdict = 'fixed';
     // 3. Judge the whole window.
-    if (!verdict) verdict = judgeSlot(winA, winC, winW, after, A[M[sp.kL][1]]);
+    if (!verdict) verdict = judgeSlot(winA, winC, winW, after, A[M[sp.kL][1]], A[M[sp.kL][1] - 1]);
     // A mostly rewritten sentence: only an exact leftover mistake counts; other judgements go to a grown-up.
     if (rewritten && (verdict === 'wrong' || verdict === 'equal')) verdict = null;
     if (verdict === 'fixed' || verdict === 'unfixed') { status[sp.index] = verdict; continue; }
@@ -739,6 +828,17 @@ export function grade(item, answer) {
     // 4. Otherwise the child changed more around it: is the right (or wrong) form somewhere in that part?
     const order = rightFirst ? ['fixed', 'unfixed'] : ['unfixed', 'fixed'];
     for (const o of order) if (indexOfRun(winA, o === 'fixed' ? r : w) >= 0) { status[sp.index] = o; break; }
+  }
+
+  // Agreement fixed from the subject's side ("The robin is", "and they win"): the kept verb now agrees, so a
+  // grown-up checks it instead of calling the verb unfixed.
+  for (const sp of spans) {
+    if (status[sp.index] !== 'unfixed' || sp.wrongToks.length !== 1 || sp.rightToks.length !== 1) continue;
+    const vN = verbNumber(lc(sp.wrongToks[0]), lc(sp.rightToks[0]));
+    if (!vN) continue;
+    let aV = -1;
+    for (let i = M[sp.kL][1] + 1; i < M[sp.kR][1]; i++) if (A[i] === sp.wrongToks[0]) { aV = i; break; }
+    if (aV >= 0 && subjectNumber(A, aV, C, sp.cTok[0]) === vN) { status[sp.index] = 'unknown'; settled.delete(sp.index); }
   }
 
   // Group errors whose windows overlap, then compare each group with what was expected given each status.
@@ -796,6 +896,14 @@ export function grade(item, answer) {
     extras.push({ expected: cEnd, got: '', kind: 'end-mark', clear: true, aStart: A.length, aEnd: A.length });
   }
 
+  // A stray "and"/"but"/"or" right before the end ("…in the trees, and.").
+  for (let i = 1; i < A.length; i++) {
+    if (!CONJ.has(lc(A[i])) || !(i === A.length - 1 || END_MARKS.has(A[i + 1]))) continue;
+    if (C.some((t, j) => lc(t) === lc(A[i]) && (j === C.length - 1 || END_MARKS.has(C[j + 1])))) continue;
+    if (!extras.some((x) => x.clear && x.aStart <= i && x.aEnd > i)) {
+      extras.push({ expected: '', got: A[i], kind: 'stray-word', clear: true, aStart: i, aEnd: i + 1 });
+    }
+  }
   // Stacked end marks ("open?.", "room.!") that the model sentence does not have.
   for (let i = 0; i + 1 < A.length; i++) {
     if (!END_MARKS.has(A[i]) || !END_MARKS.has(A[i + 1])) continue;
