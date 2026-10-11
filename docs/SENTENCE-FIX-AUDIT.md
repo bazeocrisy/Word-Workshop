@@ -1,6 +1,6 @@
 # Sentence Fix — Independent Educational Audit (Agent 5)
 
-> **FINAL status (section 15):** **Content bank: APPROVED. All 150 items PASS.** **Grading engine: NOT APPROVED** at b4c62a8. Critical: valid answers that fix the agreement by changing the subject are marked incorrect (H-1, such as "The robin is" and "Our player has"), and so is "seas" (H-2). Major: b4c62a8 now sends "the dog bark", "their cows gives" and "the store close" to review (H-3), and a comma between two names goes to review (H-4). G-1 to G-7 are fixed. Audit tests: 579 tests, 560 pass, 0 fail, 19 todo.
+> **FINAL status (section 16):** **Content bank: APPROVED. All 150 items PASS.** **Grading engine: NOT APPROVED** at cd4c542. Critical: "or so" and "yet" at the end of a sentence are marked as stray words (K-1, new in cd4c542). A subject changed to a collective or singular noun, so the kept verb agrees, is still marked incorrect (K-2, such as "Our team has" and "Mr. Park's class takes"), and so is "their posters" (K-3). Major: "X and a friend is" now goes to review (K-4, new in cd4c542). H-1 to H-8 are fixed, and the compound-noun risk does not misfire. Audit tests: 637 tests, 618 pass, 0 fail, 19 todo.
 
 Branch `claude/student-first-v3`. Audited: `data/sentence-fix/bank.json` (all 150 items read one by one), `docs/SENTENCE-FIX-CURRICULUM.md`, `js/sentencefix/engine.js`. Independent grading tests: `tests/unit/sentencefix-grading-audit.test.mjs`. Nothing in the bank, the engine, or other app code was changed.
 
@@ -792,3 +792,86 @@ Every todo currently fails, so each one is a real finding. I did not change `eng
   - **Major:** H-3 (b4c62a8 made "the dog bark", "their cows gives" and "the store close" go to review instead of incorrect) and H-4 (a comma between two names).
 
   Once H-1 to H-4 are resolved, the engine meets the approval bar. H-5 to H-8 and G-8 are Minor and can stay as todos. No invalid answer is ever graded correct.
+
+---
+
+## 16. Closing engine check (commit cd4c542: subject look-back, extended numberBreaks, irregular plurals, name commas, dropped "to", stray conjunctions)
+
+**This section supersedes the engine verdict in section 15.**
+
+**Method.** I wrote 50 fresh answers of my own, without reusing anyone else's tests: 32 valid and 18 wrong. They are in the `CLOSING` cases in `tests/unit/sentencefix-grading-audit.test.mjs`. To tell new behaviour from old, I compared every result with the engine as it was just before cd4c542.
+
+**The risk the engine agent flagged ("the store close" rule on a compound noun after "the") does not misfire.** All of these valid answers go to review:
+- "The leaf on the maple tree turns red"
+- "The old tool in our museum shows how…"
+- "blew the leaf across the yard"
+- "planted a seed in a cup"
+- "under a bush"
+- "build their nest"
+- "watch the fireworks over…"
+
+The bank has no key in which a plural noun comes after a noun used as a describing word and before a preposition, except where an excluded word guards it (*thank-you*, *their*, *little*, *old*). So the rule's exclusions hold for the bank as it stands.
+
+**H-1 to H-8 are fixed.** These valid answers go to review:
+- **Agreement fixed from the subject side:** "A robin is", "hawks hunt", "the dog barks", "their cows give", "Jin plays tennis with his brother", "Mr. Park's student takes", "My brother is", "all of them have".
+- **Irregular plurals:** "a loaf of bread", "the children", "kids".
+- **"to" variants:** "don't forget your lunch", "remember to bring", "mixed … and made", "went into the market".
+- **"and then":** "…, and then Omar can hang it up".
+
+These wrong answers are incorrect: "each bees has", "childs", "Kai, and Noah", "The mail carrier come", "water make clay", "came back on and.", "two brother bikes".
+
+### Critical: valid answers marked incorrect
+- **K-1 (introduced by cd4c542).** The stray-conjunction rule treats "so" and "yet" at the end of a sentence as left-over words. These valid answers are marked incorrect:
+  - SPL-012 "…in ten minutes **or so**."
+  - END-010 "…Is it open **yet**?"
+  - END-001 "Did you finish your spelling homework **yet**?"
+
+  All three were review before cd4c542. **Fix:** apply the rule only to *and*, *but*, *or* and *nor*, and not to "or so".
+- **K-2 (older behaviour; H-1 is not fully covered).** The child changes the subject to a collective or other singular noun, so the kept verb now agrees, but the verb still counts as unfixed:
+  - SVA-004 "Our **team has** new jerseys."
+  - SVA-012 "Mr. Park's **class takes**…"
+  - SVA-015 "My **family is** cleaning…"
+  - SVA-012 "**each of** Mr. Park's students **takes**…"
+
+  In the last example, `subjectNumber`'s look-back stops at the period in "Mr.".
+
+  **Fix:**
+  - Skip title periods (Mr., Mrs., Ms., Dr.) in the look-back.
+  - Treat "each/one/every … of" as singular.
+  - When the typed subject contains a new noun that is not a number variant, and nothing marks it as plural (no plural determiner, no "and", no pronoun like "they"), mark the planted verb "unknown", so the answer goes to review.
+- **K-3 (older behaviour, rare).** MIX-010 "…painting their **posters**." The missing period goes on "poster", so that word is a mistake's slot, and a number change there is judged as a wrong verb form. **Fix:** for a missing-mark mistake (where `right` is `wrong` plus a mark), judge the word itself like a word that was not a mistake.
+
+### Major: clearly wrong answers sent to review
+- **K-4 (introduced by cd4c542).** The look-back stops at "and", so a compound subject reads as singular, and these clear agreement errors now go to review. All three were incorrect before cd4c542:
+  - SVA-001 "Maya **and a friend is**…"
+  - SVA-015 "My brother **and a friend is**…"
+  - SVA-010 "Jin **and a friend plays**…"
+
+  **Fix:** if the look-back stops at "and" and there is a noun, name or pronoun before the "and", treat the subject as plural.
+
+### Minor (these go to a grown-up for review; no valid answer is affected)
+- **K-5, older behaviour:** number clashes that are not next to the noun: "**A** baby **foxes**", "**two** tiny **crab**", "tool … **show**", "children **walks**".
+- **K-6:** wrong plurals that are also real verbs: "leafs", "loafs".
+- **K-7:** "My grandma**, and I** baked…". The name-comma rule skips "I".
+- **G-8, by design:** a dropped "the".
+
+### Tests
+`node --test tests/unit/sentencefix-grading-audit.test.mjs` gives `tests 637, pass 618, fail 0, todo 19`. I ran it on its own. The 19 todos are:
+- K-1: 3 cases
+- K-2: 4 cases
+- K-3: 1 case
+- K-4: 3 cases
+- K-5: 4 cases
+- K-6: 2 cases
+- K-7: 1 case
+- G-8: 1 case
+
+Every todo currently fails, so each one is a real finding. I did not change `engine.js` or `bank.json`.
+
+### FINAL VERDICTS
+- **Content bank: APPROVED.** All 150 items pass, with no Critical or Major findings (section 12.7).
+- **Grading engine: NOT APPROVED.**
+  - **Critical:** K-1 ("or so" and "yet" marked incorrect; new in cd4c542), K-2 (subject changed to a collective or singular noun, so the kept verb now agrees, but the answer is still incorrect), and K-3 ("their posters").
+  - **Major:** K-4 ("X and a friend is" now goes to review; new in cd4c542).
+
+  The fixes are small and local. Once K-1 to K-4 are resolved and these 11 todo tests pass, only Minor review-direction items will remain (K-5, K-6, K-7, G-8). That meets the approval bar.

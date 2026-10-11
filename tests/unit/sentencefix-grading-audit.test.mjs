@@ -693,3 +693,80 @@ for (const [id, answer, expect, todo] of LAST) {
 }
 
 test('last engine check: 30+ fresh answers', () => assert.ok(LAST.length >= 30));
+
+// ================================================================ CLOSING ENGINE CHECK (commit cd4c542)
+// Fresh answers (not anyone else's) that stress the subject look-back (H-1), the extended numberBreaks
+// (including the "the store close" rule on compound nouns), irregular plurals, the name-comma rule,
+// dropped "to" and the stray-conjunction rule.
+
+const K = {
+  strayAdverb: 'engine defect (Critical, introduced by cd4c542): the stray-conjunction rule treats "so" and "yet" at the end as left-over words, but "or so" and "Is it open yet?" are valid English. Limit the rule to and/but/or/nor, and never after "or so".',
+  subjectCollective: 'engine defect (Critical, pre-existing; extends the H-1 lead decision): the subject was changed to a collective or singular noun ("Our team has", "Mr. Park\'s class takes", "My family is") or to "each of … students takes", so the kept verb now agrees, but it still counts as unfixed. The look-back also stops at the period in "Mr."',
+  markSlotWord: 'engine defect (Critical, pre-existing, rare): a number change of the word that carries a missing end mark ("their posters.") is judged as a wrong verb form',
+  compoundSubject: 'engine defect (Major, introduced by cd4c542): when the look-back stops at "and", "X and a friend is/plays" is read as a singular subject, so a clear agreement error goes to review (it was incorrect before)',
+  farNumber: 'engine (minor, pre-existing): a number clash that is not next to the noun ("A baby foxes", "two tiny crab", "tool … show", "children walks") goes to review',
+  realPluralVerb: 'engine (minor): wrong plurals that are also real verbs ("leafs", "loafs") go to review',
+  commaBeforeI: 'engine (minor): "My grandma, and I baked" goes to review (the name-comma rule skips "I")',
+};
+
+const CLOSING = [
+  // VALID: compound nouns and other singular rewrites after "the" (the risk the engine agent flagged)
+  ['SF-END-002', 'The leaf on the maple tree turns red in the fall.', 'ok'],
+  ['SF-SVA-013', 'The old tool in our museum shows how farmers worked, and each one has a sign that tells about it.', 'ok'],
+  ['SF-TEN-004', 'The wind blew the leaf across the yard last night.', 'ok'],
+  ['SF-TEN-008', 'Last week, we planted a seed in a cup and watched it sprout.', 'ok'],
+  ['SF-SPL-019', 'Two baby foxes were hiding under a bush near our tent.', 'ok'],
+  ['SF-SPL-016', 'The two birds carried twigs and grass together to build their nest.', 'ok'],
+  ['SF-CAP-013', 'On the Fourth of July, people in Boston watch the fireworks over the Charles River.', 'ok'],
+  // VALID: agreement fixed from the subject side (look-back)
+  ['SF-SVA-013', 'The old tools in our museum show how farmers worked, and all of them have a sign that tells about it.', 'ok'],
+  ['SF-SVA-012', 'Every Friday, Mr. Park\'s student takes a spelling test, and Ravi always gets every word right because he studies hard.', 'ok'],
+  ['SF-SVA-015', 'My brother is cleaning the garage, and Dad says we can go swimming when the job is done.', 'ok'],
+  ['SF-SVA-002', 'Look! A robin is building a nest in our tree.', 'ok'],
+  ['SF-SVA-014', 'Owls hunt at night, but hawks hunt during the day, and both birds have sharp claws.', 'ok'],
+  ['SF-SVA-008', 'The mail carrier comes to our street every day, and the dog barks at her.', 'ok'],
+  ['SF-SVA-007', 'My grandparents live on a farm, and their cows give lots of milk.', 'ok'],
+  ['SF-SVA-010', 'Jin plays tennis with his brother, and Jin wins most of the games.', 'ok'],
+  ['SF-SVA-001', 'Maya and Leo are both in the same reading group.', 'ok'],
+  ['SF-SVA-004', 'Our team has new jerseys this year.', 'ok', K.subjectCollective],
+  ['SF-SVA-012', 'Every Friday, Mr. Park\'s class takes a spelling test, and Ravi always gets every word right because he studies hard.', 'ok', K.subjectCollective],
+  ['SF-SVA-015', 'My family is cleaning the garage, and Dad says we can go swimming when the job is done.', 'ok', K.subjectCollective],
+  ['SF-SVA-012', 'Every Friday, each of Mr. Park\'s students takes a spelling test, and Ravi always gets every word right because he studies hard.', 'ok', K.subjectCollective],
+  // VALID: "to" variants, irregular plurals, "and then", end words
+  ['SF-MIX-003', 'Please don\'t forget your lunch tomorrow.', 'ok'],
+  ['SF-MIX-003', 'Please remember to bring your lunch to school tomorrow.', 'ok'],
+  ['SF-HOM-006', 'We mixed flour and water and made clay for our science project.', 'ok'],
+  ['SF-HOM-014', 'When we went into the market, we saw a sign for a sale on fresh pears and peaches.', 'ok'],
+  ['SF-HOM-007', 'Dad and I rode to the store to buy milk and a loaf of bread.', 'ok'],
+  ['SF-SPL-024', 'Many years ago, the children walked to a small school and wrote their lessons on little chalkboards every day.', 'ok'],
+  ['SF-SPL-024', 'Many years ago, kids walked to a small school and wrote their lessons on little chalkboards every day.', 'ok'],
+  ['SF-COM-011', 'Lucia, you can paint the sign, and then Omar can hang it up.', 'ok'],
+  ['SF-SPL-012', 'Dad and I believe the store closes in ten minutes or so.', 'ok', K.strayAdverb],
+  ['SF-END-010', 'The library has a new reading room. Is it open yet?', 'ok', K.strayAdverb],
+  ['SF-END-001', 'Did you finish your spelling homework yet?', 'ok', K.strayAdverb],
+  ['SF-MIX-010', 'Yes, we finished our projects, but Leah and Nora are still painting their posters.', 'ok', K.markSlotWord],
+  // WRONG: must be incorrect
+  ['SF-SVA-009', 'Honeybees make honey, and each bees has a special job in the hive.', 'incorrect'],
+  ['SF-SPL-024', 'Many years ago, childs walked to a small school and wrote their lessons on little chalkboards every day.', 'incorrect'],
+  ['SF-MIX-013', 'Kai, and Noah play basketball every Saturday at the gym on Elm Street after lunch.', 'incorrect'],
+  ['SF-SVA-008', 'The mail carrier come to our street every day, and the dogs bark at her.', 'incorrect'],
+  ['SF-HOM-006', 'We mixed flour and water make clay for our science project.', 'incorrect'],
+  ['SF-TEN-020', 'Yesterday, the power went out, so we found flashlights and told stories until the lights came back on and.', 'incorrect'],
+  ['SF-POS-008', 'My two brother bikes are in the garage, but Dad\'s car isn\'t.', 'incorrect'],
+  ['SF-SVA-001', 'Maya and a friend is in the same reading group.', 'incorrect', K.compoundSubject],
+  ['SF-SVA-015', 'My brother and a friend is cleaning the garage, and Dad says we can go swimming when the job is done.', 'incorrect', K.compoundSubject],
+  ['SF-SVA-010', 'Jin and a friend plays tennis, and Jin wins most of the games.', 'incorrect', K.compoundSubject],
+  ['SF-SPL-019', 'A baby foxes were hiding under the bushes near our tent.', 'incorrect', K.farNumber],
+  ['SF-MIX-011', 'At the beach, Elena found a starfish and two tiny crab under a rock.', 'incorrect', K.farNumber],
+  ['SF-SVA-013', 'The old tool in our museum show how farmers worked, and each one has a sign that tells about it.', 'incorrect', K.farNumber],
+  ['SF-SPL-024', 'Many years ago, children walks to a small school and wrote their lessons on little chalkboards every day.', 'incorrect', K.farNumber],
+  ['SF-END-002', 'The leafs on the maple tree turn red in the fall.', 'incorrect', K.realPluralVerb],
+  ['SF-HOM-007', 'Dad and I rode to the store to buy milk and two loafs of bread.', 'incorrect', K.realPluralVerb],
+  ['SF-CAP-002', 'My grandma, and I baked bread for the neighbors.', 'incorrect', K.commaBeforeI],
+];
+
+for (const [id, answer, expect, todo] of CLOSING) {
+  test(`closing ${id}: ${JSON.stringify(answer)} → ${expect}`, todo ? { todo } : {}, () => check(id, answer, expect));
+}
+
+test('closing engine check: 30+ fresh answers', () => assert.ok(CLOSING.length >= 30));
