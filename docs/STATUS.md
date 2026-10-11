@@ -98,6 +98,18 @@ No Critical findings. Major fixed: (1) text corrected on the photo review screen
 ## Acceptance review (2026-10-11)
 See docs/ACCEPTANCE-REPORT.md. Original photos not available (BLOCKED). Testing on the teacher's real newsletters exposed a layout defect (1/15 spelling, 0% vocabulary pairing); fixed with layout-aware extraction (js/layout.js) → 15/15 and 7/7 with 100% pairing on the clean Sept 28 newsletter, 7/15 with no wrong words on the Sept 21 redraw. Added an unsuitable-word warning for imported text. Sunday workflow measured with tests/walkthrough.mjs. Sentences and pictures for new words are manual (options in the report). Real speech verified to start/finish on Windows Chrome and Edge; mobile devices unverified. Totals: 57 unit tests, 167 browser checks (Chrome and Edge).
 
+## Family-testing release (2026-10-11)
+Published to GitHub Pages with the owner's approval for family testing (https://bazeocrisy.github.io/Word-Workshop/). OCR optimisation stopped at the owner's request; the limitations below are accepted for this release. Mandatory parent review and manual correction remain in place.
+
+**Current OCR limitations**
+- Spelling newsletter photo: 14/15 words; uncertain words are flagged and must be checked before approval.
+- Vocabulary sheet photo: not reliable — best 9/12 words and 4/12 exact definitions with table mode (mark the table corners and enter the card counts); the pale green top row often fails. Expect to type or correct most definitions, or use the phone's text recognition and "Paste or type a list".
+- Phone speed not measured: a difficult page may take 1–2 minutes.
+- Handwriting, heavy curl/glare and very low-resolution photos are not supported reliably.
+- Every imported word is a draft: nothing reaches a child until each word is checked and the week is approved.
+
+**Other known limitations:** data stays in one browser on one device (use Backup to move it); sentences and pictures for new words are manual (sentence helper, picture uploads); iPhone/iPad/Android behaviour, speech audibility and paper printing have not been verified on real devices.
+
 ## Real-photo OCR results (2026-10-11)
 The owner supplied the two original photos (kept in git-ignored local-fixtures/, never committed). `npm run test:ocr` against sample-data:
 - **Spelling newsletter:** 14/15 words exact, in order (before: 9/15). #5 "opened" came out as "opene" and is flagged; all 8 words that not every reading agreed on carry warnings into the editor.
