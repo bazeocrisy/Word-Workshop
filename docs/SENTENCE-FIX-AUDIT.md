@@ -1,6 +1,6 @@
 # Sentence Fix — Independent Educational Audit (Agent 5)
 
-> **Re-audit status (final):** see section 12. **Content bank: APPROVED. All 150 items PASS** after R1 was fixed in commit 42bebc6. **Grading engine: APPROVED** (only Minor items remain). Audit tests after 42bebc6: 389 tests, 382 pass, 0 fail, 7 todo (the Minor engine cases e-R1 to e-R5).
+> **Status (latest):** **Content bank: APPROVED. All 150 items PASS** (section 12.7). **Grading engine: NOT APPROVED** (section 13). Commit 0913ea4 introduced a Critical regression (F-1): real words such as "racing", "benches" and "lively" are now marked incorrect as misspellings. Two older Critical cases are also open: F-2 (a real word 1–2 letters from a model word is graded as a misspelling) and F-3 (words dropped in a valid rewrite). Audit tests: 453 tests, 445 pass, 0 fail, 8 todo.
 
 Branch `claude/student-first-v3`. Audited: `data/sentence-fix/bank.json` (all 150 items read one by one), `docs/SENTENCE-FIX-CURRICULUM.md`, `js/sentencefix/engine.js`. Independent grading tests: `tests/unit/sentencefix-grading-audit.test.mjs`. Nothing in the bank, the engine, or other app code was changed.
 
@@ -593,3 +593,53 @@ The 8 `todo` tests are e-R1 to e-R5 (7 cases) and the SVA-003 altCategory check 
 ### 12.7 FINAL VERDICT
 - **Content bank: APPROVED. All 150 items PASS** with no Critical or Major issue. R1 was fixed in commit 42bebc6, and I verified the fix. The bank diff removes only `"altCategory": "punctuation"` from SF-SVA-003 and changes nothing else. The bank now has 15 `altCategory` fields, matching the curriculum, which says "15 places" and no longer lists SVA-003. The Lab test confirms SVA-003 no longer accepts Punctuation. Minor m-R2 (adding `altCategory: "spelling"` to POS-006 "Were → We're") stays optional and does not block approval.
 - **Grading engine: APPROVED.** No Critical or Major defects remain. E1–E9 are fixed and verified. No invalid answer is marked correct, and no valid answer is marked incorrect. The five Minor leftovers (e-R1 to e-R5) only send clearly wrong answers to review, and they can be scheduled as polish.
+
+---
+
+## 13. Engine follow-up (commit 0913ea4: fixes for e-R1 to e-R5)
+
+**This section supersedes the engine verdict in 12.7.**
+
+**Method.** I wrote 43 fresh answers of my own, without reusing the engine agent's tests: 32 valid answers that stress the new rules and 11 wrong ones. They are in the `FOLLOWUP` cases in `tests/unit/sentencefix-grading-audit.test.mjs`. To tell new behaviour from old, I graded the same answers with the engine as it was just before 0913ea4 (`0913ea4~1`).
+
+**What works.** All five Minor findings are now graded **incorrect**:
+- e-R1: "dosent", "exsighted";
+- e-R2: a dropped appositive comma or tag-question comma;
+- e-R3: "our"/"than"/"off" in place of "are"/"then"/"of";
+- e-R4: "?.", "??", "?!", "is not it?";
+- e-R5: "pears, and peaches".
+
+None of the new rules wrongly catches these valid answers:
+- **Tag questions** written another way ("…, is it not?", "…, right?", "Is that not amazing?") go to review.
+- **Kept appositives** with other words changed go to review.
+- **Oxford commas in new lists** ("pears, apples, and peaches", "milk, eggs, and two loaves") go to review.
+- **", and" + a short clause** ("…, and I can hang it up", "…, and we found a smooth rock") goes to review.
+- **Dropped optional compound commas** go to review.
+- **Confusable words used correctly elsewhere** (to/too/two, "of them", "there") go to review.
+- **"!" endings** go to review.
+
+All 11 wrong answers are **incorrect** except one, a Minor leftover (see below).
+
+### Critical: valid answers now marked incorrect
+- **F-1 (introduced by 0913ea4).** The new e-R1 rule in `wrongWord()` marks a word in a mistake's slot as a misspelling when it has 6+ letters, the same first letter, is at most 3 edits away, and is not in `REAL_WORDS`. `REAL_WORDS` is a short list, so real words that are correct in context now count as misspellings. All four of these were **review** before 0913ea4 and are **incorrect** now:
+  - SF-SPL-013 "Diego was **racing** so fast…" (racing/running, distance 3)
+  - SF-SPL-019 "…hiding under the **benches** near our tent." (benches/bushes, distance 3)
+  - SF-SPL-010 "…a **lively** crab in the sand." (lively/little, distance 3)
+  - SF-SPL-025 "…people who are **wanting** to help…" (wanting/willing, distance 3)
+
+  **Fix:** apply the distance-3 rule only when the typed word is *not* a dictionary word. Use a word list for that check (for example a common-English list of about 10,000 words, shipped as JSON), not `REAL_WORDS`. Otherwise, apply it only when the typed word shares the key's ending, as with "dosent"/"doesn't".
+- **F-2 (pre-existing).** A real word 1–2 letters from a model word is graded as a misspelling. Examples: SF-TEN-008 "we **placed** seeds…" (placed/planted, in the mistake's slot) and SF-HOM-005 "…threw their **hats** in the air" (hats/caps, an untouched word). The same dictionary check fixes this: a typed real word becomes "different-word", which goes to review.
+- **F-3 (pre-existing).** Words dropped in a valid rewrite are a clear "dropped" mistake. Example: SF-SVA-010 "…Jin wins most games." (the key has "most of the games"). Treat a dropped *function word* (of, the, a, that) as not clear when the rest of the sentence is unchanged.
+
+### Minor
+- **F-4.** SF-HOM-006 "We mixed flour, and water to make clay…" still goes to **review**. The e-R5 fix allows a comma before *and* whenever 3 or more words follow, so a comma joining only two nouns slips through when a long phrase comes after.
+
+### Tests
+`node --test tests/unit/sentencefix-grading-audit.test.mjs` gives `tests 453, pass 445, fail 0, todo 8`. The 8 todos are F-1 (4 cases), F-2 (2), F-3 (1) and F-4 (1). Each one currently fails, so each is a real defect. I did not change `engine.js` or `bank.json`.
+
+### Engine verdict
+**Grading engine: NOT APPROVED.**
+- F-1 is a regression introduced by 0913ea4: valid answers that were review are now marked incorrect.
+- F-2 and F-3 are older Critical cases of the same kind. My earlier tests did not exercise them.
+
+The rest of 0913ea4 is sound. The engine can be approved once F-1 to F-3 are fixed and these 7 todo tests pass. F-4 is optional polish.

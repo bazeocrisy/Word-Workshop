@@ -419,3 +419,80 @@ test('Lab: genuinely disputable boundary cases accept both answers', () => {
 test('Lab: SF-SVA-003 don\'t → doesn\'t must not accept "punctuation" (curriculum rule 3: the apostrophe is already right)', () => {
   assert.equal(labAccepts(item('SF-SVA-003'), 'punctuation'), false);
 });
+
+// ================================================================ ENGINE FOLLOW-UP (commit 0913ea4)
+// Independent spot-check of the rules added for e-R1..e-R5. These are fresh answers, not taken from the
+// engine agent's tests. VALID answers stress each new rule: real words a few letters from the key in a
+// mistake's spot, tag questions written another way, appositives kept, confusable words used correctly
+// elsewhere, "!"/"?" endings, ", and" + a short clause, and Oxford commas. They must never be 'incorrect'.
+// WRONG answers must be 'incorrect'.
+
+const F = {
+  realWordSlot: 'engine defect (Critical, introduced by 0913ea4): e-R1 rule treats a REAL word in the mistake\'s spot (6+ letters, same first letter, ≤3 edits) as a misspelling; REAL_WORDS is too small to tell. Before 0913ea4 this was review.',
+  realWordNear: 'engine defect (Critical, pre-existing): a real word 1–2 letters from the key or a model word (placed/planted, hats/caps) is graded as a misspelling',
+  droppedWords: 'engine defect (Critical, pre-existing): dropping words in a valid rewrite ("most games" for "most of the games") is a clear "dropped" → incorrect',
+  twoItemLongTail: 'engine (minor): a comma before "and" that joins only two nouns is still allowed when 3+ words follow ("flour, and water to make clay")',
+};
+
+const FOLLOWUP = [
+  // VALID: a real word near the key in the mistake's spot (the e-R1 rule)
+  ['SF-SPL-013', 'Diego was racing so fast that he almost tripped on the grass.', 'ok', F.realWordSlot],
+  ['SF-SPL-019', 'Two baby foxes were hiding under the benches near our tent.', 'ok', F.realWordSlot],
+  ['SF-SPL-010', 'We found a piece of shell and a lively crab in the sand.', 'ok', F.realWordSlot],
+  ['SF-SPL-025', 'Our neighborhood is planting trees in the park, so we need people who are wanting to help on Saturday.', 'ok', F.realWordSlot],
+  ['SF-SPL-022', 'Every Monday, our teacher writes a question on the board, and we write our answers in our journals.', 'ok'],
+  ['SF-SPL-008', 'Ms. Diaz said we could choose a difficult book to read.', 'ok'],
+  // VALID: real words 1–2 letters away (older rule)
+  ['SF-TEN-008', 'Last week, we placed seeds in cups and watched them sprout.', 'ok', F.realWordNear],
+  ['SF-HOM-005', 'Our team won the game, and the players threw their hats in the air.', 'ok', F.realWordNear],
+  // VALID: tag questions and questions written another way
+  ['SF-POS-011', 'Abraham Lincoln\'s face is on the penny, is it not?', 'ok'],
+  ['SF-POS-011', 'Abraham Lincoln\'s face is on the penny, right?', 'ok'],
+  ['SF-END-008', 'Ants can carry things much heavier than their bodies. Is that not amazing?', 'ok'],
+  // VALID: appositive kept, other words changed
+  ['SF-CAP-004', 'Our soccer coach, Mr. Patel, jogged laps with us.', 'ok'],
+  ['SF-CAP-015', 'My brother\'s team, the Hilltop Hawks, beat the Lakeview Lions on Saturday.', 'ok'],
+  ['SF-CAP-015', 'My brother\'s team, the Hilltop Hawks, won the big game against the Lakeview Lions last Saturday.', 'ok'],
+  // VALID: Oxford commas and ", and" + short clause
+  ['SF-COM-012', 'Yes, Mrs. Gomez, our class collected cans, bottles, and boxes for the recycling drive.', 'correct'],
+  ['SF-HOM-014', 'When we went to the market, we saw a sign for a sale on fresh pears, apples, and peaches.', 'ok'],
+  ['SF-HOM-007', 'Dad and I rode to the store to buy milk, eggs, and two loaves of bread.', 'ok'],
+  ['SF-TEN-011', 'Last summer, my sister and I swam in the lake, and we found a smooth rock.', 'ok'],
+  ['SF-COM-011', 'Lucia, you can paint the sign, and I can hang it up.', 'ok'],
+  ['SF-SVA-008', 'The mail carrier comes to our street every day and the dogs bark at her.', 'ok'], // optional compound comma
+  ['SF-COM-008', 'Well, I wanted to play outside, but then it started to rain.', 'ok'],
+  // VALID: confusable words (to/too/two, of, their, then) used correctly elsewhere
+  ['SF-MIX-003', 'Please don\'t forget to bring your lunch to school tomorrow too.', 'ok'],
+  ['SF-HOM-002', 'I have two pencils and an eraser in my desk too.', 'ok'],
+  ['SF-SVA-011', 'There are three apples in the bowl, and Omar wants one of them.', 'ok'],
+  ['SF-POS-014', 'I\'m sure Grandpa\'s old photos are in the attic, but it\'s too dark to look there today.', 'ok'],
+  ['SF-HOM-010', 'Our family ate a whole pizza in less than one hour.', 'ok'],
+  // VALID: "!" endings and other rewrites
+  ['SF-SVA-002', 'Look! The robins are building a nest in our tree!', 'ok'],
+  ['SF-HOM-012', 'There are too many leaves in the yard, so we will rake them in a big pile over here!', 'ok'],
+  ['SF-TEN-020', 'Yesterday, the power went out, so we found candles and told stories until the lights came back on.', 'ok'],
+  ['SF-TEN-015', 'When the bell rang, Sofia grabbed her lunchbox and sat with her friends.', 'ok'],
+  ['SF-SVA-015', 'My brothers were cleaning the garage, and Dad said we could go swimming when the job was done.', 'ok'],
+  ['SF-SVA-010', 'Jin and his brother play tennis, and Jin wins most games.', 'ok', F.droppedWords],
+  // WRONG: must be incorrect
+  ['SF-SPL-013', 'Diego was runnig so fast that he almost tripped on the grass.', 'incorrect'],
+  ['SF-SPL-018', 'I was so exsighted to open my birthday presents.', 'incorrect'], // misspelling 3 letters off
+  ['SF-POS-011', 'Abraham Lincoln\'s face is on the penny, isnt it?', 'incorrect'],
+  ['SF-POS-011', 'Abraham Lincoln\'s face is on the penny isn\'t it.', 'incorrect'],
+  ['SF-CAP-015', 'My brother\'s team, the Hilltop Hawks won the big game against the Lakeview Lions on Saturday.', 'incorrect'],
+  ['SF-END-001', 'Did you finish your spelling homework last night??', 'incorrect'],
+  ['SF-END-010', 'The library has a new reading room. When does it open?!', 'incorrect'],
+  ['SF-SVA-001', 'Maya and Leo our in the same reading group.', 'incorrect'],
+  ['SF-TEN-007', 'Yesterday, Ms. Chen read us a story, and than we drew pictures about it.', 'incorrect'],
+  ['SF-SPL-010', 'We found a piece off shell and a little crab in the sand.', 'incorrect'],
+  ['SF-HOM-006', 'We mixed flour, and water to make clay for our science project.', 'incorrect', F.twoItemLongTail],
+];
+
+for (const [id, answer, expect, todo] of FOLLOWUP) {
+  test(`follow-up ${id}: ${JSON.stringify(answer)} → ${expect}`, todo ? { todo } : {}, () => check(id, answer, expect));
+}
+
+test('follow-up: 25+ valid and 10+ wrong fresh answers', () => {
+  assert.ok(FOLLOWUP.filter((c) => c[2] !== 'incorrect').length >= 25);
+  assert.ok(FOLLOWUP.filter((c) => c[2] === 'incorrect').length >= 10);
+});
