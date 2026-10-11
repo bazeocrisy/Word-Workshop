@@ -41,6 +41,9 @@ b.click = (selector, textMatch) => b.js(`
 b.settle = async () => { await b.js('await new Promise((r) => setTimeout(r, 30)); await WW.whenRendered();'); await b.wait(60); };
 b.shotIf = async (name) => { if (process.env.SHOTS) await b.shot(path.join(ROOT, 'tests', 'screenshots', name + '.png')); };
 
+// Any Content-Security-Policy violation counts as an error.
+await b.send('Page.addScriptToEvaluateOnNewDocument', { source: "document.addEventListener('securitypolicyviolation', (e) => console.error('CSP violation: ' + e.violatedDirective + ' ' + e.blockedURI));" });
+
 try {
   await b.viewport(390, 844);
   for (const s of suites) {

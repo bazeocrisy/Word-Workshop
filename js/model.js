@@ -243,8 +243,19 @@ export function formatDate(iso) {
   return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+/** "Oct 12–16, 2026", "Oct 29 – Nov 2, 2026", or "Dec 29, 2026 – Jan 2, 2027". */
+export function dateRange(start, end) {
+  if (!start) return 'Undated week';
+  if (!end || end === start) return formatDate(start);
+  const [y1, m1, d1] = start.split('-').map(Number), [y2, m2, d2] = end.split('-').map(Number);
+  const mon = (y, m) => new Date(y, m - 1, 1).toLocaleDateString(undefined, { month: 'short' });
+  if (y1 !== y2) return `${formatDate(start)} – ${formatDate(end)}`;
+  if (m1 !== m2) return `${mon(y1, m1)} ${d1} – ${mon(y2, m2)} ${d2}, ${y2}`;
+  return `${mon(y1, m1)} ${d1}–${d2}, ${y1}`;
+}
+
 export function weekLabel(week) {
-  const range = week.startDate ? `${formatDate(week.startDate)}${week.endDate ? ' – ' + formatDate(week.endDate) : ''}` : 'Undated week';
+  const range = dateRange(week.startDate, week.endDate);
   return week.title ? `${week.title} (${range})` : `Week of ${range}`;
 }
 

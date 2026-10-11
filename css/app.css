@@ -337,3 +337,12 @@ details > summary { cursor: pointer; min-height: 44px; display: flex; align-item
   .print-section + .print-section { break-before: page; page-break-before: always; }
   .vocab-guide th, .results-print th { background: none; }
 }
+.vocab-guide, .results-print { width: 100%; table-layout: fixed; }
+.vocab-guide td, .results-print td { overflow-wrap: anywhere; }
+.vocab-guide .vg-word { width: 28%; }
+.vg-pic { max-width: 100%; }
+/* Polish after screenshot review */
+.toast { bottom: auto; top: calc(.75rem + env(safe-area-inset-top)); transform: translate(-50%, -200%); }
+.toast.show { transform: translate(-50%, 0); }
+.tiles { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+.tile { padding: .8rem .75rem; }

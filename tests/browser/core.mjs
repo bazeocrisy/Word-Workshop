@@ -107,6 +107,12 @@ export default {
     check('correct PIN unlocks the parent area', /New week/.test(t), t.slice(0, 200));
     await b.js(`const c = await import('./js/views/common.js'); await c.setPin(null); return true;`);
 
+    // Content-Security-Policy: pictures or scripts from other websites are blocked (and the test would notice).
+    const before = b.errors.length;
+    await b.js(`const i = new Image(); i.src = 'https://example.com/tracker.png'; document.body.append(i); await new Promise((r) => setTimeout(r, 300)); i.remove(); return 1;`);
+    const cspErrors = b.errors.splice(before).filter((e) => /CSP violation: img-src/.test(e));
+    check('security policy blocks content from other websites', cspErrors.length === 1, cspErrors);
+
     const manifest = await b.js(`const r = await fetch('manifest.webmanifest'); return r.ok && (await r.json()).start_url;`);
     check('web app manifest loads under the base path', manifest === './index.html', manifest);
   },

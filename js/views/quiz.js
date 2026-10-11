@@ -98,12 +98,12 @@ class Session {
   promptEls(q, qid) {
     if (q.type === 'def-mc') return [h('p', { class: 'q-instruction', id: qid, tabindex: '-1', 'data-autofocus': '' }, 'What does this word mean?'), h('p', { class: 'q-word', id: `${qid}-p` }, q.prompt),
       speakButton('Hear the word', () => q.prompt, { ariaLabel: 'Hear the word' })];
-    if (q.type === 'word-mc' || q.type === 'write') return [h('p', { class: 'q-instruction', id: qid, tabindex: '-1' }, q.type === 'write' ? 'Type the word that means:' : 'Which word means:'),
+    if (q.type === 'word-mc' || q.type === 'write') return [h('p', { class: 'q-instruction', id: qid, tabindex: '-1', 'data-autofocus': '' }, q.type === 'write' ? 'Type the word that means:' : 'Which word means:'),
       h('blockquote', { class: 'q-def', id: `${qid}-p` }, q.prompt, q.definitionKind === 'parent-edited' ? h('span', { class: 'badge badge-grey' }, 'parent-edited') : null),
       speakButton('Hear the definition', () => q.prompt, { ariaLabel: 'Hear the definition' })];
-    if (q.type === 'blank') return [h('p', { class: 'q-instruction', id: qid, tabindex: '-1' }, 'Which word fits in the blank?'), h('p', { class: 'q-sentence', id: `${qid}-p` }, q.prompt),
+    if (q.type === 'blank') return [h('p', { class: 'q-instruction', id: qid, tabindex: '-1', 'data-autofocus': '' }, 'Which word fits in the blank?'), h('p', { class: 'q-sentence', id: `${qid}-p` }, q.prompt),
       speakButton('Hear the sentence', () => q.prompt.replace(/_+/g, 'blank'), { ariaLabel: 'Hear the sentence' })];
-    if (q.type === 'match') return [h('p', { class: 'q-instruction', id: qid, tabindex: '-1' }, q.rounds > 1 ? `Match each word to its meaning (set ${q.round} of ${q.rounds}).` : 'Match each word to its meaning.')];
+    if (q.type === 'match') return [h('p', { class: 'q-instruction', id: qid, tabindex: '-1', 'data-autofocus': '' }, q.rounds > 1 ? `Match each word to its meaning (set ${q.round} of ${q.rounds}).` : 'Match each word to its meaning.')];
     return [];
   }
 
