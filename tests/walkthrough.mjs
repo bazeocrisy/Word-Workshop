@@ -31,32 +31,42 @@ try {
   await js('await WW.db.deleteDatabase(); sessionStorage.clear(); return 1;');
   await b.load('about:blank'); await b.load(U + 'index.html#/'); await b.wait(500);
 
-  // ── Parent: create the week ──
-  await click('a', 'Parent area'); act('parent', 'Open Parent area');
-  await click('.student-card .btn-primary', 'New week'); act('parent', 'New week');
-  await click('.dialog .btn-primary', 'Create week'); act('parent', 'Create week (default Monday–Friday dates)');
-  const wid = await js('return location.hash.split("/").pop();');
+  // ── Parent: step 1, student and week (from the landing page) ──
+  await click('a.create-lesson'); act('parent', 'Create this week\'s lesson (landing page)');
+  await js(`document.querySelector('input[name=wz-student]').click(); return 1;`); act('parent', 'Choose the student (dates default to the coming Monday–Friday)');
+  await click('.wizard-next'); act('parent', 'Continue to Add words');
+  const wid = await js('return location.hash.split("/")[3];');
 
-  // ── Upload and read ──
-  await click('a.btn', 'Upload photos'); act('parent', 'Upload photos');
-  const payload = pages.map((p) => ({ name: path.basename(p), b64: fs.readFileSync(p).toString('base64') }));
-  await js(`const files = ${JSON.stringify(payload)}.map((p) => new File([Uint8Array.from(atob(p.b64), (c) => c.charCodeAt(0))], p.name, { type: 'image/png' }));
-    const input = document.getElementById('photo-input'); const dt = new DataTransfer(); files.forEach((f) => dt.items.add(f)); input.files = dt.files; input.dispatchEvent(new Event('change'));
-    for (let i = 0; i < 100 && document.querySelectorAll('.thumb-page').length < 2; i++) await new Promise((r) => setTimeout(r, 100)); return 1;`);
-  act('parent', 'Choose photos (pick both pages at once)');
-  const tRead = Date.now();
-  await click('.read-btn'); act('parent', 'Read the photos');
-  await js(`for (let i = 0; i < 900 && !document.querySelector('.commit-btn'); i++) await new Promise((r) => setTimeout(r, 200)); return 1;`);
-  const readSecs = (Date.now() - tRead) / 1000;
-  const review = await js(`return { sp: document.getElementById('ocr-spelling').value, vo: document.getElementById('ocr-vocab').value, notes: [...document.querySelectorAll('.import-notes li, .notice p')].map((x) => x.innerText), preview: document.querySelector('.paste-preview').innerText };`);
-
-  // ── Correct what the reader got wrong (compare with the photo) ──
+  // ── Step 2: upload each page in its section, read it, check the text, add ──
+  const readTimes = [];
   const fixes = [];
-  const vo = review.vo.replace(/enjoyable or \S+$/m, (m) => { if (m !== 'enjoyable or pleasant') fixes.push(`"${m}" → "enjoyable or pleasant"`); return 'enjoyable or pleasant'; });
-  await js(`const t = document.getElementById('ocr-vocab'); t.value = ${JSON.stringify(vo)}; t.dispatchEvent(new Event('input')); return 1;`);
-  fixes.forEach((f) => act('parent', `Correct a misread on the review screen: ${f}`));
-  await click('.commit-btn'); act('parent', 'Add to the week as drafts');
-  await settle(800);
+  let review = { notes: [] };
+  const upload = async (kind, file) => {
+    await click(`a.upload-${kind}`); act('parent', kind === 'vocab' ? 'Upload vocabulary worksheet' : 'Upload spelling list or newsletter');
+    const payload = [{ name: path.basename(file), b64: fs.readFileSync(file).toString('base64') }];
+    await js(`const files = ${JSON.stringify(payload)}.map((p) => new File([Uint8Array.from(atob(p.b64), (c) => c.charCodeAt(0))], p.name, { type: 'image/png' }));
+      const input = document.getElementById('photo-input'); const dt = new DataTransfer(); files.forEach((f) => dt.items.add(f)); input.files = dt.files; input.dispatchEvent(new Event('change'));
+      for (let i = 0; i < 100 && !document.querySelector('.thumb-page'); i++) await new Promise((r) => setTimeout(r, 100)); return 1;`);
+    act('parent', 'Choose the photo');
+    const tRead = Date.now();
+    await click('.read-btn'); act('parent', 'Read the photo');
+    await js(`for (let i = 0; i < 900 && !document.querySelector('.commit-btn'); i++) await new Promise((r) => setTimeout(r, 200)); return 1;`);
+    readTimes.push((Date.now() - tRead) / 1000);
+    const rv = await js(`return { vo: document.getElementById('ocr-vocab').value, notes: [...document.querySelectorAll('.import-notes li, .notice p')].map((x) => x.innerText) };`);
+    review.notes.push(...rv.notes);
+    if (kind === 'vocab') {
+      // Correct what the reader got wrong (compare with the photo).
+      const vo = rv.vo.replace(/enjoyable or \S+$/m, (m) => { if (m !== 'enjoyable or pleasant') fixes.push(`"${m}" → "enjoyable or pleasant"`); return 'enjoyable or pleasant'; });
+      await js(`const t = document.getElementById('ocr-vocab'); t.value = ${JSON.stringify(vo)}; t.dispatchEvent(new Event('input')); return 1;`);
+      fixes.forEach((f) => act('parent', `Correct a misread on the review screen: ${f}`));
+    }
+    await click('.commit-btn'); act('parent', 'Add to the lesson as drafts (returns to Add words)');
+    await settle(800);
+  };
+  await upload('spelling', pages[0]);
+  await upload('vocab', pages[1]);
+  const readSecs = readTimes.reduce((a, x) => a + x, 0);
+  await click('.wizard-next'); act('parent', 'Continue to Review');
 
   // ── Sentences ──
   let w = await js(`return await WW.store.getWeek(${JSON.stringify(wid)});`);
@@ -66,7 +76,7 @@ try {
     const spellSentences = { rings: 'Her phone rings at dinner time.', snacks: 'We packed snacks for the trip.', glasses: 'Grandpa wears glasses to read.', desks: 'Our desks are in a circle.', jumps: 'The frog jumps into the pond.', buzzes: 'A bee buzzes near the flowers.', crashes: 'The wave crashes on the sand.', shops: 'Mom shops for food on Saturday.', boxes: 'We stacked the boxes in the garage.', trees: 'The trees turn orange in the fall.', mends: 'Dad mends the hole in my jacket.', tables: 'The tables in the lunchroom are long.', flashes: 'The camera flashes when it takes a picture.', bushes: 'A rabbit hid in the bushes.', thanks: 'She said thanks for the gift.' };
     const vocabSentences = { sincere: 'His sincere smile showed he was really happy for me.', agreeable: 'The weather was agreeable, so we ate outside.', capable: 'She is capable of riding her bike without help.', impartial: 'The referee stayed impartial and treated both teams the same.', author: 'The author signed my copy of her book.', generous: 'Our generous neighbor shared his apples with us.', diligent: 'A diligent student checks her work carefully.' };
     for (const [sec, map] of [['spelling', spellSentences], ['vocab', vocabSentences]]) {
-      await js(`[...document.querySelectorAll('.btn')].filter((x) => /Add example sentences/.test(x.textContent))[${sec === 'spelling' ? 0 : 1}].click(); return 1;`); await settle(); act('parent', `Open "Add example sentences" (${sec})`);
+      await js(`[...document.querySelectorAll('.btn')].filter((x) => /Add example sentences/.test(x.textContent))[${sec === 'spelling' ? 1 : 0}].click(); return 1;`); await settle(); act('parent', `Open "Add example sentences" (${sec})`);
       act('parent', 'Copy the request'); act('external', `Paste the request into a writing helper, generate, copy the answer (${sec})`, 3);
       await js(`const tas = document.querySelectorAll('.dialog textarea'); tas[1].value = ${JSON.stringify(Object.entries(map).map(([k, v]) => `${k}: ${v}`).join('\n'))}; return 1;`); act('parent', 'Paste the answer');
       await click('.dialog .btn-primary', 'Use these sentences'); act('parent', 'Use these sentences'); await settle(400);
@@ -83,7 +93,9 @@ try {
     await new Promise((r) => setTimeout(r, 400)); return { acks, ticks, kinds };`);
   act('parent', 'Acknowledge warnings (after checking each against the photo)', r.acks);
   act('parent', 'Tick "Checked against the sheet/list" for each word', r.ticks);
-  await click('.approve-btn'); act('parent', 'Approve this week');
+  await click('.wizard-next'); act('parent', 'Continue to Approve');
+  await click('.verify-box'); act('parent', 'Confirm the final check (compared every word with the sheets)');
+  await click('.approve-btn'); act('parent', 'Approve and give to the student');
   w = await js(`return await WW.store.getWeek(${JSON.stringify(wid)});`);
   const snap = await js(`return await WW.store.getApprovedLesson(${JSON.stringify(wid)});`);
 
@@ -143,7 +155,7 @@ try {
 
   // ── Report ──
   const sum = (who) => steps[who].reduce((n, s) => n + s.n, 0);
-  console.log(`\nSUNDAY WALKTHROUGH (sentences: ${SENTENCE_MODE}) — Sept 28–Oct 2 teacher newsletter, 2 pages (not camera photos)`);
+  console.log(`\nSUNDAY WALKTHROUGH (lesson wizard; sentences: ${SENTENCE_MODE}) — Sept 28–Oct 2 teacher newsletter, 2 pages uploaded one per section (not camera photos)`);
   console.log(`Imported: ${counts.spelling} spelling, ${counts.vocab} vocabulary. Reading time (desktop, headless): ${readSecs.toFixed(1)} s.`);
   console.log('Review-screen notes shown:', review.notes.filter((n) => !/Check the text against/.test(n)).join(' | ') || 'none');
   console.log(`Corrections typed on the review screen: ${fixes.length} (${fixes.join('; ') || '—'})`);

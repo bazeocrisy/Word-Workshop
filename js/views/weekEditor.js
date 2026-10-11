@@ -31,10 +31,12 @@ function sourceBadge(it) {
 
 const linesToText = (lines) => lines.map((l) => l.text).join('\n');
 
-class Editor {
+// Also the base of the lesson wizard's "Add words" and "Review" steps (views/wizard.js).
+export class Editor {
   constructor(week, student, snapshots) {
     this.w = week; this.student = student; this.snapshots = snapshots;
     this.queue = Promise.resolve();
+    this.home = `#/parent/week/${week.id}`; // where to go to show what is saved
   }
 
   get who() { return this.student ? this.student.displayName : 'The student'; }
@@ -48,7 +50,7 @@ class Editor {
         this.w.revision = saved.revision; this.w.editLog = saved.editLog;
       } catch (e) {
         await alertDialog('Your last change was not saved', `${e.message || 'The browser refused to save.'} The device may be out of storage space. The page will now show what is saved.`);
-        go(`#/parent/week/${this.w.id}`);
+        go(this.home);
         return;
       }
       this.refreshSummary();
@@ -157,12 +159,13 @@ class Editor {
       this.w.sources.push(s.source);
       await this.save({ action: 'sample loaded', detail: `${s.spelling.length} spelling, ${s.vocab.length} vocabulary (unverified sample data)` });
       toast('Sample words added. Check each one before approving.');
-      go(`#/parent/week/${this.w.id}`);
+      go(this.home);
     } catch (e) { toast(e.message, 'error'); }
   }
 
-  async pasteDialog() {
+  async pasteDialog(preset) {
     const target = h('select', null, h('option', { value: 'spelling' }, 'Spelling words'), h('option', { value: 'vocab' }, 'Vocabulary words and definitions'), h('option', { value: 'both' }, 'Both (the text has "Spelling" and "Vocabulary" headings)'));
+    if (preset) { target.value = preset; target.dataset.touched = '1'; }
     const text = h('textarea', { rows: 9, placeholder: 'Spelling: one word per line, or separated by commas.\nVocabulary: Word - definition (one per line).' });
     const replace = h('input', { type: 'checkbox' });
     const preview = h('div', { class: 'paste-preview', 'aria-live': 'polite' });
