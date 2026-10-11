@@ -507,7 +507,7 @@ class Workspace extends Editor {
   rowExtras(kind, it) {
     const vo = kind === 'vocab';
     const key = `x:${it.id}`;
-    const sentenceState = it.sentence.trim() ? (it.sentenceSource === 'generated' ? 'sample sentence' : 'sentence ✓') : 'no sentence';
+    const sentenceState = it.sentence.trim() ? ({ generated: 'sample sentence: check it', pasted: 'pasted sentence: check it' }[it.sentenceSource] || 'sentence ✓') : 'no sentence';
     const pictureState = vo ? (it.image ? (it.image.kind === 'sample' ? 'sample picture' : 'picture ✓') : 'no picture') : null;
     const d = h('details', { class: 'ws-extra', open: !!this.open[key] }, h('summary', null, [sentenceState, pictureState].filter(Boolean).join(' · ')));
     d.addEventListener('toggle', () => {
@@ -541,6 +541,15 @@ class Workspace extends Editor {
         this.pictureBlock(it, () => this.refreshCheck(kind, it.id)));
     }
     return h('div', { class: 'ws-extra-body' }, parts);
+  }
+
+  async sentenceHelper(kind) {
+    const before = new Map(this.list(kind).map((it) => [it.id, it.reviewed]));
+    await super.sentenceHelper(kind);
+    let restored = 0;
+    for (const it of this.list(kind)) if (before.get(it.id) && !it.reviewed) { it.reviewed = true; restored++; }
+    if (restored) await this.save({ action: 'checked', detail: `${restored} words stay checked (only their example sentences were added)` });
+    if (this.stage === 'check') { this.drawTable(kind); this.refreshCheck(); }
   }
 
   // ── Row actions ──
@@ -711,15 +720,18 @@ class Workspace extends Editor {
     try { canvas = this.pagesInMemory.get(src.id) || await sourceCanvas(src); } catch (e) { toast(e.message, 'error'); return; }
     const v = await markTableCorners(canvas, src.table || {}, `Worksheet photo: ${src.name}`, 'Read the cards');
     if (!v || v === 'remove') return;
+    if (this.job && !this.job.error) { toast('Wait for the photo being read to finish.', 'error'); return; }
     const mine = this.w.vocab.filter((it) => it.sourceId === src.id);
     const changed = mine.filter((it) => it.reviewed || it.definitionLog.length).length;
     if (changed && !(await confirmDialog('Replace these words?', `Reading the photo again replaces its ${mine.length} vocabulary words, including ${changed} you already checked or corrected.`, 'Read again'))) return;
-    toast('Reading the word cards…');
+    const job = this.job = { label: 'Reading the word cards…', frac: 0, error: null, subject: 'vocabulary cards' };
+    this.drawProgress();
     let result;
-    try { result = await readPhoto({ canvas, corners: v.corners, cols: v.cols, rows: v.rows }, { target: 'vocab', onProgress: (f, label) => toast(label) }); }
-    catch (e) { console.warn(e); await alertDialog('The cards could not be read', readerError(e)); return; }
+    try { result = await readPhoto({ canvas, corners: v.corners, cols: v.cols, rows: v.rows }, { target: 'vocab', onProgress: (f, label) => { job.frac = f; job.label = label; this.drawProgress(); } }); }
+    catch (e) { console.warn(e); job.error = readerError(e); this.drawProgress(); return; }
     const d = draftsFromReading(result, 'vocab');
-    if (!d.voItems.length) { await alertDialog('No words were found', 'Check that the four handles are on the outside corners of the table, and the card counts are right.'); return; }
+    if (!d.voItems.length) { job.error = 'No words were found. Check that the four handles are on the outside corners of the table, and the card counts are right.'; this.drawProgress(); return; }
+    this.job = null; this.drawProgress();
     d.voItems.forEach((it) => { it.sourceId = src.id; this.fresh.add(it.id); });
     const firstAt = this.w.vocab.findIndex((it) => it.sourceId === src.id);
     this.w.vocab = this.w.vocab.filter((it) => it.sourceId !== src.id);

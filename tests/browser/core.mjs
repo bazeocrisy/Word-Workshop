@@ -44,7 +44,7 @@ export default {
     check('week survives a page reload', persisted);
     await b.go('#/parent');
     t = await b.text();
-    check('an unapproved lesson is listed as in progress', /Lessons in progress \(1\)/.test(t) && /Needs review/.test(t), t.slice(0, 400));
+    check('an unapproved lesson is listed as in progress', /Lessons in progress \(2\)/.test(t) && /Needs review/.test(t), t.slice(0, 400));
 
     // Student cannot open a week that is not approved, even by typing the URL.
     await b.go(`#/s/${alex}/w/${wid}`);
