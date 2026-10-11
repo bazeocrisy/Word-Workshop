@@ -15,7 +15,8 @@ const strOrNull = (x) => x === null || x === undefined || isStr(x);
 function checkVocabItem(v, where, err) {
   if (!isObj(v)) return err(`${where}: a vocabulary item is malformed.`);
   const bad = [];
-  for (const k of ['id', 'word', 'originalTranscription', 'sourceDefinition', 'sentence']) if (!isStr(v[k])) bad.push(k);
+  if (!isStr(v.id) || !ID_RE.test(v.id)) bad.push('id');
+  for (const k of ['word', 'originalTranscription', 'sourceDefinition', 'sentence']) if (!isStr(v[k])) bad.push(k);
   if (!strOrNull(v.parentDefinition)) bad.push('parentDefinition');
   if (!strOrNull(v.sentenceSource)) bad.push('sentenceSource');
   for (const k of ['ackKeys', 'importedFlags', 'definitionLog']) if (!isArr(v[k])) bad.push(k);
@@ -27,7 +28,8 @@ function checkVocabItem(v, where, err) {
 function checkSpellingItem(s, where, err) {
   if (!isObj(s)) return err(`${where}: a spelling item is malformed.`);
   const bad = [];
-  for (const k of ['id', 'word', 'originalTranscription', 'sentence']) if (!isStr(s[k])) bad.push(k);
+  if (!isStr(s.id) || !ID_RE.test(s.id)) bad.push('id');
+  for (const k of ['word', 'originalTranscription', 'sentence']) if (!isStr(s[k])) bad.push(k);
   if (!strOrNull(s.sentenceSource)) bad.push('sentenceSource');
   if (!isArr(s.ackKeys)) bad.push('ackKeys');
   if (typeof s.reviewed !== 'boolean') bad.push('reviewed');
@@ -70,7 +72,8 @@ function validate(obj) {
     if (!studentIds.has(w.studentId)) err(`${where} belongs to a student that is not in the backup.`);
     if (!isStr(w.startDate)) err(`${where} has no start date.`);
     if (!isInt(w.revision) || !isInt(w.approvedVersion ?? -1, 0)) err(`${where} has an invalid revision or version number.`);
-    if (w.approvedRevision != null && !isInt(w.approvedRevision)) err(`${where} has an invalid approved revision.`);
+    if (w.approvedRevision != null && (!isInt(w.approvedRevision) || (isInt(w.revision) && w.approvedRevision > w.revision))) err(`${where} has an invalid approved revision.`);
+    if (w.approvedContentKey != null && !isStr(w.approvedContentKey)) err(`${where} has an invalid approval fingerprint.`);
     if (!isArr(w.editLog) || !isArr(w.sources ?? []) || !isObj(w.settings)) err(`${where} is missing its history or settings.`);
     if (!isArr(w.vocab) || !isArr(w.spelling)) { err(`${where} is missing its word lists.`); return; }
     w.vocab.forEach((v) => checkVocabItem(v, where, err));
@@ -89,10 +92,10 @@ function validate(obj) {
     if (s.id !== `${s.weekId}@${s.version}`) err(`${where} has an inconsistent id.`);
     if (!isArr(s.vocab) || !isArr(s.spelling)) { err(`${where} is missing its word lists.`); return; }
     s.vocab.forEach((v) => {
-      if (!isObj(v) || !isStr(v.word) || !isStr(v.definition) || !isStr(v.teacherDefinition) || !isStr(v.sentence ?? '')) err(`${where} has a malformed vocabulary entry.`);
+      if (!isObj(v) || !isStr(v.id) || !isStr(v.word) || !isStr(v.definition) || !isStr(v.teacherDefinition) || !isStr(v.sentence ?? '')) err(`${where} has a malformed vocabulary entry.`);
       else if (v.image && isStr(v.image.ref) && !v.image.ref.startsWith('sample:') && !imageIds.has(v.image.ref)) err(`${where} uses a picture that is not in the backup.`);
     });
-    s.spelling.forEach((v) => { if (!isObj(v) || !isStr(v.word) || !isStr(v.sentence ?? '')) err(`${where} has a malformed spelling entry.`); });
+    s.spelling.forEach((v) => { if (!isObj(v) || !isStr(v.id) || !isStr(v.word) || !isStr(v.sentence ?? '')) err(`${where} has a malformed spelling entry.`); });
     for (const e of snapshotIntegrityErrors(s)) err(`${where}: ${e}`);
   });
   weekById.forEach((w) => { if (w.approvedVersion && !snapKeys.has(`${w.id}@${w.approvedVersion}`)) err(`Week "${w.id}" says it is approved but its approved lesson is missing.`); });

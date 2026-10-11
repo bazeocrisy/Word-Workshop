@@ -32,6 +32,7 @@ export function isHeading(text) {
   if (/:$/.test(t) && words.length <= 5) return true;
   if (HEADING_WORDS.test(t) && words.length <= 6 && !/\s[-–—=:]\s|\t/.test(t)) return true;
   if (/^(spelling|vocabulary)\b/i.test(t)) return true;
+  if (/^(words?|terms?|vocabulary words?)\s*[\t:|\-–—]?\s*(definitions?|meanings?)$/i.test(t)) return true; // table header
   if (t.length > 3 && t === t.toUpperCase() && /[A-Z]/.test(t) && words.length >= 2 && words.length <= 5 && !/[-–—:=]/.test(t)) return true;
   if (/(https?:\/\/|www\.|@\w)/i.test(t)) return true;
   return false;
@@ -56,6 +57,28 @@ export function splitPair(text) {
   return null;
 }
 
+const JOINED_NOTE = 'This definition was joined from two lines. Check it against the sheet.';
+const TRAILING_FUNCTION_WORD = /\b(a|an|the|and|or|of|to|in|on|for|with|that|by|from|at|as|is|are|be|who|which|when|where|but|than|your|their|its|over|under|about|into)$/i;
+
+/** Is `next` the continuation of an unfinished definition `def`? */
+function continues(def, next) {
+  const d = String(def || '').trim(), n = String(next || '').trim();
+  if (!d || !n || /[.!?;]$/.test(d)) return false;
+  if (splitPair(n)) return false;
+  if (TRAILING_FUNCTION_WORD.test(d)) return true;            // "…a picture or / Pattern seen from Earth"
+  const startsWithFunctionWord = LEADING_FUNCTION_WORD.test(n); // "…works / for money"
+  // A short lower-case line could be the next vocabulary word ("…pattern / peculiar"), so it needs a stronger sign.
+  if (isWordLike(n) && n.split(/\s+/).length <= 2) return startsWithFunctionWord;
+  return /^[a-z(]/.test(n);
+}
+/** True while a column of definitions is still being matched to an earlier column of words. */
+function fillingColumn(items) {
+  let n = 0; while (n < items.length && items[items.length - 1 - n].kind === 'text') n++;
+  let k = 0; while (n + k < items.length && items[items.length - 1 - n - k].kind === 'word') k++;
+  return k >= 2 && n >= 1 && n < k;
+}
+const LEADING_FUNCTION_WORD = /^(a|an|the|and|or|of|to|in|on|for|with|that|by|from|at|as|is|are|be|who|which|when|where|but|than|your|their|its|over|under|about|into)\b/i;
+
 /**
  * Vocabulary rows from lines. Handles:
  *  "Word - definition" / "Word: definition" / tab or wide gap,
@@ -70,7 +93,17 @@ export function parseVocabLines(lines) {
   for (const ln of lines) {
     const { text, number } = stripMarker(ln.text);
     if (!text) continue;
-    if (isHeading(text)) { ignored.push(text); continue; }
+    // A wrapped definition: the previous line's definition is unfinished and this line continues it.
+    const prevItem = items[items.length - 1];
+    const prevDef = prevItem ? (prevItem.kind === 'pair' ? prevItem.definition : prevItem.kind === 'text' ? prevItem.text : '') : '';
+    const join = prevDef && number == null && !fillingColumn(items) && continues(prevDef, text)
+      && (TRAILING_FUNCTION_WORD.test(prevDef.trim()) || !isHeading(text)); // "…a picture or / Pattern…" beats the heading check
+    if (!join && isHeading(text)) { ignored.push(text); continue; }
+    if (join) {
+      if (prevItem.kind === 'pair') prevItem.definition += ' ' + text; else prevItem.text += ' ' + text;
+      prevItem.conf = minConf(prevItem.conf, ln.conf); prevItem.joined = true;
+      continue;
+    }
     const pair = splitPair(text);
     if (pair) items.push({ kind: 'pair', ...pair, number, conf: ln.conf });
     else if (isWordLike(text) && text.split(/\s+/).length <= 2) items.push({ kind: 'word', word: text.replace(/[.,;:]$/, ''), number, conf: ln.conf });
@@ -78,7 +111,8 @@ export function parseVocabLines(lines) {
   }
   for (let i = 0; i < items.length; i++) {
     const it = items[i];
-    if (it.kind === 'pair') { rows.push({ word: it.word, definition: it.definition, conf: it.conf, number: it.number, notes: [] }); continue; }
+    const joinNote = (x) => (x && x.joined ? [JOINED_NOTE] : []);
+    if (it.kind === 'pair') { rows.push({ word: it.word, definition: it.definition, conf: it.conf, number: it.number, notes: joinNote(it) }); continue; }
     if (it.kind === 'word') {
       // A block of k words followed by k definitions (two-column sheet read column by column).
       let k = 0; while (items[i + k] && items[i + k].kind === 'word') k++;
@@ -89,7 +123,7 @@ export function parseVocabLines(lines) {
       }
       const next = items[i + 1];
       if (next && next.kind === 'text') {
-        rows.push({ word: it.word, definition: next.text, conf: minConf(it.conf, next.conf), number: it.number, notes: [] });
+        rows.push({ word: it.word, definition: next.text, conf: minConf(it.conf, next.conf), number: it.number, notes: joinNote(next) });
         i += 1; continue;
       }
       rows.push({ word: it.word, definition: '', conf: it.conf, number: it.number, notes: ['No definition was found for this word.'] });
@@ -97,8 +131,10 @@ export function parseVocabLines(lines) {
     }
     // Text with no word before it: continuation of the previous definition, or a row whose separator was lost.
     const prev = rows[rows.length - 1];
-    if (prev && prev.definition && /^[a-z(]/.test(it.text) && it.number == null) {
-      prev.definition += ' ' + it.text; prev.conf = minConf(prev.conf, it.conf); continue;
+    if (prev && prev.definition && it.number == null && continues(prev.definition, it.text)) {
+      prev.definition += ' ' + it.text; prev.conf = minConf(prev.conf, it.conf);
+      if (!prev.notes.includes(JOINED_NOTE)) prev.notes.push(JOINED_NOTE);
+      continue;
     }
     const m = /^([\p{L}][\p{L}'’-]*)\s+(.+)$/u.exec(it.text);
     if (m) rows.push({ word: m[1], definition: m[2], conf: it.conf, number: it.number, notes: ['The app guessed where the word ends and the definition begins. Check it.'] });
@@ -115,12 +151,25 @@ export const parseVocabText = (text) => parseVocabLines(toLines(text));
  * Spelling words from lines. Accepts one word per line, comma/semicolon lists, and numbered lists laid out in
  * columns ("1. rushed   6. buzzed") — numbers restore the teacher's order.
  */
+const STOPWORDS = new Set(['the', 'a', 'an', 'and', 'is', 'are', 'on', 'in', 'of', 'to', 'for', 'your', 'our', 'will', 'be', 'please', 'this', 'that', 'with', 'by', 'at', 'we', 'you', 'have', 'has', 'every', 'each', 'night', 'test', 'friday', 'monday']);
+function looksLikeSentence(raw, ws) {
+  if (/[.!?]$/.test(raw.trim())) return true;
+  return ws.length >= 3 && ws.some((w) => STOPWORDS.has(w.toLowerCase()));
+}
+
 export function parseSpellingLines(lines) {
   const tokens = [];
   const ignored = [];
+  const notes = [];
   for (const ln of lines) {
-    const raw = String(ln.text ?? '').replace(/ /g, ' ').trim();
+    let raw = String(ln.text ?? '').replace(/ /g, ' ').trim();
     if (!raw) continue;
+    // "Bonus: stepped" / "Challenge words: tomorrow, yesterday" — keep the words, mention the label.
+    const label = /^([\p{L} ]{2,30}):\s*(\S.*)$/u.exec(raw);
+    if (label && label[2].split(/[\s,;]+/).filter(Boolean).every((x) => WORD_RE.test(x.replace(/[.,;]$/, '')))) {
+      if (!/^(spelling|words?|word list|list|spelling words?|spelling list)$/i.test(label[1].trim())) notes.push(`Words after "${label[1].trim()}:" were included. Remove them if they are not part of the test.`);
+      raw = label[2];
+    }
     if (isHeading(stripMarker(raw).text) && !/\d/.test(raw.slice(0, 3))) { ignored.push(raw); continue; }
     // Split a line into numbered chunks if it has several numbers ("1. rushed 6. buzzed 11. hunted").
     const numbered = [...raw.matchAll(/(?:^|\s)\(?(\d{1,2})[.)\]:]?\s+([\p{L}][\p{L}'’-]*)/gu)];
@@ -132,11 +181,12 @@ export function parseSpellingLines(lines) {
     for (const p of parts) {
       const word = p.replace(/[.,;:!?)"]+$/, '').replace(/^["(]+/, '');
       if (!word) continue;
-      if (word.split(/\s+/).length > 2) {
-        // A sentence or note rather than a word — keep single words only if the line is clearly a list.
-        const ws = word.split(/\s+/);
-        if (ws.every((x) => WORD_RE.test(x)) && parts.length === 1 && ws.length <= 6 && lines.length <= 2) ws.forEach((x) => tokens.push({ word: x, number: null, conf: ln.conf }));
-        else ignored.push(word);
+      const ws = word.split(/\s+/);
+      if (ws.length > 1) {
+        // Words separated by single spaces (a word bank, or how photo-text tools return a row) are separate
+        // spelling words. A line that reads like a sentence or note is set aside and shown to the parent.
+        if (ws.every((x) => WORD_RE.test(x)) && !looksLikeSentence(p, ws)) ws.forEach((x) => tokens.push({ word: x, number: null, conf: ln.conf }));
+        else ignored.push(p);
         continue;
       }
       tokens.push({ word, number: stripMarker(raw).number && parts.length === 1 ? stripMarker(raw).number : null, conf: ln.conf });
@@ -148,7 +198,6 @@ export function parseSpellingLines(lines) {
     word: t.word, conf: t.conf, number: t.number,
     notes: WORD_RE.test(t.word.replace(/\s/g, '')) ? [] : ['Contains numbers or symbols. Check the spelling.'],
   }));
-  const notes = [];
   if (allNumbered) {
     const nums = tokens.map((t) => t.number);
     const missing = []; for (let n = 1; n <= Math.max(...nums); n++) if (!nums.includes(n)) missing.push(n);
@@ -172,6 +221,7 @@ export function splitSections(lines) {
     const t = String(ln.text || '').trim();
     if (/\bspelling\b/i.test(t) && t.split(/\s+/).length <= 6) { cur = 'spelling'; continue; }
     if (/\bvocab(ulary)?\b/i.test(t) && t.split(/\s+/).length <= 6) { cur = 'vocab'; continue; }
+    if (/^(reminders?|notes?|homework|upcoming|important dates|dates|news|announcements?|math|reading|science|social studies)\b/i.test(t) && t.split(/\s+/).length <= 4) { cur = 'unknown'; continue; }
     out[cur].push(ln);
   }
   return out;

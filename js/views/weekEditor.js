@@ -93,7 +93,16 @@ class Editor {
       st === 'approved' ? h('p', { class: 'hint' }, 'Nothing has changed since the last approval.')
         : blockers.length ? h('div', null, h('p', { class: 'hint' }, 'Before you can approve:'), h('ul', { class: 'blockers' }, blockers.slice(0, 12).map((b) => h('li', null, b))), blockers.length > 12 ? h('p', { class: 'hint' }, `…and ${blockers.length - 12} more.`) : null)
           : h('p', { class: 'ok-text' }, 'Everything is checked. Approving makes this version available to the student.'),
+      blockers.length && st !== 'approved' ? btn('Go to the next word to check', () => this.jumpToNext(), 'btn-ghost next-check') : null,
       approveBtn);
+  }
+
+  jumpToNext() {
+    const cards = [...this.root.querySelectorAll('[data-item]')];
+    const target = cards.find((c) => !c.classList.contains('is-reviewed') || c.querySelector('.flag-warn'));
+    if (!target) return;
+    target.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    (target.querySelector('.flag-warn .ack-box') || target.querySelector('.word-input'))?.focus({ preventScroll: true });
   }
 
   async approve() {
@@ -158,6 +167,8 @@ class Editor {
       const parts = [];
       if (r.sp) parts.push(h('p', null, h('strong', null, `${r.sp.words.length} spelling words: `), r.sp.words.map((w) => w.word).join(', ') || '—'), ...r.sp.notes.map((n) => h('p', { class: 'warn-text' }, n)));
       if (r.vo) parts.push(h('p', null, h('strong', null, `${r.vo.rows.length} vocabulary words: `), r.vo.rows.map((x) => x.word + (x.definition ? '' : ' (no definition)')).join(', ') || '—'));
+      const ign = [...(r.sp?.ignored || []), ...(r.vo?.ignored || [])];
+      if (ign.length) parts.push(h('p', { class: 'hint' }, h('strong', null, 'Left out (headings or notes): '), ign.join(' · ')));
       if (target.value === 'both' && !r.sp && !r.vo) parts.push(h('p', { class: 'warn-text' }, 'No "Spelling" or "Vocabulary" headings found.'));
       fill(preview, ...parts);
     };
@@ -232,21 +243,29 @@ class Editor {
 
   listControls(kind, it, idx, list) {
     const move = async (d) => {
-      const j = idx + d;
-      if (j < 0 || j >= list.length) return;
-      [list[idx], list[j]] = [list[j], list[idx]];
+      if (this.moving) return; // a quick double tap must not undo itself
+      const i = list.indexOf(it), j = i + d;
+      if (i < 0 || j < 0 || j >= list.length) return;
+      this.moving = true;
+      [list[i], list[j]] = [list[j], list[i]];
       await this.save({ action: 'reordered', detail: `${kind} "${it.word}" moved ${d < 0 ? 'up' : 'down'}` });
       this.rerender(kind);
-      this.root.querySelector(`[data-item="${it.id}"] .mv-${d < 0 ? 'up' : 'down'}:not([disabled])`)?.focus();
+      this.moving = false;
+      const card = this.root.querySelector(`[data-item="${it.id}"]`);
+      (card?.querySelector(`.mv-${d < 0 ? 'up' : 'down'}:not([disabled])`) || card?.querySelector('.word-input'))?.focus();
     };
     return h('div', { class: 'item-controls' },
       btn('↑', () => move(-1), 'btn-ghost btn-small mv-up', { 'aria-label': `Move ${it.word || 'word'} up`, disabled: idx === 0 }),
       btn('↓', () => move(1), 'btn-ghost btn-small mv-down', { 'aria-label': `Move ${it.word || 'word'} down`, disabled: idx === list.length - 1 }),
       btn('Delete', async () => {
         if (!(await confirmDialog('Delete word?', `Delete "${it.word || 'this word'}" from this week?`, 'Delete', true))) return;
-        list.splice(list.indexOf(it), 1);
+        const at = list.indexOf(it);
+        list.splice(at, 1);
         await this.save({ action: 'deleted', detail: `${kind} "${it.word}"` });
         this.rerender(kind);
+        const section = kind === 'vocab' ? this.vocabSection : this.spellingSection;
+        const inputs = section.querySelectorAll('[data-item] .word-input');
+        (inputs[Math.min(at, inputs.length - 1)] || section.querySelector(kind === 'vocab' ? '.add-vo' : '.add-sp'))?.focus();
       }, 'btn-ghost btn-small del-btn', { 'aria-label': `Delete ${it.word || 'word'}` }));
   }
 
@@ -255,12 +274,14 @@ class Editor {
     if (!flags.length) return null;
     return h('ul', { class: 'flags' }, flags.map((f) => {
       if (f.level === 'info') return h('li', { class: 'flag flag-info' }, h('span', { 'aria-hidden': 'true' }, 'ℹ️ '), f.message);
-      const cb = h('input', { type: 'checkbox', checked: f.acknowledged, class: 'ack-box' });
+      const cb = h('input', { type: 'checkbox', checked: f.acknowledged, class: 'ack-box', dataset: { key: f.key } });
       cb.addEventListener('change', async () => {
+        const card = cb.closest('[data-item]');
         it.ackKeys = (it.ackKeys || []).filter((k) => k !== f.key);
         if (cb.checked) it.ackKeys.push(f.key);
         await this.save({ action: cb.checked ? 'warning acknowledged' : 'warning reopened', detail: `"${it.word}": ${f.message}` });
         refresh();
+        [...(card?.querySelectorAll('.ack-box') || [])].find((x) => x.dataset.key === f.key)?.focus(); // keep keyboard place
       });
       return h('li', { class: `flag ${f.acknowledged ? 'flag-ack' : 'flag-warn'}` },
         h('span', { class: 'flag-msg' }, h('span', { 'aria-hidden': 'true' }, '⚠️ '), f.message),
@@ -271,9 +292,11 @@ class Editor {
   reviewedBox(it, refresh, label) {
     const cb = h('input', { type: 'checkbox', checked: it.reviewed, class: 'reviewed-box' });
     cb.addEventListener('change', async () => {
+      const card = cb.closest('[data-item]');
       it.reviewed = cb.checked;
       await this.save({ action: cb.checked ? 'checked' : 'unchecked', detail: `"${it.word}"` });
       refresh();
+      card?.querySelector('.reviewed-box')?.focus(); // keep keyboard place
     });
     return h('label', { class: 'check reviewed' }, cb, h('span', null, label));
   }
@@ -426,6 +449,15 @@ class Editor {
 
   pictureBlock(it, refresh) {
     const wrap = h('div', { class: 'picture-edit' });
+    const altField = () => {
+      const id = `alt-${it.id}`;
+      const input = h('input', { type: 'text', id, class: 'alt-input', value: it.image.alt || '', maxlength: '120' });
+      input.addEventListener('change', async () => {
+        it.image = { ...it.image, alt: input.value.trim() || `Picture for ${it.word}` };
+        await this.save({ action: 'picture description', detail: `"${it.word}": ${it.image.alt}` });
+      });
+      return h('div', { class: 'field' }, h('label', { for: id }, 'Describe the picture (read aloud by screen readers)'), input);
+    };
     const draw = async () => {
       const url = it.image ? await store.imageUrl(it.image.ref) : null;
       const file = h('input', { type: 'file', accept: 'image/*', class: 'sr-only', id: `pic-${it.id}`, tabindex: '-1' });
@@ -435,7 +467,7 @@ class Editor {
           const blob = await prepareForStorage(f, 1000);
           const ref = await store.saveImage(blob, { kind: 'upload', name: f.name });
           it.image = { ref, kind: 'upload', alt: `Picture for ${it.word}` }; it.reviewed = false;
-          await this.save({ action: 'picture added', detail: `"${it.word}"` }); draw(); refresh();
+          await this.save({ action: 'picture added', detail: `"${it.word}"` }); await draw(); refresh(); wrap.querySelector('.alt-input')?.focus();
         } catch (e) { toast(e instanceof ImageError ? e.message : 'That picture could not be used.', 'error'); }
       });
       fill(wrap, 
@@ -444,9 +476,10 @@ class Editor {
           url ? h('img', { src: url, alt: it.image.alt || '', class: 'thumb' }) : h('div', { class: 'thumb thumb-empty' }, 'No picture'),
           h('div', null,
             h('p', { class: 'hint' }, it.image ? (it.image.kind === 'sample' ? 'Sample illustration that comes with the app. Check that it fits the meaning.' : 'Picture you added.') : 'Optional. Without one, students see a "picture coming soon" card.'),
+            it.image && it.image.kind === 'upload' ? altField() : null,
             h('div', { class: 'row' },
               btn(it.image ? 'Change picture' : 'Add a picture', () => file.click(), 'btn-ghost btn-small'), file,
-              it.image ? btn('Remove', async () => { it.image = null; it.reviewed = false; await this.save({ action: 'picture removed', detail: `"${it.word}"` }); draw(); refresh(); }, 'btn-ghost btn-small') : null,
+              it.image ? btn('Remove', async () => { it.image = null; it.reviewed = false; await this.save({ action: 'picture removed', detail: `"${it.word}"` }); await draw(); refresh(); wrap.querySelector('button')?.focus(); }, 'btn-ghost btn-small') : null,
               btn('Picture idea', () => this.copyPicturePrompt(it), 'btn-ghost btn-small')))));
     };
     draw();

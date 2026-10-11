@@ -73,3 +73,33 @@ test('sentences pasted back are matched to words', () => {
   assert.equal(found.get('blasted'), 'The rocket blasted off.');
   assert.deepEqual(unmatched, ['Nothing here.']);
 });
+
+test('review fixes: word banks and two-per-line lists become separate words (M2 review, Major 2)', () => {
+  assert.deepEqual(parseSpellingText('rushed blasted washed winked\nopened buzzed asked called').words.map((w) => w.word),
+    ['rushed', 'blasted', 'washed', 'winked', 'opened', 'buzzed', 'asked', 'called']);
+  assert.deepEqual(parseSpellingText('rushed blasted\nwashed winked').words.map((w) => w.word), ['rushed', 'blasted', 'washed', 'winked']);
+  const bonus = parseSpellingText('1. rushed\n2. blasted\nBonus: stepped\nChallenge words: tomorrow, yesterday');
+  assert.deepEqual(bonus.words.map((w) => w.word), ['rushed', 'blasted', 'stepped', 'tomorrow', 'yesterday']);
+  assert.ok(bonus.notes.some((n) => /Bonus/.test(n)) && bonus.notes.some((n) => /Challenge/.test(n)));
+  const note = parseSpellingText('rushed\nPlease practice every night.\nblasted');
+  assert.deepEqual(note.words.map((w) => w.word), ['rushed', 'blasted']);
+  assert.ok(note.ignored.some((x) => /practice/.test(x)), 'the note is shown as ignored, not lost silently');
+});
+
+test('review fixes: wrapped definitions are joined and flagged (M2 review, Major 3)', () => {
+  let { rows } = parseVocabText('Employee - Someone who works\nfor money\nPeculiar - strange or unusual');
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].definition, 'Someone who works for money');
+  assert.ok(rows[0].notes.some((n) => /joined/.test(n)));
+  ({ rows } = parseVocabText('Constellations - A group of stars in the night sky that make up a picture or\nPattern seen from Earth'));
+  assert.equal(rows[0].definition, 'A group of stars in the night sky that make up a picture or Pattern seen from Earth');
+  ({ rows } = parseVocabText('constellations\na group of stars that make a pattern\npeculiar\nstrange or unusual'));
+  assert.deepEqual(rows.map((r) => r.word), ['constellations', 'peculiar'], 'a lower-case next word is not swallowed');
+});
+
+test('review fixes: table header and non-word sections are not imported', () => {
+  const { rows } = parseVocabText('Word\tDefinition\nProduce\tFresh fruits and vegetables');
+  assert.deepEqual(rows.map((r) => r.word), ['Produce']);
+  const s = splitSections(['Vocabulary', 'Produce - Fresh fruits and vegetables', 'Reminders', 'Picture day is Tuesday.'].map((text) => ({ text, conf: null })));
+  assert.equal(s.vocab.length, 1);
+});

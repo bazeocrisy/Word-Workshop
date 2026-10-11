@@ -13,8 +13,8 @@ Architecture: `docs/ARCHITECTURE-PROPOSAL.md` (vanilla JS ES modules, IndexedDB,
 | # | Milestone | State |
 |---|---|---|
 | 1 | Core application, profiles, storage | **Complete** — reviewed; 5 Major + 7 Minor findings fixed (see below) |
-| 2 | Weekly lesson editor and approval | Built, tests passing; independent review in progress |
-| 3 | Vocabulary learning and assessment | Not started |
+| 2 | Weekly lesson editor and approval | **Complete** — reviewed; 4 Major + 6 Minor findings fixed (see below) |
+| 3 | Vocabulary learning and assessment | Built, tests passing; independent review in progress |
 | 4 | Spelling learning and assessment | Not started |
 | 5 | Photograph extraction and verification | Not started |
 | 6 | Illustrated-card workflow and printable materials | Not started |
@@ -43,6 +43,19 @@ No Critical findings. Major: M1 async mutator could silently lose edits → `edi
 - Approval creates an immutable snapshot version; edits after approval show "Changes pending" while students keep the previous version; version list and change history shown.
 - Vocabulary pictures: upload (resized on device), bundled sample illustrations for the sample words, "Picture idea" text. No automatic generation (see illustrations.js integration point).
 - Tests: 30 unit, 61 browser checks.
+
+### Milestone 2 review — resolution
+No Critical findings (definition integrity, approval enforcement and XSS checks passed). Major fixed: (1) -ed suggestions for longer silent-e words (decided, invited, escaped…) were "just add -ed" → now drop-e where letters prove it (replaced, rescued, sneezed) and "Check me" where they cannot (decided vs visited); quizzed/controlled fixed; sound is still suggested from the stem. (2) Paste parser dropped/merged word banks → single-space rows split into words, "Bonus:"/"Challenge words:" kept with a note, sentences/notes set aside and shown in the preview. (3) Wrapped definitions truncated → joined across lines and flagged "joined from two lines"; column layouts protected. (4) Keyboard focus lost after ticking → focus restored on the same checkbox; after delete/move/picture changes too. Minor fixed: table header lines ignored; "Reminders"-type headings end a section; double-tap ↑/↓ safe; re-ticking boxes no longer marks a week "Changes pending" (status now compares content fingerprint); parent can describe uploaded pictures (alt text); "Go to the next word to check" button; installment illustration redrawn (pay-over-time); validator item-id/approvedRevision/snapshot-entry-id checks. Accepted as-is: editing the teacher box is logged as a transcription correction (by design; parent rewording uses "my own wording").
+
+## Milestone 3 — Vocabulary learning and assessment
+- Flashcards: picture (or honest "Picture coming soon"), word, exact approved definition labelled "Teacher's definition" or "Definition (parent-edited)", example sentence, audio (word normal/slow, sentence), Back/Next and arrow keys.
+- Five activity types + Mixed, for practice and for tests: choose the meaning, choose the word, fill in the blank, matching (rounds of ≤5), write the word.
+- Fairness rules (js/vocab.js, unit-tested over many seeds): exactly one right option; distractors never share the target's word or definition and never repeat; blank needs a sentence with the exact word once and never offers a word already in the sentence; identical definitions → either word accepted; unfair questions are skipped and listed, never graded.
+- Practice: immediate feedback, explanation (word means …, example), "Try again" or "Show the answer", progress bar, first-try scoring saved.
+- Tests: no feedback until submitted; options carry no correctness markers; answer word never present in the page for written questions; review screen lists unanswered questions; confirmation to submit with blanks; leaving mid-test asks first; a test in progress survives a refresh (sessionStorage).
+- Results: score, %, encouragement, every answer with the correct answer, missed words, "Practice missed words"; saved per student/week/lesson version; retakes add new results.
+- Speech: speechSynthesis with voice selection, tap-to-start, honest status ("Playing…" only after start; explanation if it did not play), disabled with a message when unsupported. Parent "Test the voice" page.
+- Grading rules: docs/GRADING.md.
 
 ## Known limitations / decisions log
 - Data lives in one browser on one device; no sync (by design, documented in the UI).

@@ -22,9 +22,13 @@ export const SOUND_GROUPS = {
 const DOUBLE_BASES = new Set(['add', 'odd', 'ebb', 'err', 'purr', 'egg', 'inn', 'butt', 'putt', 'buzz', 'fizz', 'fuzz', 'jazz', 'whizz']);
 const VOWEL = /[aeiou]/;
 
-function group(key, base, extra) {
-  return { key, label: SPELLING_GROUPS[key].label, reason: extra || SPELLING_GROUPS[key].explain, base };
+function group(key, base, extra, stem = null) {
+  return { key, label: SPELLING_GROUPS[key].label, reason: extra || SPELLING_GROUPS[key].explain, base, stem: stem || base };
 }
+
+const vowelGroups = (s) => (s.match(/[aeiouy]+/g) || []).length;
+// Unstressed endings that take plain -ed (open → opened, offer → offered, travel → traveled).
+const PLAIN_ENDINGS = /(en|er|on|el|al|or|ar|om|um|ow|it|et)$/;
 
 /** Work out the base word and spelling-change rule for an -ed word. */
 export function spellingChange(word) {
@@ -34,14 +38,20 @@ export function spellingChange(word) {
   // cried → cry (consonant + ied). Short words like "tied"/"died" are ambiguous (tie/die), so ask.
   if (w.endsWith('ied')) {
     if (w.length > 4 && !VOWEL.test(w.at(-4))) { const base = w.slice(0, -3) + 'y'; return group('y-to-i', base, `${base} → ${w}`); }
-    return group('check', null);
+    return group('check', null, null, w.slice(0, -2));
   }
   // shed, sled: no vowel left once -ed is removed, so not an -ed word.
   if (!/[aeiouy]/.test(stem)) return group('other', null);
   // freed (free + d) vs speed / succeed (not -ed words at all): can't tell from letters.
-  if (w.endsWith('eed')) return group('check', null);
+  if (w.endsWith('eed')) return group('check', null, null, stem);
   const last = stem.at(-1), prev = stem.at(-2);
   if (stem.length >= 3 && last === prev && !VOWEL.test(last)) {
+    // quizzed: quiz is short vowel + z, so the z doubles (buzz/fizz already end in zz).
+    if (last === 'z' && !DOUBLE_BASES.has(stem) && /^(qu|[^aeiou])*[aeiou]zz$/.test(stem) && vowelGroups(stem.replace(/^qu/, 'q')) === 1) {
+      const base = stem.slice(0, -1); return group('double', base, `${base} → ${w}: short vowel and one consonant, so double the z.`);
+    }
+    // controlled vs installed: a longer word ending in ll could be either — ask.
+    if (last === 'l' && vowelGroups(stem) >= 2) return group('check', null, null, stem);
     if ('lsfz'.includes(last) || DOUBLE_BASES.has(stem)) return group('add-ed', stem, `${stem} + ed → ${w}`);
     const base = stem.slice(0, -1);
     return group('double', base, `${base} → ${w}: short vowel and one consonant, so double the ${last}.`);
@@ -50,15 +60,25 @@ export function spellingChange(word) {
   if (/^[^aeiouy]*[aeiou][^aeiouwxy]$/.test(stem)) { const base = stem + 'e'; return group('drop-e', base, `${base} → ${w}`); }
   // English words don't end in these letter clusters, so the base must end in e: danced, judged, charged, solved, bubbled.
   if (/(nc|rc|dg|rg|v|[bpgktdfz]l)$/.test(stem)) { const base = stem + 'e'; return group('drop-e', base, `${base} → ${w}`); }
+  // replaced, noticed, rescued, glued, sneezed: English words rarely end in a vowel + c, in u, or in a vowel + z.
+  if (/([aeiou]c|u|[aeiou]z)$/.test(stem)) { const base = stem + 'e'; return group('drop-e', base, `${base} → ${w}`); }
+  // Longer words ending vowel + consonant: decided/invited (silent e) vs opened/visited (plain). Only the
+  // common unstressed endings are safe to call; everything else is for the parent to decide.
+  if (vowelGroups(stem) >= 2 && /[aeiou][^aeiouwxy]$/.test(stem) && !/[aeiou]{2}[^aeiouwxy]$/.test(stem)) {
+    if (PLAIN_ENDINGS.test(stem) && !/(it|et)$/.test(stem)) return group('add-ed', stem, `${stem} + ed → ${w}`);
+    return group('check', null, null, stem);
+  }
   // sensed / lapsed: could be "sense"/"lapse" or not — let the parent decide.
-  if (/(rs|ls|ns|ps)$/.test(stem)) return group('check', null);
+  if (/(rs|ls|ns|ps)$/.test(stem)) return group('check', null, null, stem);
   return group('add-ed', stem, `${stem} + ed → ${w}`);
 }
 
 /** Pronunciation of -ed, from the base word's final sound. null = can't tell from the letters. */
 export function endingSound(word, change = spellingChange(word)) {
-  if (change.key === 'other' || !change.base) return null;
-  const base = change.base;
+  if (change.key === 'other') return null;
+  // When the spelling rule is unclear, the sound can usually still be told from the stem (decid → /id/).
+  const base = change.base || change.stem;
+  if (!base) return null;
   const s = (key, why) => ({ key, label: SOUND_GROUPS[key].label, reason: why || SOUND_GROUPS[key].explain });
   if (/[td]e?$/.test(base)) return s('id', `${base} ends in ${base.replace(/e$/, '').at(-1)}, so -ed adds a syllable.`);
   if (/(gh|th|[^s]se|^se|[^zs]s|c)$/.test(base)) return null; // laugh, bathe/bath, raise/chase, bus: depends on the word

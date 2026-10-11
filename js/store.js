@@ -1,7 +1,7 @@
 // Domain operations on top of IndexedDB. Student-facing code reads lessons only through
 // getApprovedLesson()/listApprovedWeeks(), which return frozen snapshots — never working drafts.
 import { transact, get, getAll, getAllBy, put, del, STORES } from './db.js';
-import { uid, nowIso, newWeek, buildSnapshot, approvalBlockers, snapshotIntegrityErrors, itemIntegrityErrors, weekStatus } from './model.js';
+import { uid, nowIso, newWeek, buildSnapshot, approvalBlockers, snapshotIntegrityErrors, itemIntegrityErrors, weekStatus, contentKey } from './model.js';
 
 export const DEMO_STUDENTS = [
   { displayName: 'Alex', grade: 3, color: 'sky' },
@@ -112,6 +112,7 @@ export async function approveWeek(id) {
     if (errs.length) throw new Error('Definition check failed: ' + errs.join(' '));
     w.approvedVersion = version;
     w.approvedRevision = w.revision;
+    w.approvedContentKey = contentKey(w);
     w.approvedAt = snap.approvedAt;
     w.editLog.push({ at: snap.approvedAt, revision: w.revision, action: 'approved', detail: `Version ${version}` });
     s.snapshots.put(snap);

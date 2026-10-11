@@ -152,10 +152,23 @@ export const STATUS_LABELS = {
   draft: 'Draft', 'pending-review': 'Needs review', approved: 'Approved', 'pending-changes': 'Changes pending',
 };
 
-/** draft: empty · pending-review: has content, never approved · approved · pending-changes: edited since last approval. */
+/**
+ * Fingerprint of what students would see (words, definitions, sentences, pictures, groups, settings, dates).
+ * Review ticks and acknowledgements are not content, so re-ticking a box does not make a week "Changes pending".
+ */
+export function contentKey(week) {
+  const s = buildSnapshot(week, 0, '');
+  const text = JSON.stringify([s.title, s.focus, s.startDate, s.endDate, s.settings, s.vocab, s.spelling]);
+  let h1 = 0x811c9dc5, h2 = 5381;
+  for (let i = 0; i < text.length; i++) { const c = text.charCodeAt(i); h1 = Math.imul(h1 ^ c, 16777619); h2 = (Math.imul(h2, 33) + c) | 0; }
+  return (h1 >>> 0).toString(16) + (h2 >>> 0).toString(16) + ':' + text.length;
+}
+
+/** draft: empty · pending-review: has content, never approved · approved · pending-changes: content changed since approval. */
 export function weekStatus(week) {
   const has = (week.vocab?.length || 0) + (week.spelling?.length || 0) > 0;
   if (!week.approvedVersion) return has ? 'pending-review' : 'draft';
+  if (week.approvedContentKey) return contentKey(week) === week.approvedContentKey ? 'approved' : 'pending-changes';
   return week.revision === week.approvedRevision ? 'approved' : 'pending-changes';
 }
 

@@ -19,7 +19,11 @@ const only = process.env.ONLY ? process.env.ONLY.split(',') : null;
 
 // Navigate by hash and wait for the router to finish rendering.
 b.go = async (hash) => {
-  await b.js(`location.hash = ${JSON.stringify(hash)}; await new Promise((r) => setTimeout(r, 30)); await WW.whenRendered();`);
+  // A test in progress asks before leaving; tests that navigate away accept it.
+  await b.js(`location.hash = ${JSON.stringify(hash)}; await new Promise((r) => setTimeout(r, 60));
+    const leave = [...document.querySelectorAll('.dialog .btn-primary')].find((x) => x.textContent === 'Leave');
+    if (leave) { leave.click(); await new Promise((r) => setTimeout(r, 60)); }
+    await WW.whenRendered();`);
   await b.wait(60);
 };
 b.text = () => b.js(`return document.getElementById('app').innerText;`);

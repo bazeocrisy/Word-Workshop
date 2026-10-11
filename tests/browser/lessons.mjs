@@ -130,6 +130,24 @@ export default {
     const log = await b.js(`return (await WW.store.getWeek(${JSON.stringify(w2)})).editLog.map((e) => e.action);`);
     check('changes are recorded in the week history', ['words added', 'reordered', 'deleted', 'pattern changed'].every((a) => log.includes(a)), log);
 
+    // Review fixes (Milestone 2 review): keyboard focus stays put; double-tap move; re-ticking is not a change.
+    await b.go(`#/parent/week/${wid}`);
+    const focusKept = await b.js(`
+      const box = document.querySelector('.reviewed-box'); const id = box.closest('[data-item]').dataset.item;
+      box.focus(); box.click(); await new Promise((r) => setTimeout(r, 300));
+      const a = document.activeElement; const ok1 = a && a.classList.contains('reviewed-box') && a.closest('[data-item]').dataset.item === id;
+      a.click(); await new Promise((r) => setTimeout(r, 300));
+      return ok1 && document.activeElement.classList.contains('reviewed-box');`);
+    check('keyboard focus stays on the checkbox after ticking it', focusKept);
+    const st2 = await b.js(`const w = await WW.store.getWeek(${W}); return WW.model.weekStatus(w);`);
+    check('unticking and re-ticking "checked" does not create pending changes', st2 === 'approved', st2);
+    await b.go(`#/parent/week/${w2}`);
+    await b.js(`const d = document.querySelector('[data-item] .mv-down'); d.click(); d.click(); await new Promise((r) => setTimeout(r, 400)); return 1;`);
+    const afterDouble = await b.js(`return (await WW.store.getWeek(${JSON.stringify(w2)})).spelling.map((s) => s.word).join();`);
+    check('a quick double tap on ↓ moves the word once, not back again', afterDouble === 'hoped,hopped', afterDouble);
+    const nextBtn = await b.js(`return !!document.querySelector('.next-check');`);
+    check('approve panel offers "Go to the next word to check"', nextBtn);
+
     // Backup round trip with a real picture blob.
     const rt = await b.js(`
       const c = document.createElement('canvas'); c.width = 40; c.height = 30; const x = c.getContext('2d'); x.fillStyle = '#f00'; x.fillRect(0, 0, 20, 30);
