@@ -1,0 +1,9 @@
+# Real school photos, personal backups and test output must never be committed (public repository).
+local-fixtures/
+*.local.*
+word-workshop-backup-*.json
+tests/screenshots/
+tests/output/
+node_modules/
+.DS_Store
+Thumbs.db
