@@ -30,7 +30,7 @@ Length targets are guides; the test only warns when an item is outside them and 
 
 ## Thinking Lab category rules
 
-Each mistake has exactly one category:
+Each mistake has exactly one main `category` (and, rarely, a second acceptable `altCategory`; see below):
 
 - **spelling**: a misspelled word (freind → friend), **including** spelling-rule mistakes on the right word in the right tense (stoped → stopped, carryed → carried, hopeing → hoping, boxs → boxes), **and** homophone mix-ups where a different word must be chosen (there → their, too → two, by → buy).
 - **capitalization**: a missing capital letter (or a capital that must be lowercase).
@@ -44,24 +44,37 @@ Rules for words that could fall into two groups:
 3. **don't → doesn't** is grammar (agreement), not punctuation, because the apostrophe is already right.
 4. A single `wrong` span never mixes two categories. When a word needs two fixes (for example, a lowercase word that also needs an end mark), the sentence is written so the end mark falls on a different word.
 
-Single-skill items only use their skill's category: capitalization → capitalization; ending-punctuation, commas, possessives-contractions → punctuation; spelling, homophones → spelling; verb-tense, subject-verb → grammar. There are no exceptions in the current bank.
+### `altCategory` (a second acceptable Lab answer)
+
+An error may carry an optional `altCategory` (one of the four categories, never the same as `category`). It is used only when a reasonable teacher could file the mistake either way. The Lab accepts either choice. `category` stays the main answer, and the feedback can explain why (for example: "This is a spelling-rule mistake: the verb and tense are right, only the spelling is wrong."). The current bank uses it in 16 places:
+
+- Homophones that are verbs: new → knew, one → won, no → know (category spelling, altCategory grammar). Items: HOM-004, HOM-005, HOM-013 (twice), HOM-015.
+- Spelling-rule verb endings: runing, stoped, carryed, hopeing (category spelling, altCategory grammar). Items: SPL-013, SPL-015, SPL-016, SPL-023 (twice).
+- don't → doesn't (category grammar, altCategory punctuation). Item: SVA-003.
+- its / it's (category punctuation, altCategory spelling, because many classrooms teach it as a homophone pair). Items: POS-003, POS-007, POS-014, POS-015, MIX-015.
+
+Made-up irregular past forms (goed, catched, eated) have no `altCategory`: they are always grammar. Contractions that are not real words without the apostrophe (cant, dont, Youre) are always punctuation.
+
+Single-skill items only use their skill's category (as `category`; `altCategory` may name another): capitalization → capitalization; ending-punctuation, commas, possessives-contractions → punctuation; spelling, homophones → spelling; verb-tense, subject-verb → grammar. There are no exceptions in the current bank.
 
 ## Accepted alternatives
 
-`accepted` lists other fully correct answers (8 items):
+`accepted` lists other fully correct answers (51 items):
 
-- **Lists**: `correct` leaves out the comma before *and* (beans, peas, carrots and lettuce). The version with that comma is in `accepted`. Only the commas before *and* are optional; the others are documented errors.
-- **Optional comma after a short opening phrase** (On Saturday we... / On Saturday, we...).
-- **Isn't that amazing?** also accepts an exclamation point.
-- **doesn't / does not**.
+- **Lists** (COM-005, 009, 012, 013, 014): `correct` leaves out the comma before *and* (beans, peas, carrots and lettuce). The version with that comma is in `accepted`. Only the comma before *and* is optional; the other list commas are documented errors.
+- **Optional comma after an opening phrase or short opening clause** (Last week / In 1620 / On our hike / When the bell rang / As we hurried out the door). The comma is in both `incorrect` and `correct`, so it is never a mistake, and the comma-less sentence is always in `accepted` (combined with any other accepted variant). The test enforces this for every item that starts with such a phrase. Commas that ARE taught stay required: after Yes/No/Well, after the name of the person spoken to, before a quotation, in dates, between city and state, and before *and/but/so* joining two sentences.
+- **End marks**: "!" is accepted where the sentence is a natural exclamation (END-008 "Isn't that amazing!", END-012 "this morning!", END-013 "A storm is coming!", END-015 "Bats are amazing animals!"). Questions always need "?".
+- **Other valid answers**: doesn't / does not (SVA-003); "were" with no time cue (SVA-001); "had" with "this year" (SVA-004); "has only six" (SVA-006); "Moon" capitalized (CAP-009).
 
-Optional commas after opening phrases are otherwise written into both `incorrect` and `correct` (for example, "Last week, we..."), so they are never marked as mistakes. Nothing listed in `accepted` still contains a documented error.
+Nothing listed in `accepted` still contains a documented error.
 
 ## Item format notes
 
 - `errors` are listed left to right. Replacing each `wrong` with its `right` once, moving left to right, turns `incorrect` into exactly `correct`. The test checks this and checks that each match is a whole word or phrase.
 - For a missing mark, `wrong` is the word before it (for example, `store` → `store.` or `Yes` → `Yes,`).
-- Hints: (1) the kind of mistake, (2) where to look, (3) a specific clue that does not write out the answer.
+- Hints: (1) the kind of mistake, (2) where to look, (3) a specific clue that does not write out the answer. In mixed items, hint 1 names the mistakes using the four Lab categories (capital letter, spelling, punctuation, grammar), so it never steers the child toward a wrong Lab choice. Hints do not assume facts the sentence does not state, such as a person's gender.
+- Facts in science, nature and history items are checked. For example, the moon is only "sometimes" in the daytime sky, and "honeybees" (not all bees) make honey.
+- Explanations say "cannot", never "can not".
 - Straight apostrophes and quotation marks only. American spelling.
 
 ## Contexts

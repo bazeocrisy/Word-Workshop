@@ -182,6 +182,177 @@ function locate(item) {
   return result;
 }
 
+// ---------- Word knowledge (small lists, enough for grade-3 sentences) ----------
+
+// Irregular past tenses → base verb. "goed", "go", "goes" for "went" are wrong forms, not rewrites.
+const IRREGULAR_PAST = {
+  went: 'go', caught: 'catch', grew: 'grow', swam: 'swim', found: 'find', knew: 'know', taught: 'teach',
+  read: 'read', ate: 'eat', ran: 'run', threw: 'throw', sang: 'sing', drew: 'draw', made: 'make', wrote: 'write',
+  saw: 'see', came: 'come', took: 'take', gave: 'give', got: 'get', said: 'say', told: 'tell', sat: 'sit',
+  bought: 'buy', brought: 'bring', thought: 'think', flew: 'fly', drove: 'drive', rode: 'ride', won: 'win',
+  hid: 'hide', began: 'begin', broke: 'break', built: 'build', felt: 'feel', kept: 'keep', left: 'leave',
+  lost: 'lose', met: 'meet', paid: 'pay', sent: 'send', slept: 'sleep', spent: 'spend', stood: 'stand',
+  fell: 'fall', held: 'hold', heard: 'hear', did: 'do', had: 'have', rose: 'rise', chose: 'choose',
+  froze: 'freeze', wore: 'wear', blew: 'blow', dug: 'dig', hung: 'hang', spoke: 'speak', woke: 'wake',
+  shook: 'shake', forgot: 'forget', understood: 'understand', sold: 'sell', sewed: 'sew', fed: 'feed',
+  led: 'lead', hit: 'hit', cut: 'cut', put: 'put', shut: 'shut', let: 'let', bit: 'bite', slid: 'slide',
+  swung: 'swing', stuck: 'stick', spun: 'spin', drank: 'drink', rang: 'ring', sank: 'sink', shone: 'shine',
+};
+// Homophones (and near-homophones) children mix up. Typing one for another is a mistake, not a rewrite.
+const HOMOPHONES = new Set(('there their they\'re to too two your you\'re its it\'s no know new knew by buy bye ' +
+  'hear here right write pair pear pare sea see one won ate eight for four whole hole hour our week weak ' +
+  'through threw blue blew son sun flour flower which witch wood would tail tale meet meat road rode mail male ' +
+  'plain plane peace piece sale sail bear bare dear deer wear where we\'re were whose who\'s than then ' +
+  'principal principle break brake cent sent scent knot not made maid night knight red read road rowed ' +
+  'some sum tide tied toe tow wait weight way weigh wore war allowed aloud ant aunt be bee berry bury cell sell ' +
+  'flew flu grown groan hair hare herd heard hi high hole knows nose pail pale passed past rain reign rein ' +
+  'sew so sow stair stare steal steel tail waist waste').split(' '));
+// Forms that only differ by agreement inside the same tense: one for another is an agreement mistake.
+const AGREEMENT_SETS = [['is', 'are', 'am'], ['was', 'were'], ['has', 'have'], ['does', 'do'], ["doesn't", "don't"],
+  ["isn't", "aren't"], ["wasn't", "weren't"], ["there's", 'there are'], ["here's", 'here are']];
+// Common real words: a typed real word close to the key ("were" for "are") may be a rewrite, so never a "misspelling".
+const REAL_WORDS = new Set(('a an the is are am was were be been being has have had do does did done can cannot ' +
+  'could will would shall should may might must not no yes and or but so if as at by for from in into of on off ' +
+  'to too two up down out over with he she it its we they you your i me him her us them his hers our ours their ' +
+  'theirs there then than this that these those what when where who whom why how all any some one more most ' +
+  'very just also each every both few many much said says see saw seen go goes went gone get got come came ' +
+  'make made take took give gave run ran find found know knew grow grew').split(' '));
+// Contractions and their long forms count as the same words when checking equivalence.
+const PRONOUN_IS = new Set(['it', 'he', 'she', 'that', 'there', 'here', 'what', 'who', 'where', 'how']);
+function expandWords(toks) {
+  const out = [];
+  for (const raw of toks) {
+    if (!isWord(raw)) continue;
+    const t = lc(raw);
+    let m;
+    if (t === 'cannot' || t === "can't") out.push('can', 'not');
+    else if (t === "won't") out.push('will', 'not');
+    else if ((m = t.match(/^(.+)n't$/))) out.push(m[1], 'not');
+    else if ((m = t.match(/^(.+)'re$/))) out.push(m[1], 'are');
+    else if ((m = t.match(/^(.+)'m$/))) out.push(m[1], 'am');
+    else if ((m = t.match(/^(.+)'ll$/))) out.push(m[1], 'will');
+    else if ((m = t.match(/^(.+)'ve$/))) out.push(m[1], 'have');
+    else if (t === "let's") out.push('let', 'us');
+    else if ((m = t.match(/^(.+)'s$/)) && PRONOUN_IS.has(m[1])) out.push(m[1], 'is');
+    else out.push(t);
+  }
+  return out;
+}
+const sameList = (a, b) => a.length === b.length && a.every((t, i) => t === b[i]);
+
+/** a/an: does `article` suit the word after it? (vowel sound, with the common exceptions) */
+function articleFits(article, next) {
+  const w = lc(next || '');
+  if (!w) return true;
+  const vowelSound = (/^[aeiou]/.test(w) && !/^(uni|use|usu|uke|ure|eu|one|once)/.test(w)) || /^(hour|honest|honor|heir)/.test(w);
+  return lc(article) === 'an' ? vowelSound : !vowelSound;
+}
+
+/** Possible stems of a word with a simple ending removed (walks/walked/walking → walk). */
+function stems(w) {
+  const s = new Set([w]);
+  const add = (x) => x.length >= 2 && s.add(x);
+  if (w.endsWith('ies')) add(`${w.slice(0, -3)}y`);
+  if (w.endsWith('ied')) add(`${w.slice(0, -3)}y`);
+  if (w.endsWith('es')) add(w.slice(0, -2));
+  if (w.endsWith('s')) add(w.slice(0, -1));
+  if (w.endsWith('ed')) { add(w.slice(0, -2)); add(w.slice(0, -1)); if (w.at(-3) === w.at(-4)) add(w.slice(0, -3)); }
+  if (w.endsWith('ing')) { add(w.slice(0, -3)); add(`${w.slice(0, -3)}e`); }
+  return s;
+}
+
+/**
+ * Typed word `got` where the key has `exp`: a clear mistake ('capital', 'article', 'homophone', 'verb',
+ * 'agreement', 'spelling') or null (could be a fair rewrite). `inSlot`: this is where a planted mistake was,
+ * so another form of the same word (cook/cooked, want/wants) is also a mistake.
+ */
+function wrongWord(exp, got, next, inSlot) {
+  const e = lc(exp), g = lc(got);
+  if (e === g) return exp === got ? null : 'capital';
+  if ((e === 'a' || e === 'an') && (g === 'a' || g === 'an')) return articleFits(got, next) ? null : 'article';
+  if (HOMOPHONES.has(e) && HOMOPHONES.has(g)) return 'homophone';
+  if (AGREEMENT_SETS.some((set) => set.includes(e) && set.includes(g))) return 'agreement';
+  const base = IRREGULAR_PAST[e];
+  if (base) {
+    const forms = [base, `${base}s`, `${base}es`, `${base}ed`, `${base}d`, `${base}${base.at(-1)}ed`, `${e}ed`, `${base}ing`];
+    if (forms.includes(g)) return 'verb';
+  }
+  if (inSlot && [...stems(e)].some((x) => stems(g).has(x))) return 'verb';
+  if (!REAL_WORDS.has(g) && nearMiss(exp, got)) return 'spelling';
+  return null;
+}
+
+/** Compare the key's tokens with the typed tokens word by word: a clear mistake kind, 'same', or null. */
+function wordVerdict(exp, got, after, inSlot) {
+  if (exp.length !== got.length) {
+    const squash = (toks) => lc(toks.join('')).replace(/-/g, '');
+    return exp.length && squash(exp) === squash(got) ? 'spelling' : null;
+  }
+  let kind = 'same';
+  for (let i = 0; i < exp.length; i++) {
+    if (exp[i] === got[i]) continue;
+    if (!isWord(exp[i]) || !isWord(got[i])) return null;
+    const k = wrongWord(exp[i], got[i], got[i + 1] ?? after, inSlot);
+    if (!k) return null;
+    if (kind === 'same') kind = k;
+  }
+  return kind;
+}
+
+// ---------- Commas ----------
+
+// Words that start an opening phrase ("Last Sunday, ...", "In 1776, ..."): its comma is optional.
+const OPENERS = new Set(('in on at after before during last every yesterday today tomorrow tonight long when if since ' +
+  'because for many this next first then finally later once while as outside inside earlier sometimes suddenly ' +
+  'luckily soon each one some at by from until with without whenever').split(' '));
+const YES_NO = new Set(['yes', 'no', 'well', 'oh', 'okay', 'ok', 'wow', 'hey']);
+const WEEKDAYS = new Set(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']);
+const MONTHS = new Set(['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']);
+const STATES = new Set(('alabama alaska arizona arkansas california colorado connecticut delaware florida georgia hawaii ' +
+  'idaho illinois indiana iowa kansas kentucky louisiana maine maryland massachusetts michigan minnesota mississippi ' +
+  'missouri montana nebraska nevada ohio oklahoma oregon pennsylvania tennessee texas utah vermont virginia ' +
+  'washington wisconsin wyoming canada mexico england france').split(' '));
+const CONJ = new Set(['and', 'or', 'but', 'so', 'yet', 'nor']);
+const isCap = (t) => !!t && isWord(t) && t[0] !== lc(t[0]);
+
+/** Is the opening phrase before index k (no marks, ≤ 4 words, starts with an opener word)? */
+function afterOpener(toks, k) {
+  const before = toks.slice(0, k);
+  return before.length > 0 && before.length <= 4 && before.every(isWord) && OPENERS.has(lc(before[0]));
+}
+
+/** A comma at index k of the model sentence that a clear rule requires (list, date, place, name, yes/no, speech). */
+function commaRequired(C, k) {
+  const prev = C[k - 1] || '', next = C[k + 1] || '';
+  if (next === '"' || prev === '"') return true; // speech: asked, "Who ..."
+  const startIdx = C[0] === '"' ? 1 : 0;
+  if (k - 1 === startIdx && YES_NO.has(lc(prev))) return true;
+  if (/^\d+$/.test(prev) && /^\d+$/.test(next)) return true; // March 4, 1852
+  if (WEEKDAYS.has(lc(prev)) && MONTHS.has(lc(next))) return true; // Monday, May 3
+  if (isCap(prev) && STATES.has(lc(next))) return true; // Boston, Massachusetts
+  if (afterOpener(C, k)) return false;
+  if (CONJ.has(lc(next)) && C.slice(Math.max(0, k - 6), k).includes(',')) return false; // Oxford / compound comma
+  // A list: short items separated by commas, ending in "and"/"or".
+  let words = 0;
+  for (let i = k + 1; i < C.length; i++) {
+    if (lc(C[i]) === 'and' || lc(C[i]) === 'or') { if (words >= 1 && words <= 3) return true; break; }
+    if (C[i] === ',') { if (words < 1 || words > 3) break; words = 0; continue; }
+    if (!isWord(C[i]) || ++words > 3) break;
+  }
+  if (k - 1 === startIdx && isCap(prev) && !OPENERS.has(lc(prev))) return true; // Sam, do you ...
+  if (isCap(next) && END_MARKS.has(C[k + 2])) return true; // Thank you, Mom.
+  return false;
+}
+
+/** A comma typed at index k of the answer where the model has none: fine only in an optional spot. */
+function commaAllowed(A, k) {
+  const next = A[k + 1] || '';
+  if (CONJ.has(lc(next)) && isWord(A[k - 1] || '')) return true; // before "and"/"but" (Oxford or compound)
+  if (afterOpener(A, k)) return true;
+  if (next === '"') return true; // before speech
+  return false;
+}
+
 // ---------- Grading ----------
 
 const MESSAGES = {
@@ -195,19 +366,29 @@ const TIPS = {
   'capital-start': 'Remember: a sentence starts with a capital letter.',
   'end-mark': "Don't forget the mark at the end of the sentence.",
   punctuation: 'Check your punctuation marks.',
+  comma: 'Check where your commas go.',
   dropped: 'It looks like a word or mark went missing.',
   repeated: 'A word is written twice.',
   spacing: 'Check the spaces between your words.',
+  article: 'Check "a" and "an".',
+  homophone: 'Check words that sound the same but are spelled differently.',
+  verb: 'Check the form of each action word.',
+  agreement: 'Check that each action word matches who is doing it.',
 };
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
-/** Decide whether one difference (expected tokens → typed tokens) is clearly a mistake. */
-function classify(h, A, insBag, delBag) {
+/** Decide whether one difference (expected tokens → typed tokens) is clearly a mistake: [kind, clear]. */
+function classify(h, A, C, insBag, delBag) {
   const { exp, got } = h;
   const inBag = (bag, toks) => toks.every((t) => (bag.get(lc(t)) || 0) > 0);
-  if (!got.length) return inBag(insBag, exp) ? ['moved', false] : ['dropped', true];
+  if (!got.length) {
+    if (inBag(insBag, exp)) return ['moved', false];
+    if (exp.length === 1 && exp[0] === ',') return ['comma', h.cStart != null && commaRequired(C, h.cStart)];
+    return ['dropped', true];
+  }
   if (!exp.length) {
     if (inBag(delBag, got)) return ['moved', false];
+    if (got.length === 1 && got[0] === ',') return ['comma', !commaAllowed(A, h.aStart)];
     const before = A[h.aStart - 1], after = A[h.aStart + got.length];
     const repeated = got.length === 1 && [before, after].some((t) => t && lc(t) === lc(got[0]));
     return repeated ? ['repeated', true] : ['added', false];
@@ -216,8 +397,8 @@ function classify(h, A, insBag, delBag) {
     const [e] = exp, [g] = got;
     if (isWord(e) && isWord(g)) {
       if (lc(e) === lc(g)) return h.expAtStart !== (h.aStart === 0) ? ['moved', false] : ['capital', true];
-      const d = editDistance(lc(e), lc(g));
-      return d <= 2 && d < Math.min(e.length, g.length) ? ['spelling', true] : ['different-word', false];
+      const k = wrongWord(e, g, A[h.aStart + 1], false);
+      return k ? [k, true] : ['different-word', false];
     }
     if (!isWord(e) && !isWord(g)) {
       const clear = END_MARKS.has(e) !== END_MARKS.has(g) || e === '?' || g === '?';
@@ -225,9 +406,8 @@ function classify(h, A, insBag, delBag) {
     }
     return ['rewrite', false];
   }
-  // "every day" ↔ "everyday": same letters, split or joined differently.
-  const squash = (toks) => lc(toks.join('')).replace(/-/g, '');
-  if (squash(exp) === squash(got)) return ['spelling', true];
+  const k = wordVerdict(exp, got, A[h.aStart + got.length], false);
+  if (k && k !== 'same') return [k, true];
   return ['rewrite', false];
 }
 
@@ -247,6 +427,29 @@ const endMark = (toks) => {
 };
 
 /**
+ * What the child typed where one planted mistake was. winC = the model's tokens there, winW = the same with the
+ * mistake left in, winA = what was typed. Returns 'fixed' | 'unfixed' | 'wrong' (a different mistake there) |
+ * 'equal' (same words, e.g. "cannot" for "can't") | 'alt' ("!" for ".": a grown-up should check) | null.
+ */
+function judgeSlot(winA, winC, winW, after) {
+  if (sameList(winA, winC)) return 'fixed';
+  if (sameList(winA, winW)) return 'unfixed';
+  if (winA.length === winC.length) {
+    const diffs = winA.map((t, i) => i).filter((i) => winA[i] !== winC[i]);
+    if (diffs.length === 1 && END_MARKS.has(winA[diffs[0]]) && END_MARKS.has(winC[diffs[0]])) {
+      return winA[diffs[0]] === '?' || winC[diffs[0]] === '?' ? 'wrong' : 'alt';
+    }
+  }
+  const words = (toks) => toks.filter(isWord).map(lc);
+  if (winA.length && sameList(words(winA), words(winC))) return 'wrong'; // same words, wrong marks or capitals
+  const xa = expandWords(winA);
+  if (xa.length && sameList(xa, expandWords(winC))) return 'equal';
+  if (xa.length && sameList(xa, expandWords(winW))) return 'wrong';
+  const k = wordVerdict(winC, winA, after, true);
+  return k && k !== 'same' ? 'wrong' : null;
+}
+
+/**
  * Grade a typed answer. result is 'correct' | 'incorrect' | 'review' | 'empty'.
  * fixed / unfixed / unknown hold indexes into item.errors; extraChanges lists other differences
  * from the model sentence ({ expected, got, kind, clear }).
@@ -264,11 +467,15 @@ export function grade(item, answer) {
   const C = L.corTokens.map((t) => t.t);
   const M = [[-1, -1], ...lcsPairs(C, A), [C.length, A.length]]; // matched (correct, answer) pairs + ends
 
+  // Mostly rewritten (under 70% of the model's tokens kept): word-by-word checks can't be trusted, so only
+  // the whole-sentence checks and mistakes still exactly present count.
+  const kept = M.length - 2;
+  const rewritten = C.length - kept >= 3 && kept < 0.7 * C.length;
   const status = new Array(errors.length).fill('unknown');
-  const near = new Set(); // unfixed by a small slip rather than the original wrong form
+  const settled = new Set(); // judged from a different form typed in the spot: leave its tokens out of "extras"
   const hunks = [];
 
-  // Group errors whose neighbourhoods (between matched anchor tokens) overlap.
+  // Each error's window: the tokens between the nearest matched anchors around it.
   const spans = L.spans.filter(Boolean).map((sp) => {
     let kL = 0;
     while (kL + 1 < M.length && M[kL + 1][0] < sp.cTok[0]) kL++;
@@ -276,68 +483,86 @@ export function grade(item, answer) {
     while (M[kR][0] < sp.cTok[1]) kR++;
     return { ...sp, kL, kR };
   }).sort((x, y) => x.kL - y.kL || x.cTok[0] - y.cTok[0]);
+
+  for (const sp of spans) {
+    const { wrongToks: w, rightToks: r } = sp;
+    const caseOnly = w.length === r.length && w.every((t, i) => lc(t) === lc(r[i]));
+    if (caseOnly && sp.cTok[0] === 0 && lc(A[0] || '') !== lc(r[0])) continue; // sentence start moved: can't tell
+    const cFrom = M[sp.kL][0] + 1, cTo = M[sp.kR][0];
+    const winC = C.slice(cFrom, cTo), winA = A.slice(M[sp.kL][1] + 1, M[sp.kR][1]);
+    const off = sp.cTok[0] - cFrom;
+    const winW = [...winC.slice(0, off), ...w, ...winC.slice(off + r.length)];
+    const after = A[M[sp.kR][1]];
+    const rightFirst = !(indexOfRun(w, r) >= 0 && w.length > r.length); // "the the" → "the": look for the wrong form first
+    // 1. The window also holds changed neighbours (often another mistake): if they line up one-to-one,
+    //    judge just this mistake's own tokens.
+    const pre = off, post = winC.length - off - r.length, aFrom = M[sp.kL][1] + 1;
+    const lines = (ci, ai) => lc(C[ci]) === lc(A[ai]) || nearMiss(C[ci], A[ai]) || spans.some((o) => o !== sp && ci >= o.cTok[0] && ci < o.cTok[1]);
+    let verdict = null;
+    if ((pre || post) && winA.length > pre + post
+      && [...Array(pre).keys()].every((i) => lines(cFrom + i, aFrom + i))
+      && [...Array(post).keys()].every((i) => lines(cTo - 1 - i, aFrom + winA.length - 1 - i))) {
+      verdict = judgeSlot(winA.slice(pre, winA.length - post), r, w, after);
+    }
+    // 2. The right form is there (the child changed something next to it).
+    if (!verdict && rightFirst && indexOfRun(winA, r) >= 0) verdict = 'fixed';
+    // 3. Judge the whole window.
+    if (!verdict) verdict = judgeSlot(winA, winC, winW, after);
+    // A mostly rewritten sentence: only an exact leftover mistake counts; other judgements go to a grown-up.
+    if (rewritten && (verdict === 'wrong' || verdict === 'equal')) verdict = null;
+    if (verdict === 'fixed' || verdict === 'unfixed') { status[sp.index] = verdict; continue; }
+    if (verdict === 'wrong') { status[sp.index] = 'unfixed'; settled.add(sp.index); continue; }
+    if (verdict === 'equal') { status[sp.index] = 'fixed'; settled.add(sp.index); continue; }
+    if (verdict === 'alt') continue; // unknown → review
+    // 4. Otherwise the child changed more around it: is the right (or wrong) form somewhere in that part?
+    const order = rightFirst ? ['fixed', 'unfixed'] : ['unfixed', 'fixed'];
+    for (const o of order) if (indexOfRun(winA, o === 'fixed' ? r : w) >= 0) { status[sp.index] = o; break; }
+  }
+
+  // Group errors whose windows overlap, then compare each group with what was expected given each status.
   const groups = [];
   for (const sp of spans) {
     const last = groups[groups.length - 1];
     if (last && sp.kL < last.kR) { last.spans.push(sp); last.kR = Math.max(last.kR, sp.kR); }
     else groups.push({ kL: sp.kL, kR: sp.kR, spans: [sp] });
   }
-
   for (const g of groups) {
     const c0 = M[g.kL][0] + 1, c1 = M[g.kR][0], a0 = M[g.kL][1] + 1, a1 = M[g.kR][1];
     const segA = A.slice(a0, a1);
-    // Fixed if the right form is in this part of the answer; unfixed if the wrong form still is.
-    for (const sp of g.spans) {
-      const { wrongToks: w, rightToks: r } = sp;
-      const caseOnly = w.length === r.length && w.every((t, i) => lc(t) === lc(r[i]));
-      if (caseOnly && sp.cTok[0] === 0 && lc(A[0] || '') !== lc(r[0])) continue; // sentence start moved: can't tell
-      const order = indexOfRun(w, r) >= 0 && w.length > r.length ? ['unfixed', 'fixed'] : ['fixed', 'unfixed'];
-      for (const o of order) if (indexOfRun(segA, o === 'fixed' ? r : w) >= 0) { status[sp.index] = o; break; }
-      // Near miss in the same spot ("receieved" for "received"): still a mistake, not a rewrite.
-      if (status[sp.index] === 'unknown' && segA.length === c1 - c0) {
-        const got = segA.slice(sp.cTok[0] - c0, sp.cTok[1] - c0);
-        if (got.length === r.length && got.some((t, i) => t !== r[i]) && got.every((t, i) => t === r[i] || nearMiss(r[i], t))) { status[sp.index] = 'unfixed'; near.add(sp.index); }
-      }
-    }
-    // Expected text for this part, given what the child did with each mistake; other differences are extras.
     const E = [];
     let j = c0;
     for (const sp of [...g.spans].sort((x, y) => x.cTok[0] - y.cTok[0])) {
       if (sp.cTok[0] < j) continue;
-      while (j < sp.cTok[0]) E.push({ t: C[j], start: j === 0 }), j++;
-      const st = status[sp.index];
-      (st === 'unfixed' && !near.has(sp.index) ? sp.wrongToks : sp.rightToks).forEach((t, i) => E.push({ t, start: j === 0 && i === 0, skip: st === 'unknown' || near.has(sp.index) }));
+      while (j < sp.cTok[0]) E.push({ t: C[j], c: j }), j++;
+      const st = status[sp.index], skip = st === 'unknown' || settled.has(sp.index);
+      (st === 'unfixed' && !skip ? sp.wrongToks : sp.rightToks).forEach((t, i) => E.push({ t, c: i === 0 ? j : null, skip }));
       j = sp.cTok[1];
     }
-    while (j < c1) E.push({ t: C[j], start: j === 0 }), j++;
+    while (j < c1) E.push({ t: C[j], c: j }), j++;
     for (const h of diffHunks(E.map((e) => e.t), segA)) {
       const touched = h.a1 > h.a0 ? E.slice(h.a0, h.a1).some((e) => e.skip) : E[h.a0 - 1]?.skip || E[h.a0]?.skip;
       if (touched) continue;
-      hunks.push({ exp: E.slice(h.a0, h.a1).map((e) => e.t), got: segA.slice(h.b0, h.b1), aStart: a0 + h.b0, expAtStart: h.a0 === 0 && c0 === 0 && (E[0]?.start ?? false) });
+      hunks.push({ exp: E.slice(h.a0, h.a1).map((e) => e.t), got: segA.slice(h.b0, h.b1), aStart: a0 + h.b0, cStart: E[h.a0]?.c ?? null, expAtStart: E[h.a0]?.c === 0 });
     }
   }
-  // Differences outside every mistake's neighbourhood.
+  // Differences outside every mistake's window.
   const inGroup = (k) => groups.some((g) => k >= g.kL && k < g.kR);
   for (let k = 0; k < M.length - 1; k++) {
     if (inGroup(k)) continue;
     const c0 = M[k][0] + 1, c1 = M[k + 1][0], a0 = M[k][1] + 1, a1 = M[k + 1][1];
-    if (c1 > c0 || a1 > a0) hunks.push({ exp: C.slice(c0, c1), got: A.slice(a0, a1), aStart: a0, expAtStart: c0 === 0 });
+    if (c1 > c0 || a1 > a0) hunks.push({ exp: C.slice(c0, c1), got: A.slice(a0, a1), aStart: a0, cStart: c0, expAtStart: c0 === 0 });
   }
 
   // Classify: words moved elsewhere are a rewrite (review), not a mistake.
   const bag = (key) => { const m = new Map(); hunks.forEach((h) => h[key].forEach((t) => m.set(lc(t), (m.get(lc(t)) || 0) + 1))); return m; };
   const insBag = bag('got'), delBag = bag('exp');
-  // Mostly rewritten (under 70% of the model's tokens kept): word-by-word checks can't be trusted, so only
-  // the whole-sentence checks below and mistakes still present count.
-  const kept = M.length - 2;
-  const rewritten = C.length - kept >= 3 && kept < 0.7 * C.length;
   const extras = hunks.map((h) => {
-    const [kind, sure] = classify(h, A, insBag, delBag);
+    const [kind, sure] = classify(h, A, C, insBag, delBag);
     const clear = sure && !rewritten;
     return { expected: joinTokens(h.exp), got: joinTokens(h.got), kind, clear, aStart: h.aStart, aEnd: h.aStart + h.got.length };
   });
 
-  // Whole-sentence checks: capital at the start, mark at the end.
+  // Whole-sentence checks: capital at the start, mark at the end (always: it is what is being taught).
   const pending = (cIndex) => spans.some((sp) => status[sp.index] !== 'fixed' && cIndex >= sp.cTok[0] && cIndex < sp.cTok[1]);
   const aFirst = firstLetter(text), cFirst = firstLetter(L.cor);
   if (aFirst && aFirst !== aFirst.toUpperCase() && cFirst && cFirst !== cFirst.toLowerCase() && !pending(0)
@@ -345,14 +570,14 @@ export function grade(item, answer) {
     extras.push({ expected: C[0] || '', got: A[0] || '', kind: 'capital-start', clear: true, aStart: 0, aEnd: 1 });
   }
   const cEnd = endMark(C);
-  if (cEnd && !endMark(A) && !pending(C.length - 1) && !extras.some((x) => x.clear && x.aEnd === A.length)) {
+  if (cEnd && !endMark(A) && !extras.some((x) => x.clear && x.aEnd === A.length)) {
     extras.push({ expected: cEnd, got: '', kind: 'end-mark', clear: true, aStart: A.length, aEnd: A.length });
   }
 
   const fixed = [], unfixed = [], unknown = [];
   status.forEach((s, i) => (s === 'fixed' ? fixed : s === 'unfixed' ? unfixed : unknown).push(i));
-  // Same words and marks as a key sentence but different spacing ("Lopez,reads").
-  if (!unfixed.length && !unknown.length && !extras.length) {
+  // Same words and marks as the model sentence but different spacing ("Lopez,reads").
+  if (!unfixed.length && !unknown.length && !extras.length && sameList(A, C)) {
     extras.push({ expected: normalize(item.correct), got: text, kind: 'spacing', clear: true, aStart: 0, aEnd: A.length });
   }
   const extraChanges = extras.map(({ expected, got, kind, clear }) => ({ expected, got, kind, clear }));
@@ -382,6 +607,19 @@ export const LAB_CHOICES = [
 export function labCategory(item) {
   const cats = [...new Set((item?.errors || []).map((e) => e?.category).filter(Boolean))];
   return cats.length === 1 ? cats[0] : 'more-than-one';
+}
+
+/**
+ * Is `choice` a fair Thinking Lab answer? Some mistakes fit two kinds (an error's optional altCategory,
+ * e.g. "new" → "knew" is spelling or grammar). True if each error can be given one of its kinds so that the
+ * kinds used are exactly {choice}, or (for 'more-than-one') at least two different kinds.
+ */
+export function labAccepts(item, choice) {
+  const options = (item?.errors || []).map((e) => [...new Set([e?.category, e?.altCategory].filter(Boolean))]).filter((o) => o.length);
+  if (!options.length) return false;
+  if (choice !== 'more-than-one') return options.every((o) => o.includes(choice));
+  // Two different kinds are possible when two errors can be given different kinds.
+  return options.some((o, i) => o.some((x) => options.some((p, j) => j !== i && p.some((y) => y !== x))));
 }
 
 // ---------- Seeded randomness ----------

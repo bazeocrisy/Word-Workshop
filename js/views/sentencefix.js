@@ -247,7 +247,8 @@ async function fixSession({ params, query }, mode) {
       labPart = h('section', { class: 'card sf-lab', 'aria-labelledby': 'lab-q' }, h('h2', { id: 'lab-q', tabindex: '-1' }, 'What kind of mistake is in this sentence?'),
         h('div', { class: 'lab-choices' }, E.LAB_CHOICES.map((c) => btn(c.label, async () => {
           a.labTries++;
-          if (c.value === want) { a.labDone = true; a.labRight = a.labTries === 1; await persist(); toast(`Yes! ${c.label}.`); draw(); return; }
+          // Some mistakes can fairly be called two kinds (e.g. a verb homophone); the engine accepts either.
+          if (E.labAccepts ? E.labAccepts(item, c.value) : c.value === want) { a.labDone = true; a.labRight = a.labTries === 1; await persist(); toast(`Yes! ${c.label}.`); draw(); return; }
           if (a.labTries >= 2) {
             const right = E.LAB_CHOICES.find((x) => x.value === want);
             fill(msg, h('div', { class: 'sf-try' }, h('p', null, `It is: ${right.label}.`), h('p', null, labReason(item, want)),

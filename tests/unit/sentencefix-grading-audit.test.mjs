@@ -84,30 +84,22 @@ test('lowercase first letter of the key is incorrect', () => {
   }
 });
 
-// Leaving off the final end mark must be incorrect. Items whose documented mistake was a WRONG
-// end mark (e.g. "boots." → "boots?") currently go to review when the mark is simply dropped.
-const DROP_END_DEFECT = new Set(['SF-END-003', 'SF-END-005', 'SF-END-006', 'SF-END-010', 'SF-END-014']);
+// Leaving off the final end mark must be incorrect, also when the documented mistake was a WRONG
+// end mark (e.g. "boots." → "boots?").
 for (const it of items) {
   const noEnd = it.correct.replace(/[.?!]("?)$/, '$1');
-  const todo = DROP_END_DEFECT.has(it.id)
-    ? 'engine defect: missing final end mark goes to review when the documented mistake was a wrong end mark (pending() suppresses the end-mark check)'
-    : undefined;
-  test(`missing final end mark is incorrect: ${it.id}`, { todo }, () => check(it.id, noEnd, 'incorrect'));
+  test(`missing final end mark is incorrect: ${it.id}`, () => check(it.id, noEnd, 'incorrect'));
 }
 
-// A question written with a period must be incorrect.
-const Q_PERIOD_DEFECT = new Set(['SF-MIX-008', 'SF-MIX-012']);
+// A question written with a period must be incorrect (also inside closing quotation marks).
 for (const it of items.filter((i) => /\?"?$/.test(i.correct))) {
   const asPeriod = it.correct.replace(/\?("?)$/, '.$1');
-  const todo = Q_PERIOD_DEFECT.has(it.id)
-    ? 'engine defect: "." instead of "?" inside closing quotation marks goes to review, not incorrect'
-    : undefined;
-  test(`period instead of question mark is incorrect: ${it.id}`, { todo }, () => check(it.id, asPeriod, 'incorrect'));
+  test(`period instead of question mark is incorrect: ${it.id}`, () => check(it.id, asPeriod, 'incorrect'));
 }
 
 // Leaving out an OPTIONAL comma after a short opening phrase (≤ 4 words) is still correct US English.
-// The curriculum itself calls these commas optional (SF-CAP-006 accepts both), but only CAP-006 lists
-// the comma-less form, so the engine reports a 'dropped' mark → incorrect.
+// The curriculum calls these commas optional; the engine treats a dropped opening-phrase comma as
+// optional (review at worst), and the bank lists comma-less forms in `accepted`.
 const OPTIONAL_INTRO = [
   'SF-CAP-009', 'SF-CAP-010', 'SF-CAP-011', 'SF-CAP-012', 'SF-END-011', 'SF-SPL-009', 'SF-SPL-014',
   'SF-SPL-021', 'SF-SPL-022', 'SF-SPL-024', 'SF-TEN-002', 'SF-TEN-003', 'SF-TEN-006', 'SF-TEN-007',
@@ -116,9 +108,7 @@ const OPTIONAL_INTRO = [
   'SF-MIX-002', 'SF-MIX-005', 'SF-MIX-007', 'SF-MIX-009', 'SF-MIX-011', 'SF-MIX-014',
 ];
 for (const id of OPTIONAL_INTRO) {
-  test(`omitting the optional opening-phrase comma is not marked wrong: ${id}`, {
-    todo: 'bank/engine defect: optional opening-phrase comma is only accepted in SF-CAP-006; elsewhere omitting it is "dropped" → incorrect',
-  }, () => {
+  test(`omitting the optional opening-phrase comma is not marked wrong: ${id}`, () => {
     const it = item(id);
     const m = it.correct.match(/^([^,"]+), /);
     assert.ok(m && m[1].split(' ').length <= 4, `${id} should start with a short opening phrase`);
@@ -132,16 +122,6 @@ test('control: SF-CAP-006 accepts the opening comma both ways', () => {
 
 // ---------------------------------------------------------------- Hand-written realistic answers
 
-const D = {
-  realWordNear: 'engine defect: nearMiss() treats a different real word within 2 letters (are/were, can\'t/cannot) as a misspelling → incorrect instead of review',
-  farIrregular: 'engine defect: a wrong verb form more than 2 letters from the key (catch/caught, finded/found, goed/went) is "unknown" → review instead of incorrect',
-  farWord: 'engine defect: a wrong word more than 2 letters from the key is "unknown" → review instead of incorrect',
-  addedMark: 'engine defect: an added comma is never "clear" → a misplaced comma with every documented fix done goes to review',
-  exclaim: 'engine defect: "!" for a period is marked incorrect when the period was a documented missing mark (the bare word counts as "unfixed"), but review elsewhere',
-  article: 'engine defect: "a"/"an" swap is "different-word" (not clear) → review',
-  inSpan: 'engine defect: a mark dropped or misplaced INSIDE the span of a documented mistake ("Mr Patel", "March, 4") leaves the mistake "unknown" → review instead of incorrect',
-};
-
 const CASES = [
   // capitalization
   ['SF-CAP-001', 'Our class visited the library on monday.', 'incorrect'], // one mistake left
@@ -151,33 +131,33 @@ const CASES = [
   ['SF-CAP-002', 'My Grandma and I baked bread for the neighbors.', 'incorrect'], // "my grandma" stays lowercase
   ['SF-CAP-002', 'My grandma and I baked bread for our neighbors.', 'ok'], // harmless word swap → review
   ['SF-CAP-003', 'We saw a moose near Lake superior last summer.', 'incorrect'], // half of a two-word name
-  ['SF-CAP-004', 'Our soccer coach, Mr Patel, ran laps with us.', 'incorrect', D.inSpan], // US: Mr. needs its period
+  ['SF-CAP-004', 'Our soccer coach, Mr Patel, ran laps with us.', 'incorrect'], // US: Mr. needs its period
   ['SF-CAP-006', 'On Saturday we helped clean up Maple Street park.', 'incorrect'],
   ['SF-CAP-013', 'On the Fourth Of July, people in Boston watch fireworks over the Charles River.', 'incorrect'],
   ['SF-CAP-014', 'Mrs. Okafor said that I could read my report about Harriet Tubman on friday.', 'incorrect'],
   ['SF-CAP-015', 'My brother\'s team, The Hilltop Hawks, won the big game against the Lakeview Lions on Saturday.', 'incorrect'],
   // ending punctuation
   ['SF-END-001', 'Did you finish your spelling homework last night.', 'incorrect'], // "." on a question
-  ['SF-END-003', 'Where did I leave my red rain boots', 'incorrect', 'engine defect: dropped end mark → review (pending() suppresses the end-mark check)'],
-  ['SF-END-005', 'Water turns into ice when it gets very cold', 'incorrect', 'engine defect: dropped end mark → review (pending() suppresses the end-mark check)'],
+  ['SF-END-003', 'Where did I leave my red rain boots', 'incorrect'],
+  ['SF-END-005', 'Water turns into ice when it gets very cold', 'incorrect'],
   ['SF-END-007', 'The bus is late again. Do you think it will come soon.', 'incorrect'],
   ['SF-END-008', 'Ants can carry things much heavier than their bodies. Isn\'t that amazing!', 'correct'],
   ['SF-END-008', 'Ants can carry things much heavier than their bodies. Isn\'t that amazing.', 'incorrect'],
   ['SF-END-009', 'Our class pet is a turtle named Pickles, what should we feed him?', 'incorrect'], // comma splice
-  ['SF-END-012', 'My puppy ran away this morning! Can you help me look for him?', 'ok', D.exclaim],
-  ['SF-END-013', 'A storm is coming! Did you close the windows? We should bring the plants inside.', 'ok', D.exclaim],
+  ['SF-END-012', 'My puppy ran away this morning! Can you help me look for him?', 'ok'],
+  ['SF-END-013', 'A storm is coming! Did you close the windows? We should bring the plants inside.', 'ok'],
   ['SF-END-014', 'Is the game at noon? I packed snacks and water. Should we bring chairs too.', 'incorrect'],
   // commas
   ['SF-COM-001', 'Yes,  we can borrow two books from the library today.', 'correct'], // double space after comma
-  ['SF-COM-003', 'Our town was founded on March, 4 1852.', 'incorrect', D.inSpan], // comma in the wrong place
+  ['SF-COM-003', 'Our town was founded on March, 4 1852.', 'incorrect'], // comma in the wrong place
   ['SF-COM-005', 'We planted beans, peas, carrots, and lettuce in the school garden.', 'correct'], // Oxford comma accepted
-  ['SF-COM-005', 'We planted beans, peas, carrots, and, lettuce in the school garden.', 'incorrect', D.addedMark],
+  ['SF-COM-005', 'We planted beans, peas, carrots, and, lettuce in the school garden.', 'incorrect'],
   ['SF-COM-006', 'No, Diego I did not see who kicked the ball.', 'incorrect'],
   ['SF-COM-008', 'Well, I wanted to play outside but, it started to rain.', 'incorrect'],
   ['SF-COM-010', 'Sam, do you know what happened on December 17, 1903.', 'incorrect'],
   ['SF-COM-011', 'Lucia, you can paint the sign and Omar can hang it up.', 'incorrect'],
   ['SF-COM-013', 'As we hurried out the door, Dad called out, “Kenji, grab your jacket, shoes and backpack.”', 'correct'],
-  ['SF-COM-014', 'Well, I packed, crayons, glue and paper, but I forgot the scissors.', 'incorrect', D.addedMark],
+  ['SF-COM-014', 'Well, I packed, crayons, glue and paper, but I forgot the scissors.', 'incorrect'],
   // spelling
   ['SF-SPL-001', 'My frend Jamal sits next to me in class.', 'incorrect'],
   ['SF-SPL-005', 'We will test the magnets again tomorow.', 'incorrect'],
@@ -190,38 +170,38 @@ const CASES = [
   // verb tense
   ['SF-TEN-001', 'We walks to the science museum last Friday.', 'incorrect'],
   ['SF-TEN-001', 'We went to the science museum last Friday.', 'ok'], // synonym → review
-  ['SF-TEN-003', 'Last week, Mia catch the ball with one hand.', 'incorrect', D.farIrregular],
+  ['SF-TEN-003', 'Last week, Mia catch the ball with one hand.', 'incorrect'],
   ['SF-TEN-005', 'I eat two pancakes for breakfast this morning.', 'incorrect'],
   ['SF-TEN-007', 'Yesterday, Ms. Chen readed us a story, and then we drew pictures about it.', 'incorrect'],
-  ['SF-TEN-009', 'Long ago, people sewed their own clothes and growed their own food.', 'incorrect', D.farIrregular],
-  ['SF-TEN-011', 'Last summer, my sister and I swimed in the lake and found a smooth rock.', 'incorrect', D.farIrregular],
+  ['SF-TEN-009', 'Long ago, people sewed their own clothes and growed their own food.', 'incorrect'],
+  ['SF-TEN-011', 'Last summer, my sister and I swimed in the lake and found a smooth rock.', 'incorrect'],
   ['SF-TEN-012', 'Last Sunday morning, the sun rose, and the birds sang in the trees.', 'ok'],
-  ['SF-TEN-016', 'Last Tuesday, our class goed outside at noon, and we traced our shadows with chalk while Mr. Ross took pictures.', 'incorrect', D.farIrregular],
+  ['SF-TEN-016', 'Last Tuesday, our class goed outside at noon, and we traced our shadows with chalk while Mr. Ross took pictures.', 'incorrect'],
   ['SF-TEN-017', 'In 1620, the Pilgrims sailed to America on a ship called the Mayflower, and the trip took many weeks.', 'ok'],
-  ['SF-TEN-019', 'Last weekend, Grandpa teach me to fish, and I caught a big trout that we cooked for dinner.', 'incorrect', D.farIrregular],
-  ['SF-TEN-020', 'Yesterday, the power went out, so we finded flashlights and told stories until the lights came back on.', 'incorrect', D.farIrregular],
+  ['SF-TEN-019', 'Last weekend, Grandpa teach me to fish, and I caught a big trout that we cooked for dinner.', 'incorrect'],
+  ['SF-TEN-020', 'Yesterday, the power went out, so we finded flashlights and told stories until the lights came back on.', 'incorrect'],
   // subject-verb agreement
-  ['SF-SVA-001', 'Maya and Leo were in the same reading group.', 'ok', D.realWordNear],
-  ['SF-SVA-001', 'Maya and Leo am in the same reading group.', 'incorrect', D.farWord],
+  ['SF-SVA-001', 'Maya and Leo were in the same reading group.', 'ok'],
+  ['SF-SVA-001', 'Maya and Leo am in the same reading group.', 'incorrect'],
   ['SF-SVA-003', 'My little sister does not like spicy food at all.', 'correct'],
   ['SF-SVA-003', 'My little sister doesnt like spicy food at all.', 'incorrect'],
   ['SF-SVA-006', 'A spider has eight legs, but an insect has only six.', 'ok'], // word order → review
-  ['SF-SVA-011', 'There\'s three apples in the bowl, and Omar wants one.', 'incorrect', D.farWord],
+  ['SF-SVA-011', 'There\'s three apples in the bowl, and Omar wants one.', 'incorrect'],
   ['SF-SVA-012', 'Every Friday, Mr. Park\'s students take a spelling test, and Ravi always gets every word right because he studys hard.', 'incorrect'],
   ['SF-SVA-014', 'Owls hunt at night, but a hawk hunt during the day, and both birds have sharp claws.', 'incorrect'],
   ['SF-SVA-015', 'My brothers are cleaning the garage, and Dad says we can go swimming when the job is finished.', 'ok'],
   // homophones
   ['SF-HOM-001', 'We walked over they\'re to see the new puppy.', 'incorrect'],
   ['SF-HOM-002', 'I have too pencils and an eraser in my desk.', 'incorrect'],
-  ['SF-HOM-004', 'My brother no the answer to the riddle.', 'incorrect', D.farWord],
+  ['SF-HOM-004', 'My brother no the answer to the riddle.', 'incorrect'],
   ['SF-HOM-008', 'Please write your name at the top of the paper and hand it in bye noon.', 'incorrect'],
-  ['SF-HOM-010', 'Our family ate a whole pizza in less than a hour.', 'incorrect', D.article],
+  ['SF-HOM-010', 'Our family ate a whole pizza in less than a hour.', 'incorrect'],
   ['SF-HOM-012', 'There are too many leaves in the yard, so we will rake them in a big pile over there.', 'incorrect'],
-  ['SF-HOM-013', 'Jamal knowed he could win the race, so he trained hard for two weeks and won the gold medal.', 'incorrect', D.farWord],
+  ['SF-HOM-013', 'Jamal knowed he could win the race, so he trained hard for two weeks and won the gold medal.', 'incorrect'],
   ['SF-HOM-014', 'When we went to the market, we saw a sign for a sale on fresh pairs and peaches.', 'incorrect'],
   // possessives and contractions
   ['SF-POS-001', 'I can not find my other sock anywhere.', 'ok'],
-  ['SF-POS-001', 'I cannot find my other sock anywhere.', 'ok', D.realWordNear],
+  ['SF-POS-001', 'I cannot find my other sock anywhere.', 'ok'],
   ['SF-POS-001', 'I ca\'nt find my other sock anywhere.', 'incorrect'],
   ['SF-POS-002', 'Mias\' backpack is hanging on the hook by the door.', 'incorrect'],
   ['SF-POS-006', 'We\'re going to visit the zoo, and I am so excited.', 'ok'],
@@ -234,10 +214,10 @@ const CASES = [
   ['SF-MIX-001', 'My friend Ava sits next to me in art class', 'incorrect'],
   ['SF-MIX-002', 'Last Sunday, we went to the Zoo with our cousins.', 'incorrect'],
   ['SF-MIX-005', 'On Friday, Tariq and his friends practiced their soccer moves at the park until dark?', 'incorrect'],
-  ['SF-MIX-007', 'In 1776 American leaders met in Philadelphia and signed the Declaration of Independence to start a new country.', 'ok', 'bank/engine defect: optional opening-phrase comma omitted → incorrect'],
+  ['SF-MIX-007', 'In 1776 American leaders met in Philadelphia and signed the Declaration of Independence to start a new country.', 'ok'],
   ['SF-MIX-008', 'Mrs. Jones asked, “Who wants to help plant flowers at the park?”', 'correct'],
-  ['SF-MIX-008', 'Mrs. Jones asked, "Who wants to help plant flowers at the park."', 'incorrect', 'engine defect: "." instead of "?" inside closing quotation marks → review'],
-  ['SF-MIX-010', 'Yes, we finished our projects, but Leah and Nora are still painting they\'re poster.', 'incorrect', D.farWord],
+  ['SF-MIX-008', 'Mrs. Jones asked, "Who wants to help plant flowers at the park."', 'incorrect'],
+  ['SF-MIX-010', 'Yes, we finished our projects, but Leah and Nora are still painting they\'re poster.', 'incorrect'],
   ['SF-MIX-012', 'Isaac asked his dad, "can we go to the library after lunch?"', 'incorrect'],
   ['SF-MIX-013', 'Kai and Noah play basketball every Saturday at the gym on Elm street after school.', 'incorrect'],
   ['SF-MIX-015', 'It\'s time for recess, but Hugo wants to finish his drawing of a dinosaur first', 'incorrect'],

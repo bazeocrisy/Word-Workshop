@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import {
-  grade, normalize, labCategory, LAB_CHOICES, rng, newProgress, TEST_RESERVE, pickSession,
+  grade, normalize, labCategory, labAccepts, LAB_CHOICES, rng, newProgress, TEST_RESERVE, pickSession,
   recordAnswer, markSessionSeen, summarizeTest, hint, explainErrors, markErrors, stepByStep,
 } from '../../js/sentencefix/engine.js';
 
@@ -163,6 +163,78 @@ test('labCategory: one kind of mistake, or more than one', () => {
   assert.equal(labCategory(MIX), 'more-than-one');
   assert.deepEqual(LAB_CHOICES.map((c) => c.label), ['Spelling', 'Capital letters', 'Punctuation', 'Grammar', 'More than one type']);
   assert.ok(LAB_CHOICES.some((c) => c.value === labCategory(MIX)));
+});
+
+test('labAccepts: a mistake that fits two kinds accepts either, and "more than one" only when it can be', () => {
+  const KNEW = { errors: [{ category: 'spelling', altCategory: 'grammar', wrong: 'new', right: 'knew' }] };
+  assert.ok(labAccepts(KNEW, 'spelling'));
+  assert.ok(labAccepts(KNEW, 'grammar'));
+  assert.ok(!labAccepts(KNEW, 'punctuation'));
+  assert.ok(!labAccepts(KNEW, 'more-than-one'), 'one mistake is one kind');
+  const TWO = { errors: [{ category: 'spelling', altCategory: 'grammar' }, { category: 'grammar' }] };
+  assert.ok(labAccepts(TWO, 'grammar'));
+  assert.ok(labAccepts(TWO, 'more-than-one'));
+  assert.ok(!labAccepts(TWO, 'spelling'));
+  assert.ok(labAccepts(CAP, 'capitalization') && !labAccepts(CAP, 'more-than-one'));
+  assert.ok(labAccepts(MIX, 'more-than-one') && !labAccepts(MIX, 'grammar'));
+  for (const it of [CAP, MIX, COMMA, SPELL, POSS]) assert.ok(labAccepts(it, labCategory(it)), it.id);
+});
+
+// ---------- Grading: real-word slips, marks and commas ----------
+
+const fx = (incorrect, correct, errors, accepted = []) => ({ id: 'FX', skill: 'mixed', incorrect, correct, accepted, errors: errors.map(([wrong, right, category = 'grammar']) => ({ wrong, right, category })) });
+
+test('a real word that may be a fair rewrite goes to review; a known wrong form is incorrect', () => {
+  const sva = fx('Maya and Leo is in the same group.', 'Maya and Leo are in the same group.', [['is', 'are']]);
+  assert.equal(grade(sva, 'Maya and Leo were in the same group.').result, 'review'); // a different tense, not a typo
+  assert.equal(grade(sva, 'Maya and Leo am in the same group.').result, 'incorrect'); // agreement
+  const cant = fx('I cant find my sock.', "I can't find my sock.", [['cant', "can't", 'punctuation']]);
+  assert.equal(grade(cant, 'I cannot find my sock.').result, 'review');
+  assert.equal(grade(cant, 'I can not find my sock.').result, 'review');
+  assert.equal(grade(cant, "I ca'nt find my sock.").result, 'incorrect');
+  const tense = fx('Last week, Mia catched the ball and goes home.', 'Last week, Mia caught the ball and went home.', [['catched', 'caught'], ['goes', 'went']]);
+  for (const a of ['Last week, Mia catch the ball and went home.', 'Last week, Mia caught the ball and goed home.', 'Last week, Mia caught the ball and go home.']) {
+    assert.equal(grade(tense, a).result, 'incorrect', a);
+  }
+  const hom = fx('My brother new the answer.', 'My brother knew the answer.', [['new', 'knew', 'spelling']]);
+  assert.equal(grade(hom, 'My brother no the answer.').result, 'incorrect');
+  const there = fx('There is three apples.', 'There are three apples.', [['is', 'are']]);
+  assert.equal(grade(there, "There's three apples.").result, 'incorrect');
+});
+
+test('end marks: "!" for "." is review, "." for "?" is incorrect, a missing mark is always incorrect', () => {
+  const two = fx('My puppy ran away Can you help', 'My puppy ran away. Can you help?', [['away', 'away.', 'punctuation'], ['help', 'help?', 'punctuation']]);
+  assert.equal(grade(two, 'My puppy ran away! Can you help?').result, 'review');
+  assert.equal(grade(two, 'My puppy ran away. Can you help.').result, 'incorrect');
+  assert.equal(grade(two, 'My puppy ran away. Can you help').result, 'incorrect');
+  const q = fx('Where are my boots.', 'Where are my boots?', [['boots.', 'boots?', 'punctuation']]);
+  assert.equal(grade(q, 'Where are my boots').result, 'incorrect');
+  const quote = fx('Mom asked "who is hungry"', 'Mom asked, "Who is hungry?"', [['asked', 'asked,', 'punctuation'], ['"who', '"Who', 'capitalization'], ['hungry"', 'hungry?"', 'punctuation']]);
+  assert.equal(grade(quote, 'Mom asked, "Who is hungry."').result, 'incorrect');
+});
+
+test('commas: an optional opening comma may be left out; added or misplaced commas are mistakes', () => {
+  const intro = fx('last sunday, we went to the zoo.', 'Last Sunday, we went to the zoo.', [['last', 'Last', 'capitalization']]);
+  assert.notEqual(grade(intro, 'Last Sunday we went to the zoo.').result, 'incorrect');
+  const list = fx('We planted beans peas carrots and lettuce.', 'We planted beans, peas, carrots and lettuce.', [['beans', 'beans,', 'punctuation'], ['peas', 'peas,', 'punctuation']]);
+  assert.notEqual(grade(list, 'We planted beans, peas, carrots, and lettuce.').result, 'incorrect'); // Oxford comma
+  assert.equal(grade(list, 'We planted beans, peas, carrots, and, lettuce.').result, 'incorrect');
+  assert.equal(grade(list, 'We planted, beans, peas, carrots and lettuce.').result, 'incorrect');
+  const date = fx('It was founded on March 4 1852.', 'It was founded on March 4, 1852.', [['March 4', 'March 4,', 'punctuation']]);
+  assert.equal(grade(date, 'It was founded on March, 4 1852.').result, 'incorrect');
+  const title = fx('Our coach, mr. patel, ran.', 'Our coach, Mr. Patel, ran.', [['mr. patel', 'Mr. Patel', 'capitalization']]);
+  assert.equal(grade(title, 'Our coach, Mr Patel, ran.').result, 'incorrect');
+  const yes = fx('yes we can go.', 'Yes, we can go.', [['yes', 'Yes,', 'punctuation']]);
+  assert.equal(grade(yes, 'Yes we can go.').result, 'incorrect');
+});
+
+test('a/an before a vowel sound', () => {
+  const hour = fx('We ate in less than an our.', 'We ate in less than an hour.', [['our', 'hour', 'spelling']]);
+  assert.equal(grade(hour, 'We ate in less than a hour.').result, 'incorrect');
+  const apple = fx('I ate a apple.', 'I ate an apple.', [['a apple', 'an apple', 'grammar']]);
+  assert.equal(grade(apple, 'I ate a apple.').result, 'incorrect');
+  const owl = fx('I saw a owl yesterday', 'I saw an owl yesterday.', [['a owl', 'an owl'], ['yesterday', 'yesterday.', 'punctuation']]);
+  assert.equal(grade(owl, 'I saw an owl yesterday.').result, 'correct');
 });
 
 // ---------- Selection ----------

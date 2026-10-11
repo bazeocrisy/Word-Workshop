@@ -208,7 +208,7 @@
       "hints": [
         "Look for words that need capital letters.",
         "Check the beginning of the sentence and the last word.",
-        "The doctor's title, her name, and the month all need capitals."
+        "The doctor's title, the doctor's name, and the month all need capitals."
       ],
       "tags": [
         "capitalization"
@@ -258,7 +258,11 @@
       "context": "history",
       "incorrect": "In july 1969, neil armstrong became the first person to walk on the moon.",
       "correct": "In July 1969, Neil Armstrong became the first person to walk on the moon.",
-      "accepted": [],
+      "accepted": [
+        "In July 1969 Neil Armstrong became the first person to walk on the moon.",
+        "In July 1969, Neil Armstrong became the first person to walk on the Moon.",
+        "In July 1969 Neil Armstrong became the first person to walk on the Moon."
+      ],
       "errors": [
         {
           "category": "capitalization",
@@ -289,7 +293,9 @@
       "context": "school",
       "incorrect": "Every wednesday, ms. rivera teaches us songs in spanish.",
       "correct": "Every Wednesday, Ms. Rivera teaches us songs in Spanish.",
-      "accepted": [],
+      "accepted": [
+        "Every Wednesday Ms. Rivera teaches us songs in Spanish."
+      ],
       "errors": [
         {
           "category": "capitalization",
@@ -326,7 +332,9 @@
       "context": "family",
       "incorrect": "for thanksgiving, we drove to my aunt's house in ohio.",
       "correct": "For Thanksgiving, we drove to my aunt's house in Ohio.",
-      "accepted": [],
+      "accepted": [
+        "For Thanksgiving we drove to my aunt's house in Ohio."
+      ],
       "errors": [
         {
           "category": "capitalization",
@@ -363,7 +371,9 @@
       "context": "nature",
       "incorrect": "last june, my family camped at yellowstone national park with uncle ray and aunt bea.",
       "correct": "Last June, my family camped at Yellowstone National Park with Uncle Ray and Aunt Bea.",
-      "accepted": [],
+      "accepted": [
+        "Last June my family camped at Yellowstone National Park with Uncle Ray and Aunt Bea."
+      ],
       "errors": [
         {
           "category": "capitalization",
@@ -412,7 +422,9 @@
       "context": "community",
       "incorrect": "on the fourth of july, people in boston watch fireworks over the charles river.",
       "correct": "On the Fourth of July, people in Boston watch fireworks over the Charles River.",
-      "accepted": [],
+      "accepted": [
+        "On the Fourth of July people in Boston watch fireworks over the Charles River."
+      ],
       "errors": [
         {
           "category": "capitalization",
@@ -817,7 +829,9 @@
       "context": "history",
       "incorrect": "Long ago, people wrote letters with feather pens Have you ever tried one",
       "correct": "Long ago, people wrote letters with feather pens. Have you ever tried one?",
-      "accepted": [],
+      "accepted": [
+        "Long ago people wrote letters with feather pens. Have you ever tried one?"
+      ],
       "errors": [
         {
           "category": "punctuation",
@@ -848,7 +862,9 @@
       "context": "family",
       "incorrect": "My puppy ran away this morning Can you help me look for him",
       "correct": "My puppy ran away this morning. Can you help me look for him?",
-      "accepted": [],
+      "accepted": [
+        "My puppy ran away this morning! Can you help me look for him?"
+      ],
       "errors": [
         {
           "category": "punctuation",
@@ -879,7 +895,9 @@
       "context": "nature",
       "incorrect": "A storm is coming Did you close the windows We should bring the plants inside",
       "correct": "A storm is coming. Did you close the windows? We should bring the plants inside.",
-      "accepted": [],
+      "accepted": [
+        "A storm is coming! Did you close the windows? We should bring the plants inside."
+      ],
       "errors": [
         {
           "category": "punctuation",
@@ -953,7 +971,9 @@
       "context": "science",
       "incorrect": "Why do bats sleep during the day They hunt for food at night Bats are amazing animals",
       "correct": "Why do bats sleep during the day? They hunt for food at night. Bats are amazing animals.",
-      "accepted": [],
+      "accepted": [
+        "Why do bats sleep during the day? They hunt for food at night. Bats are amazing animals!"
+      ],
       "errors": [
         {
           "category": "punctuation",
@@ -1217,7 +1237,9 @@
       "incorrect": "On our hike, we saw deer rabbits turkeys and a red fox.",
       "correct": "On our hike, we saw deer, rabbits, turkeys and a red fox.",
       "accepted": [
-        "On our hike, we saw deer, rabbits, turkeys, and a red fox."
+        "On our hike, we saw deer, rabbits, turkeys, and a red fox.",
+        "On our hike we saw deer, rabbits, turkeys and a red fox.",
+        "On our hike we saw deer, rabbits, turkeys, and a red fox."
       ],
       "errors": [
         {
@@ -1351,7 +1373,9 @@
       "incorrect": "As we hurried out the door, Dad called out \"Kenji grab your jacket shoes and backpack.\"",
       "correct": "As we hurried out the door, Dad called out, \"Kenji, grab your jacket, shoes and backpack.\"",
       "accepted": [
-        "As we hurried out the door, Dad called out, \"Kenji, grab your jacket, shoes, and backpack.\""
+        "As we hurried out the door, Dad called out, \"Kenji, grab your jacket, shoes, and backpack.\"",
+        "As we hurried out the door Dad called out, \"Kenji, grab your jacket, shoes and backpack.\"",
+        "As we hurried out the door Dad called out, \"Kenji, grab your jacket, shoes, and backpack.\""
       ],
       "errors": [
         {
@@ -1387,17 +1411,17 @@
       "skill": "commas",
       "difficulty": "hard",
       "context": "school",
-      "incorrect": "Well I packed crayons glue and paper but I forgot the scissors.",
-      "correct": "Well, I packed crayons, glue and paper, but I forgot the scissors.",
+      "incorrect": "Mom I packed crayons glue and paper but I forgot the scissors.",
+      "correct": "Mom, I packed crayons, glue and paper, but I forgot the scissors.",
       "accepted": [
-        "Well, I packed crayons, glue, and paper, but I forgot the scissors."
+        "Mom, I packed crayons, glue, and paper, but I forgot the scissors."
       ],
       "errors": [
         {
           "category": "punctuation",
-          "wrong": "Well",
-          "right": "Well,",
-          "explanation": "Put a comma after Yes, No, or Well at the start of a sentence."
+          "wrong": "Mom",
+          "right": "Mom,",
+          "explanation": "Use a comma to set off the name of the person you are talking to."
         },
         {
           "category": "punctuation",
@@ -1414,8 +1438,8 @@
       ],
       "hints": [
         "Look for missing commas.",
-        "Look at the first word, the list of supplies, and the word \"but.\"",
-        "Add a comma after \"Well,\" between the supplies, and before \"but.\" A comma before \"and\" is OK too."
+        "Look at the name of the person being spoken to, the list of supplies, and the word \"but.\"",
+        "Add a comma after \"Mom,\" between the supplies, and before \"but.\" A comma before \"and\" is OK too."
       ],
       "tags": [
         "commas"
@@ -1426,8 +1450,8 @@
       "skill": "commas",
       "difficulty": "hard",
       "context": "history",
-      "incorrect": "No Theo the astronauts landed on the moon on July 20 1969.",
-      "correct": "No, Theo, the astronauts landed on the moon on July 20, 1969.",
+      "incorrect": "No Theo the Golden Gate Bridge in San Francisco opened on May 27 1937.",
+      "correct": "No, Theo, the Golden Gate Bridge in San Francisco opened on May 27, 1937.",
       "accepted": [],
       "errors": [
         {
@@ -1444,8 +1468,8 @@
         },
         {
           "category": "punctuation",
-          "wrong": "July 20",
-          "right": "July 20,",
+          "wrong": "May 27",
+          "right": "May 27,",
           "explanation": "Put a comma between the day and the year in a date."
         }
       ],
@@ -1670,7 +1694,7 @@
       "hints": [
         "Look for two misspelled words.",
         "Look at the word after \"Ms. Diaz\" and the word that describes the book.",
-        "One word is spelled the way it sounds but is not spelled that way. The other is missing a vowel."
+        "One word does not look the way it sounds. The other word is missing a vowel."
       ],
       "tags": [
         "spelling"
@@ -1683,7 +1707,9 @@
       "context": "science",
       "incorrect": "In science, we learned wich animals sleep durring the cold winter.",
       "correct": "In science, we learned which animals sleep during the cold winter.",
-      "accepted": [],
+      "accepted": [
+        "In science we learned which animals sleep during the cold winter."
+      ],
       "errors": [
         {
           "category": "spelling",
@@ -1732,7 +1758,7 @@
       "hints": [
         "Look for two misspelled words.",
         "Look at the word before \"of shell\" and the word that describes the crab.",
-        "One word has the i and e switched. The other ends with the wrong two letters."
+        "One word has the i and e switched. The other word has its last two letters in the wrong order."
       ],
       "tags": [
         "spelling"
@@ -1819,7 +1845,8 @@
           "category": "spelling",
           "wrong": "runing",
           "right": "running",
-          "explanation": "For words like run, double the last letter before adding -ing."
+          "explanation": "For words like run, double the last letter before adding -ing.",
+          "altCategory": "grammar"
         },
         {
           "category": "spelling",
@@ -1844,7 +1871,9 @@
       "context": "history",
       "incorrect": "Long ago, many peple traveled across the contry in covered wagons.",
       "correct": "Long ago, many people traveled across the country in covered wagons.",
-      "accepted": [],
+      "accepted": [
+        "Long ago many people traveled across the country in covered wagons."
+      ],
       "errors": [
         {
           "category": "spelling",
@@ -1881,7 +1910,8 @@
           "category": "spelling",
           "wrong": "stoped",
           "right": "stopped",
-          "explanation": "For words like stop, double the last letter before adding -ed."
+          "explanation": "For words like stop, double the last letter before adding -ed.",
+          "altCategory": "grammar"
         },
         {
           "category": "spelling",
@@ -1912,7 +1942,8 @@
           "category": "spelling",
           "wrong": "carryed",
           "right": "carried",
-          "explanation": "For words like carry, change the y to i before adding -ed."
+          "explanation": "For words like carry, change the y to i before adding -ed.",
+          "altCategory": "grammar"
         },
         {
           "category": "spelling",
@@ -2067,7 +2098,9 @@
       "context": "family",
       "incorrect": "On Sunday, my famly went to the beach and stayed untill the sun went down becuase it was realy warm.",
       "correct": "On Sunday, my family went to the beach and stayed until the sun went down because it was really warm.",
-      "accepted": [],
+      "accepted": [
+        "On Sunday my family went to the beach and stayed until the sun went down because it was really warm."
+      ],
       "errors": [
         {
           "category": "spelling",
@@ -2110,7 +2143,9 @@
       "context": "school",
       "incorrect": "Every mornning, our teacher writes a question on the bord, and we write our answers in our jurnals.",
       "correct": "Every morning, our teacher writes a question on the board, and we write our answers in our journals.",
-      "accepted": [],
+      "accepted": [
+        "Every morning our teacher writes a question on the board, and we write our answers in our journals."
+      ],
       "errors": [
         {
           "category": "spelling",
@@ -2153,13 +2188,15 @@
           "category": "spelling",
           "wrong": "hopeing",
           "right": "hoping",
-          "explanation": "For words like hope, drop the e before adding -ing."
+          "explanation": "For words like hope, drop the e before adding -ing.",
+          "altCategory": "grammar"
         },
         {
           "category": "spelling",
           "wrong": "stoped",
           "right": "stopped",
-          "explanation": "For words like stop, double the last letter before adding -ed."
+          "explanation": "For words like stop, double the last letter before adding -ed.",
+          "altCategory": "grammar"
         },
         {
           "category": "spelling",
@@ -2184,7 +2221,9 @@
       "context": "history",
       "incorrect": "Many years ago, childern walked to a small school and wrote their lessons on littel chalkboards evry day.",
       "correct": "Many years ago, children walked to a small school and wrote their lessons on little chalkboards every day.",
-      "accepted": [],
+      "accepted": [
+        "Many years ago children walked to a small school and wrote their lessons on little chalkboards every day."
+      ],
       "errors": [
         {
           "category": "spelling",
@@ -2283,7 +2322,9 @@
       "context": "family",
       "incorrect": "Yesterday, my dad cooks spaghetti for dinner.",
       "correct": "Yesterday, my dad cooked spaghetti for dinner.",
-      "accepted": [],
+      "accepted": [
+        "Yesterday my dad cooked spaghetti for dinner."
+      ],
       "errors": [
         {
           "category": "grammar",
@@ -2308,7 +2349,9 @@
       "context": "sports",
       "incorrect": "Last week, Mia catched the ball with one hand.",
       "correct": "Last week, Mia caught the ball with one hand.",
-      "accepted": [],
+      "accepted": [
+        "Last week Mia caught the ball with one hand."
+      ],
       "errors": [
         {
           "category": "grammar",
@@ -2383,7 +2426,9 @@
       "context": "community",
       "incorrect": "Last spring, our town builded a new playground.",
       "correct": "Last spring, our town built a new playground.",
-      "accepted": [],
+      "accepted": [
+        "Last spring our town built a new playground."
+      ],
       "errors": [
         {
           "category": "grammar",
@@ -2408,7 +2453,9 @@
       "context": "school",
       "incorrect": "Yesterday, Ms. Chen reads us a story, and then we draw pictures about it.",
       "correct": "Yesterday, Ms. Chen read us a story, and then we drew pictures about it.",
-      "accepted": [],
+      "accepted": [
+        "Yesterday Ms. Chen read us a story, and then we drew pictures about it."
+      ],
       "errors": [
         {
           "category": "grammar",
@@ -2439,7 +2486,9 @@
       "context": "science",
       "incorrect": "Last week, we plant seeds in cups and watch them sprout.",
       "correct": "Last week, we planted seeds in cups and watched them sprout.",
-      "accepted": [],
+      "accepted": [
+        "Last week we planted seeds in cups and watched them sprout."
+      ],
       "errors": [
         {
           "category": "grammar",
@@ -2470,7 +2519,9 @@
       "context": "history",
       "incorrect": "Long ago, people sew their own clothes and grow their own food.",
       "correct": "Long ago, people sewed their own clothes and grew their own food.",
-      "accepted": [],
+      "accepted": [
+        "Long ago people sewed their own clothes and grew their own food."
+      ],
       "errors": [
         {
           "category": "grammar",
@@ -2501,7 +2552,9 @@
       "context": "sports",
       "incorrect": "In the last game, Carlos runned fast and throwed the ball to first base.",
       "correct": "In the last game, Carlos ran fast and threw the ball to first base.",
-      "accepted": [],
+      "accepted": [
+        "In the last game Carlos ran fast and threw the ball to first base."
+      ],
       "errors": [
         {
           "category": "grammar",
@@ -2532,7 +2585,9 @@
       "context": "family",
       "incorrect": "Last summer, my sister and I swimmed in the lake and finded a smooth rock.",
       "correct": "Last summer, my sister and I swam in the lake and found a smooth rock.",
-      "accepted": [],
+      "accepted": [
+        "Last summer my sister and I swam in the lake and found a smooth rock."
+      ],
       "errors": [
         {
           "category": "grammar",
@@ -2563,7 +2618,9 @@
       "context": "nature",
       "incorrect": "Last Sunday morning, the sun comes up, and the birds sing in the trees.",
       "correct": "Last Sunday morning, the sun came up, and the birds sang in the trees.",
-      "accepted": [],
+      "accepted": [
+        "Last Sunday morning the sun came up, and the birds sang in the trees."
+      ],
       "errors": [
         {
           "category": "grammar",
@@ -2594,7 +2651,9 @@
       "context": "family",
       "incorrect": "Last Saturday, my aunt maked bread, and we eat it while it was still warm.",
       "correct": "Last Saturday, my aunt made bread, and we ate it while it was still warm.",
-      "accepted": [],
+      "accepted": [
+        "Last Saturday my aunt made bread, and we ate it while it was still warm."
+      ],
       "errors": [
         {
           "category": "grammar",
@@ -2625,7 +2684,9 @@
       "context": "community",
       "incorrect": "Last month, our class writed letters to the mayor, and she sends us a reply.",
       "correct": "Last month, our class wrote letters to the mayor, and she sent us a reply.",
-      "accepted": [],
+      "accepted": [
+        "Last month our class wrote letters to the mayor, and she sent us a reply."
+      ],
       "errors": [
         {
           "category": "grammar",
@@ -2654,9 +2715,11 @@
       "skill": "verb-tense",
       "difficulty": "medium",
       "context": "school",
-      "incorrect": "When the bell rang, Sofia grabs her lunch and sit with her friends.",
+      "incorrect": "When the bell rang, Sofia grabs her lunch and sits with her friends.",
       "correct": "When the bell rang, Sofia grabbed her lunch and sat with her friends.",
-      "accepted": [],
+      "accepted": [
+        "When the bell rang Sofia grabbed her lunch and sat with her friends."
+      ],
       "errors": [
         {
           "category": "grammar",
@@ -2666,9 +2729,9 @@
         },
         {
           "category": "grammar",
-          "wrong": "sit",
+          "wrong": "sits",
           "right": "sat",
-          "explanation": "Sit is a special verb. Its past tense is sat."
+          "explanation": "The bell already rang, so use the past tense. The past tense of sit is sat."
         }
       ],
       "hints": [
@@ -2687,7 +2750,9 @@
       "context": "science",
       "incorrect": "Last Tuesday, our class goes outside at noon, and we trace our shadows with chalk while Mr. Ross takes pictures.",
       "correct": "Last Tuesday, our class went outside at noon, and we traced our shadows with chalk while Mr. Ross took pictures.",
-      "accepted": [],
+      "accepted": [
+        "Last Tuesday our class went outside at noon, and we traced our shadows with chalk while Mr. Ross took pictures."
+      ],
       "errors": [
         {
           "category": "grammar",
@@ -2722,9 +2787,11 @@
       "skill": "verb-tense",
       "difficulty": "hard",
       "context": "history",
-      "incorrect": "In 1620, the Pilgrims sail to America on a ship that is called the Mayflower, and the trip takes many weeks.",
-      "correct": "In 1620, the Pilgrims sailed to America on a ship that was called the Mayflower, and the trip took many weeks.",
-      "accepted": [],
+      "incorrect": "In 1620, the Pilgrims sail on a ship that is called the Mayflower, and the trip takes many weeks.",
+      "correct": "In 1620, the Pilgrims sailed on a ship that was called the Mayflower, and the trip took many weeks.",
+      "accepted": [
+        "In 1620 the Pilgrims sailed on a ship that was called the Mayflower, and the trip took many weeks."
+      ],
       "errors": [
         {
           "category": "grammar",
@@ -2761,7 +2828,9 @@
       "context": "sports",
       "incorrect": "At the swim meet yesterday, Hana jumps into the pool and swimmed so fast that she wins a blue ribbon.",
       "correct": "At the swim meet yesterday, Hana jumped into the pool and swam so fast that she won a blue ribbon.",
-      "accepted": [],
+      "accepted": [
+        "At the swim meet yesterday Hana jumped into the pool and swam so fast that she won a blue ribbon."
+      ],
       "errors": [
         {
           "category": "grammar",
@@ -2798,7 +2867,9 @@
       "context": "family",
       "incorrect": "Last weekend, Grandpa teached me to fish, and I catched a big trout that we cook for dinner.",
       "correct": "Last weekend, Grandpa taught me to fish, and I caught a big trout that we cooked for dinner.",
-      "accepted": [],
+      "accepted": [
+        "Last weekend Grandpa taught me to fish, and I caught a big trout that we cooked for dinner."
+      ],
       "errors": [
         {
           "category": "grammar",
@@ -2835,7 +2906,9 @@
       "context": "everyday",
       "incorrect": "Yesterday, the power goes out, so we find flashlights and tell stories until the lights came back on.",
       "correct": "Yesterday, the power went out, so we found flashlights and told stories until the lights came back on.",
-      "accepted": [],
+      "accepted": [
+        "Yesterday the power went out, so we found flashlights and told stories until the lights came back on."
+      ],
       "errors": [
         {
           "category": "grammar",
@@ -2872,7 +2945,9 @@
       "context": "school",
       "incorrect": "Maya and Leo is in the same reading group.",
       "correct": "Maya and Leo are in the same reading group.",
-      "accepted": [],
+      "accepted": [
+        "Maya and Leo were in the same reading group."
+      ],
       "errors": [
         {
           "category": "grammar",
@@ -2930,7 +3005,8 @@
           "category": "grammar",
           "wrong": "don't",
           "right": "doesn't",
-          "explanation": "Use doesn't with one person, like he, she, or my sister."
+          "explanation": "Use doesn't with one person, like he, she, or my sister.",
+          "altCategory": "punctuation"
         }
       ],
       "hints": [
@@ -2949,7 +3025,9 @@
       "context": "sports",
       "incorrect": "Our players has new jerseys this year.",
       "correct": "Our players have new jerseys this year.",
-      "accepted": [],
+      "accepted": [
+        "Our players had new jerseys this year."
+      ],
       "errors": [
         {
           "category": "grammar",
@@ -3005,7 +3083,9 @@
       "context": "science",
       "incorrect": "A spider have eight legs, but an insect only have six.",
       "correct": "A spider has eight legs, but an insect only has six.",
-      "accepted": [],
+      "accepted": [
+        "A spider has eight legs, but an insect has only six."
+      ],
       "errors": [
         {
           "category": "grammar",
@@ -3096,15 +3176,15 @@
       "skill": "subject-verb",
       "difficulty": "medium",
       "context": "nature",
-      "incorrect": "Bees makes honey, and each bee have a special job in the hive.",
-      "correct": "Bees make honey, and each bee has a special job in the hive.",
+      "incorrect": "Honeybees makes honey, and each bee have a special job in the hive.",
+      "correct": "Honeybees make honey, and each bee has a special job in the hive.",
       "accepted": [],
       "errors": [
         {
           "category": "grammar",
           "wrong": "makes",
           "right": "make",
-          "explanation": "Bees means more than one, so use make, not makes."
+          "explanation": "Honeybees means more than one, so use make, not makes."
         },
         {
           "category": "grammar",
@@ -3115,8 +3195,8 @@
       ],
       "hints": [
         "Look for two verbs that do not match what they tell about.",
-        "Look at the word after \"Bees\" and the word after \"each bee.\"",
-        "Many bees need a verb without s. \"Each bee\" is one bee, so it needs has."
+        "Look at the word after \"Honeybees\" and the word after \"each bee.\"",
+        "Many bees need a verb without s. \"Each bee\" is one bee, so it needs a verb for one."
       ],
       "tags": [
         "subject-verb"
@@ -3191,7 +3271,9 @@
       "context": "school",
       "incorrect": "Every Friday, Mr. Park's students takes a spelling test, and Ravi always get every word right because he study hard.",
       "correct": "Every Friday, Mr. Park's students take a spelling test, and Ravi always gets every word right because he studies hard.",
-      "accepted": [],
+      "accepted": [
+        "Every Friday Mr. Park's students take a spelling test, and Ravi always gets every word right because he studies hard."
+      ],
       "errors": [
         {
           "category": "grammar",
@@ -3326,7 +3408,7 @@
       "hints": [
         "Look for three verbs that do not match who or what they tell about.",
         "Look at the word after \"brothers,\" the word after \"Dad,\" and the word after \"job.\"",
-        "Two brothers need are. One dad needs a verb with s. One job needs is."
+        "More than one brother needs a verb for more than one. One dad needs a verb with s. One job needs a verb for one thing."
       ],
       "tags": [
         "subject-verb"
@@ -3420,7 +3502,8 @@
           "category": "spelling",
           "wrong": "new",
           "right": "knew",
-          "explanation": "Knew is the past tense of know. New means not old."
+          "explanation": "Knew is the past tense of know. New means not old.",
+          "altCategory": "grammar"
         }
       ],
       "hints": [
@@ -3445,7 +3528,8 @@
           "category": "spelling",
           "wrong": "one",
           "right": "won",
-          "explanation": "Won means you came in first. One is the number 1."
+          "explanation": "Won means you came in first. One is the number 1.",
+          "altCategory": "grammar"
         },
         {
           "category": "spelling",
@@ -3499,8 +3583,8 @@
       "skill": "homophones",
       "difficulty": "medium",
       "context": "community",
-      "incorrect": "Dad and I rode our bikes to the store to by milk and too loaves of bread.",
-      "correct": "Dad and I rode our bikes to the store to buy milk and two loaves of bread.",
+      "incorrect": "Dad and I rode to the store to by milk and too loaves of bread.",
+      "correct": "Dad and I rode to the store to buy milk and two loaves of bread.",
       "accepted": [],
       "errors": [
         {
@@ -3563,7 +3647,9 @@
       "context": "history",
       "incorrect": "Long ago, sailors used the stars to find there way across the see.",
       "correct": "Long ago, sailors used the stars to find their way across the sea.",
-      "accepted": [],
+      "accepted": [
+        "Long ago sailors used the stars to find their way across the sea."
+      ],
       "errors": [
         {
           "category": "spelling",
@@ -3637,7 +3723,7 @@
           "category": "spelling",
           "wrong": "rode",
           "right": "road",
-          "explanation": "A road is a street. Rode means you rode on something."
+          "explanation": "A road is a street. Rode is the past tense of ride."
         }
       ],
       "hints": [
@@ -3699,7 +3785,8 @@
           "category": "spelling",
           "wrong": "new",
           "right": "knew",
-          "explanation": "Knew is the past tense of know. New means not old."
+          "explanation": "Knew is the past tense of know. New means not old.",
+          "altCategory": "grammar"
         },
         {
           "category": "spelling",
@@ -3711,7 +3798,8 @@
           "category": "spelling",
           "wrong": "one",
           "right": "won",
-          "explanation": "Won means you came in first. One is the number 1."
+          "explanation": "Won means you came in first. One is the number 1.",
+          "altCategory": "grammar"
         }
       ],
       "hints": [
@@ -3730,7 +3818,9 @@
       "context": "community",
       "incorrect": "When we went too the market, we saw a sign for a sail on fresh pairs and peaches.",
       "correct": "When we went to the market, we saw a sign for a sale on fresh pears and peaches.",
-      "accepted": [],
+      "accepted": [
+        "When we went to the market we saw a sign for a sale on fresh pears and peaches."
+      ],
       "errors": [
         {
           "category": "spelling",
@@ -3753,7 +3843,7 @@
       ],
       "hints": [
         "Look for three words that sound right but are the wrong words.",
-        "Look at the word before \"the market,\" the word after \"a,\" and the fruit.",
+        "Look at the word before \"the market,\" the word after \"a sign for a,\" and the fruit.",
         "One word needs only one o, one word means \"lower prices,\" and one word names a fruit."
       ],
       "tags": [
@@ -3765,15 +3855,16 @@
       "skill": "homophones",
       "difficulty": "hard",
       "context": "science",
-      "incorrect": "Do you no wear the moon goes during the day? It is still their in the sky.",
-      "correct": "Do you know where the moon goes during the day? It is still there in the sky.",
+      "incorrect": "Do you no wear the moon is during the day? Sometimes it is still up their in the sky.",
+      "correct": "Do you know where the moon is during the day? Sometimes it is still up there in the sky.",
       "accepted": [],
       "errors": [
         {
           "category": "spelling",
           "wrong": "no",
           "right": "know",
-          "explanation": "Know means to understand. No is the opposite of yes."
+          "explanation": "Know means to understand. No is the opposite of yes.",
+          "altCategory": "grammar"
         },
         {
           "category": "spelling",
@@ -3790,7 +3881,7 @@
       ],
       "hints": [
         "Look for three words that sound right but are the wrong words.",
-        "Look at the words after \"Do you\" and the word after \"still.\"",
+        "Look at the words after \"Do you\" and the word after \"still up.\"",
         "One word starts with a silent k. The other two words tell about a place."
       ],
       "tags": [
@@ -3810,13 +3901,13 @@
           "category": "punctuation",
           "wrong": "cant",
           "right": "can't",
-          "explanation": "Can't is short for can not. The apostrophe takes the place of the missing letters."
+          "explanation": "Can't is short for cannot. The apostrophe takes the place of the missing letters."
         }
       ],
       "hints": [
         "Look for a missing apostrophe.",
         "Look at the word after \"I.\"",
-        "This word is a short way to say \"can not.\""
+        "This word is a short way to say \"cannot.\""
       ],
       "tags": [
         "possessives-contractions"
@@ -3860,7 +3951,8 @@
           "category": "punctuation",
           "wrong": "Its",
           "right": "It's",
-          "explanation": "It's is short for it is, so it needs an apostrophe."
+          "explanation": "It's is short for it is, so it needs an apostrophe.",
+          "altCategory": "spelling"
         }
       ],
       "hints": [
@@ -3902,8 +3994,8 @@
       "skill": "possessives-contractions",
       "difficulty": "medium",
       "context": "sports",
-      "incorrect": "Owens soccer ball rolled under Aunt Rosas car.",
-      "correct": "Owen's soccer ball rolled under Aunt Rosa's car.",
+      "incorrect": "Owens new soccer ball rolled under Aunt Rosas red car.",
+      "correct": "Owen's new soccer ball rolled under Aunt Rosa's red car.",
       "accepted": [],
       "errors": [
         {
@@ -3972,7 +4064,8 @@
           "category": "punctuation",
           "wrong": "it's",
           "right": "its",
-          "explanation": "Its shows that something belongs to it. It's with an apostrophe means it is."
+          "explanation": "Its shows that something belongs to it. It's with an apostrophe means it is.",
+          "altCategory": "spelling"
         },
         {
           "category": "punctuation",
@@ -4162,8 +4255,8 @@
       "skill": "possessives-contractions",
       "difficulty": "hard",
       "context": "sports",
-      "incorrect": "Lets go watch Kofis game, but we shouldnt sit in the coachs chairs.",
-      "correct": "Let's go watch Kofi's game, but we shouldn't sit in the coach's chairs.",
+      "incorrect": "Lets go watch Kofis game, but we shouldnt sit in the coachs chair.",
+      "correct": "Let's go watch Kofi's game, but we shouldn't sit in the coach's chair.",
       "accepted": [],
       "errors": [
         {
@@ -4193,7 +4286,7 @@
       ],
       "hints": [
         "Look for four missing apostrophes.",
-        "Look at the first word, whose game it is, the word that means \"should not,\" and whose chairs they are.",
+        "Look at the first word, whose game it is, the word that means \"should not,\" and whose chair it is.",
         "Two words are short forms, like \"let us.\" Two words show who owns something."
       ],
       "tags": [
@@ -4225,7 +4318,8 @@
           "category": "punctuation",
           "wrong": "its",
           "right": "it's",
-          "explanation": "It's is short for it is, so it needs an apostrophe."
+          "explanation": "It's is short for it is, so it needs an apostrophe.",
+          "altCategory": "spelling"
         }
       ],
       "hints": [
@@ -4256,18 +4350,19 @@
           "category": "punctuation",
           "wrong": "cant",
           "right": "can't",
-          "explanation": "Can't is short for can not, so it needs an apostrophe."
+          "explanation": "Can't is short for cannot, so it needs an apostrophe."
         },
         {
           "category": "punctuation",
           "wrong": "its",
           "right": "it's",
-          "explanation": "It's is short for it is, so it needs an apostrophe."
+          "explanation": "It's is short for it is, so it needs an apostrophe.",
+          "altCategory": "spelling"
         }
       ],
       "hints": [
         "Look for three missing apostrophes.",
-        "Look at whose den it is, the word that means \"can not,\" and the word after \"know.\"",
+        "Look at whose den it is, the word that means \"cannot,\" and the word after \"know.\"",
         "Many foxes share the den, so the apostrophe goes after the s. The last fix means \"it is.\""
       ],
       "tags": [
@@ -4279,8 +4374,8 @@
       "skill": "mixed",
       "difficulty": "medium",
       "context": "school",
-      "incorrect": "my freind Ava sits next to me in art class",
-      "correct": "My friend Ava sits next to me in art class.",
+      "incorrect": "my sister Ava used bright colers in art class",
+      "correct": "My sister Ava used bright colors in art class.",
       "accepted": [],
       "errors": [
         {
@@ -4291,9 +4386,9 @@
         },
         {
           "category": "spelling",
-          "wrong": "freind",
-          "right": "friend",
-          "explanation": "Friend is spelled f-r-i-e-n-d. Remember: a friend to the end."
+          "wrong": "colers",
+          "right": "colors",
+          "explanation": "Colors is spelled c-o-l-o-r-s."
         },
         {
           "category": "punctuation",
@@ -4303,9 +4398,9 @@
         }
       ],
       "hints": [
-        "There are three different kinds of mistakes: a capital letter, a spelling word, and an end mark.",
-        "Look at the first two words and the end of the sentence.",
-        "Capitalize the first word, switch two letters in the second word, and end the telling sentence."
+        "Look for a capital-letter mistake, a spelling mistake, and a missing end mark.",
+        "Look at the first word, the word that names things like red and blue, and the end of the sentence.",
+        "Capitalize the first word, fix one vowel in the word for red and blue, and end the telling sentence."
       ],
       "tags": [
         "capitalization",
@@ -4320,7 +4415,9 @@
       "context": "family",
       "incorrect": "Last sunday, we goed to the zoo with our cousins.",
       "correct": "Last Sunday, we went to the zoo with our cousins.",
-      "accepted": [],
+      "accepted": [
+        "Last Sunday we went to the zoo with our cousins."
+      ],
       "errors": [
         {
           "category": "capitalization",
@@ -4336,7 +4433,7 @@
         }
       ],
       "hints": [
-        "There are two kinds of mistakes: a capital letter and a verb.",
+        "Look for a capital-letter mistake and a grammar mistake with a verb.",
         "Look at the day and at what we did.",
         "Days start with a capital letter. The past tense of go does not use -ed."
       ],
@@ -4350,8 +4447,8 @@
       "skill": "mixed",
       "difficulty": "medium",
       "context": "everyday",
-      "incorrect": "Please dont forget too bring your lunch tomorrow.",
-      "correct": "Please don't forget to bring your lunch tomorrow.",
+      "incorrect": "Please dont forget too bring your lunch to school tomorrow.",
+      "correct": "Please don't forget to bring your lunch to school tomorrow.",
       "accepted": [],
       "errors": [
         {
@@ -4368,7 +4465,7 @@
         }
       ],
       "hints": [
-        "There are two kinds of mistakes: a missing apostrophe and a wrong word that sounds right.",
+        "Look for a punctuation mistake (a missing apostrophe) and a spelling mistake (a word that sounds right but is the wrong word).",
         "Look at the word after \"Please\" and the word before \"bring.\"",
         "One word is a short way to say \"do not.\" The word before \"bring\" needs only one o."
       ],
@@ -4400,7 +4497,7 @@
         }
       ],
       "hints": [
-        "There are two kinds of mistakes: a verb and an end mark.",
+        "Look for a grammar mistake with a verb and a missing end mark.",
         "Look at the word after \"Squirrels\" and at the end of the sentence.",
         "Many squirrels need a verb without s. The telling sentence needs an end mark."
       ],
@@ -4416,7 +4513,9 @@
       "context": "sports",
       "incorrect": "on friday, Tariq and his friends practiced there soccer moves at the park untill dark",
       "correct": "On Friday, Tariq and his friends practiced their soccer moves at the park until dark.",
-      "accepted": [],
+      "accepted": [
+        "On Friday Tariq and his friends practiced their soccer moves at the park until dark."
+      ],
       "errors": [
         {
           "category": "capitalization",
@@ -4450,9 +4549,9 @@
         }
       ],
       "hints": [
-        "There are four kinds of mistakes: capital letters, a wrong word that sounds right, a misspelled word, and an end mark.",
+        "Look for capital-letter mistakes, two spelling mistakes (one is a word that sounds right but is the wrong word), and a missing end mark.",
         "Look at the first two words, whose soccer moves they were, the word before \"dark,\" and the end.",
-        "Capitalize two words, show the moves belong to the boys, remove one l, and end the telling sentence."
+        "Capitalize two words, show the moves belong to Tariq and his friends, remove one l, and end the telling sentence."
       ],
       "tags": [
         "capitalization",
@@ -4496,7 +4595,7 @@
         }
       ],
       "hints": [
-        "There are four kinds of mistakes: a capital letter, a verb, a misspelled word, and an end mark.",
+        "Look for a capital-letter mistake, a grammar mistake with a verb, a spelling mistake, and a missing end mark.",
         "Look at the first word, the verb after \"it,\" the word that describes the sight, and the end.",
         "Capitalize the first word, use the verb that goes with \"it,\" add a missing u, and end the telling sentence."
       ],
@@ -4514,7 +4613,9 @@
       "context": "history",
       "incorrect": "In 1776, american leaders met in philadelphia and sign the declaration of independence to start a new country",
       "correct": "In 1776, American leaders met in Philadelphia and signed the Declaration of Independence to start a new country.",
-      "accepted": [],
+      "accepted": [
+        "In 1776 American leaders met in Philadelphia and signed the Declaration of Independence to start a new country."
+      ],
       "errors": [
         {
           "category": "capitalization",
@@ -4548,7 +4649,7 @@
         }
       ],
       "hints": [
-        "There are three kinds of mistakes: capital letters, a verb, and an end mark.",
+        "Look for capital-letter mistakes, a grammar mistake with a verb, and a missing end mark.",
         "Look at the word before \"leaders,\" the city, what the leaders did, the name of the paper, and the end.",
         "Capitalize \"American,\" the city, and the main words of the paper's name (\"of\" stays small). Use the past tense, and end the sentence."
       ],
@@ -4593,7 +4694,7 @@
         }
       ],
       "hints": [
-        "There are three kinds of mistakes: capital letters, a missing comma, and an end mark.",
+        "Look for capital-letter mistakes and punctuation mistakes (a missing comma and a missing question mark).",
         "Look at the teacher's name, the word before the quotation marks, the first word she says, and the end.",
         "Capitalize her title and name and the first word she says. Add a comma before her words. Her words ask a question."
       ],
@@ -4610,7 +4711,9 @@
       "context": "family",
       "incorrect": "On tuesday, our puppy turns two, and my brother cant beleive how big he is",
       "correct": "On Tuesday, our puppy turns two, and my brother can't believe how big he is.",
-      "accepted": [],
+      "accepted": [
+        "On Tuesday our puppy turns two, and my brother can't believe how big he is."
+      ],
       "errors": [
         {
           "category": "capitalization",
@@ -4622,7 +4725,7 @@
           "category": "punctuation",
           "wrong": "cant",
           "right": "can't",
-          "explanation": "Can't is short for can not, so it needs an apostrophe."
+          "explanation": "Can't is short for cannot, so it needs an apostrophe."
         },
         {
           "category": "spelling",
@@ -4638,8 +4741,8 @@
         }
       ],
       "hints": [
-        "There are four kinds of mistakes: a capital letter, an apostrophe, a misspelled word, and an end mark.",
-        "Look at the day, the word that means \"can not,\" the word after it, and the end.",
+        "Look for a capital-letter mistake, a spelling mistake, and two punctuation mistakes (an apostrophe and an end mark).",
+        "Look at the day, the word that means \"cannot,\" the word after it, and the end.",
         "Capitalize the day, add an apostrophe, switch the e and i, and end the telling sentence."
       ],
       "tags": [
@@ -4684,7 +4787,7 @@
         }
       ],
       "hints": [
-        "There are four kinds of mistakes: a comma, a verb, a wrong word that sounds right, and an end mark.",
+        "Look for two punctuation mistakes (a comma and an end mark), a grammar mistake with a verb, and a spelling mistake with a word that sounds right.",
         "Look at the first word, the verb after \"Leah and Nora,\" whose poster it is, and the end.",
         "Add a comma after \"Yes.\" Two girls need are. The poster belongs to them. End the telling sentence."
       ],
@@ -4702,7 +4805,9 @@
       "context": "nature",
       "incorrect": "at the beach, Elena finded a starfish and too tiny crabs under a rock",
       "correct": "At the beach, Elena found a starfish and two tiny crabs under a rock.",
-      "accepted": [],
+      "accepted": [
+        "At the beach Elena found a starfish and two tiny crabs under a rock."
+      ],
       "errors": [
         {
           "category": "capitalization",
@@ -4730,7 +4835,7 @@
         }
       ],
       "hints": [
-        "There are four kinds of mistakes: a capital letter, a verb, a wrong word that sounds right, and an end mark.",
+        "Look for a capital-letter mistake, a grammar mistake with a verb, a spelling mistake with a word that sounds right, and a missing end mark.",
         "Look at the first word, what Elena did, how many crabs there were, and the end.",
         "Capitalize the first word, use the past tense of find, use the number word, and end the telling sentence."
       ],
@@ -4776,7 +4881,7 @@
         }
       ],
       "hints": [
-        "There are four kinds of mistakes: a comma, a capital letter, a misspelled word, and an end mark.",
+        "Look for punctuation mistakes (a comma and an end mark), a capital-letter mistake, and a spelling mistake.",
         "Look before the quotation marks, at the first word Isaac says, at the place he wants to go, and at the end.",
         "Add a comma before his words, capitalize his first word, add a missing r, and end his question."
       ],
@@ -4792,8 +4897,8 @@
       "skill": "mixed",
       "difficulty": "hard",
       "context": "sports",
-      "incorrect": "Kai and Noah plays basketball every saturday at the gym on elm street after school",
-      "correct": "Kai and Noah play basketball every Saturday at the gym on Elm Street after school.",
+      "incorrect": "Kai and Noah plays basketball every saturday at the gym on elm street after lunch",
+      "correct": "Kai and Noah play basketball every Saturday at the gym on Elm Street after lunch.",
       "accepted": [],
       "errors": [
         {
@@ -4816,13 +4921,13 @@
         },
         {
           "category": "punctuation",
-          "wrong": "school",
-          "right": "school.",
+          "wrong": "lunch",
+          "right": "lunch.",
           "explanation": "A telling sentence ends with a period."
         }
       ],
       "hints": [
-        "There are three kinds of mistakes: a verb, capital letters, and an end mark.",
+        "Look for a grammar mistake with a verb, capital-letter mistakes, and a missing end mark.",
         "Look at the verb after \"Kai and Noah,\" the day, the street name, and the end.",
         "Two boys need a verb without s. Capitalize the day and both words of the street. End the telling sentence."
       ],
@@ -4839,7 +4944,9 @@
       "context": "community",
       "incorrect": "on april 22, our class celebrated earth day by picking up trash in the park",
       "correct": "On April 22, our class celebrated Earth Day by picking up trash in the park.",
-      "accepted": [],
+      "accepted": [
+        "On April 22 our class celebrated Earth Day by picking up trash in the park."
+      ],
       "errors": [
         {
           "category": "capitalization",
@@ -4867,7 +4974,7 @@
         }
       ],
       "hints": [
-        "There are two kinds of mistakes: capital letters and an end mark.",
+        "Look for capital-letter mistakes and a missing end mark.",
         "Look at the first word, the month, the name of the special day, and the end.",
         "Capitalize the first word, the month, and both words of the special day. Then end the telling sentence."
       ],
@@ -4889,7 +4996,8 @@
           "category": "punctuation",
           "wrong": "Its",
           "right": "It's",
-          "explanation": "It's is short for it is, so it needs an apostrophe."
+          "explanation": "It's is short for it is, so it needs an apostrophe.",
+          "altCategory": "spelling"
         },
         {
           "category": "grammar",
@@ -4911,7 +5019,7 @@
         }
       ],
       "hints": [
-        "There are four kinds of mistakes: an apostrophe, a verb, a misspelled word, and an end mark.",
+        "Look for two punctuation mistakes (an apostrophe and an end mark), a grammar mistake with a verb, and a spelling mistake.",
         "Look at the first word, the word after \"Hugo,\" the animal he is drawing, and the end.",
         "The first word means \"it is.\" One boy needs a verb with s. Fix the end of the animal word and end the sentence."
       ],

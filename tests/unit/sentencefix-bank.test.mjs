@@ -105,6 +105,12 @@ test('error spans: wrong in incorrect, right in correct, valid category, short e
   for (const it of items) {
     for (const e of it.errors) {
       assert.ok(CATEGORIES.includes(e.category), `${it.id} category ${e.category}`);
+      if ('altCategory' in e) {
+        assert.ok(CATEGORIES.includes(e.altCategory), `${it.id} altCategory ${e.altCategory}`);
+        assert.notEqual(e.altCategory, e.category, `${it.id} altCategory differs from category`);
+      }
+      for (const k of Object.keys(e)) assert.ok(['category', 'altCategory', 'wrong', 'right', 'explanation'].includes(k), `${it.id} unknown error field ${k}`);
+      assert.ok(!/\bcan not\b/i.test(e.explanation), `${it.id} write "cannot", not "can not"`);
       assert.ok(e.wrong.length > 0 && e.right.length > 0 && e.wrong !== e.right, `${it.id} wrong/right`);
       assert.ok(it.incorrect.includes(e.wrong), `${it.id} wrong "${e.wrong}" in incorrect`);
       assert.ok(it.correct.includes(e.right), `${it.id} right "${e.right}" in correct`);
@@ -163,6 +169,21 @@ test('mixed items: errors span 2+ skills and every category is covered by a tag'
   for (const it of items.filter((i) => i.skill === 'mixed')) {
     const tagCats = new Set(it.tags.map((t) => SKILL_CATEGORY[t]));
     for (const e of it.errors) assert.ok(tagCats.has(e.category), `${it.id} category ${e.category} covered by tags`);
+  }
+});
+
+test('optional opening-phrase comma: both forms are accepted', () => {
+  // A comma after a short opening phrase (not a taught Yes/No/Well/name/quote comma) is optional.
+  const OPENER = /^(In|On|At|Last|Every|For|Long|Many|Yesterday|When|As)\b/;
+  for (const it of items) {
+    const k = it.correct.indexOf(', ');
+    if (k < 0) continue;
+    const opener = it.correct.slice(0, k);
+    if (!OPENER.test(opener) || opener.split(' ').length > 6) continue;
+    const taught = it.errors.some((e) => e.right.endsWith(',') && it.correct.indexOf(e.right) + e.right.length - 1 === k);
+    if (taught) continue;
+    const without = it.correct.slice(0, k) + it.correct.slice(k + 1);
+    assert.ok(it.accepted.includes(without), `${it.id} should accept "${without}"`);
   }
 });
 
