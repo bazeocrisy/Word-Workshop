@@ -1,5 +1,7 @@
 # Sentence Fix — Independent Educational Audit (Agent 5)
 
+> **Re-audit status (latest):** see section 12. Content bank: approved once the single remaining fix is made (remove `altCategory` from SF-SVA-003); 149/150 items PASS. Grading engine: APPROVED (Minor items only). Audit tests: 389 tests, 381 pass, 0 fail, 8 todo.
+
 Branch `claude/student-first-v3`. Audited: `data/sentence-fix/bank.json` (all 150 items read one by one), `docs/SENTENCE-FIX-CURRICULUM.md`, `js/sentencefix/engine.js`. Independent grading tests: `tests/unit/sentencefix-grading-audit.test.mjs`. Nothing in the bank, the engine, or other app code was changed.
 
 ## 1. Summary
@@ -388,3 +390,206 @@ What works well: partial fixes, a mistake left in place, new misspellings (`vist
 ## 11. Final verdict
 - **Content bank: NOT APPROVED.** There are 2 Critical findings (C1 HOM-015 factual error; C2 opening-comma answers missing from `accepted` on 34 items) and 7 Major findings (M1–M7). All have small, ready-to-apply fixes above. Once they are applied, the bank is approvable. The Minor items m1–m11 are recommended but should not block approval.
 - **Grading engine: NOT APPROVED.** It has 2 Critical defects (E1, E2) plus E3 (shared with C2), and 5 Major defects (E4–E8).
+
+---
+
+## 12. Re-audit (after commit 2931f45 "Sentence Fix: curriculum revised per independent audit…")
+
+Sections 1–11 above record the first audit. **This section supersedes their verdicts.**
+
+### 12.1 Scope and method
+- I compared `bank.json` with its previous version item by item. **79 items differ.** The commit message says 80, so one item listed there has no data change.
+- I re-audited all 79 changed items in full against the 8 criteria:
+  1. every documented error is really in the incorrect sentence;
+  2. the corrected sentence is sound;
+  3. the explanations are right;
+  4. the hints progress and do not give the answer away;
+  5. the difficulty level fits;
+  6. the vocabulary is grade 3;
+  7. no correct answer is left out of `accepted`, and nothing in `accepted` is wrong;
+  8. accepted answers are handled the same way across items.
+- I re-checked the whole bank for regressions:
+  - Counts are still 40 / 65 / 45 and 15 / 15 / 15 / 25 / 20 / 15 / 15 / 15 / 15 by skill.
+  - All items are now inside their word-count bands. The old drifts in POS-005, MIX-003, HOM-007 and TEN-017 are fixed.
+  - No duplicate or near-duplicate items remain.
+  - The documented fixes still turn every `incorrect` sentence into exactly its `correct` sentence.
+  - Single-skill items use only their skill's main category.
+- I reviewed all 16 `altCategory` assignments and the new `labAccepts()`.
+- I tested 88 fresh hand-written student answers (`RE_CASES`) plus Lab tests, in addition to the first-audit suite.
+
+### 12.2 Changed items: status
+
+78 PASS, 1 REVISE.
+
+| id | what changed | status | note |
+|---|---|---|---|
+| SF-CAP-007 | hints | PASS |  |
+| SF-CAP-009 | accepted +3 | PASS |  |
+| SF-CAP-010 | accepted +1 | PASS |  |
+| SF-CAP-011 | accepted +1 | PASS |  |
+| SF-CAP-012 | accepted +1 | PASS |  |
+| SF-CAP-013 | accepted +1 | PASS |  |
+| SF-END-011 | accepted +1 | PASS |  |
+| SF-END-012 | accepted +1 | PASS |  |
+| SF-END-013 | accepted +1 | PASS |  |
+| SF-END-015 | accepted +1 | PASS |  |
+| SF-COM-009 | accepted +2 | PASS |  |
+| SF-COM-013 | accepted +2 | PASS |  |
+| SF-COM-014 | rewritten; accepted +0; hints | PASS |  |
+| SF-COM-015 | rewritten | PASS |  |
+| SF-SPL-008 | hints | PASS |  |
+| SF-SPL-009 | accepted +1 | PASS |  |
+| SF-SPL-010 | hints | PASS |  |
+| SF-SPL-013 | altCategory runing→grammar | PASS |  |
+| SF-SPL-014 | accepted +1 | PASS |  |
+| SF-SPL-015 | altCategory stoped→grammar | PASS |  |
+| SF-SPL-016 | altCategory carryed→grammar | PASS |  |
+| SF-SPL-021 | accepted +1 | PASS |  |
+| SF-SPL-022 | accepted +1 | PASS |  |
+| SF-SPL-023 | altCategory hopeing→grammar, stoped→grammar | PASS |  |
+| SF-SPL-024 | accepted +1 | PASS |  |
+| SF-TEN-002 | accepted +1 | PASS |  |
+| SF-TEN-003 | accepted +1 | PASS |  |
+| SF-TEN-006 | accepted +1 | PASS |  |
+| SF-TEN-007 | accepted +1 | PASS |  |
+| SF-TEN-008 | accepted +1 | PASS |  |
+| SF-TEN-009 | accepted +1 | PASS |  |
+| SF-TEN-010 | accepted +1 | PASS |  |
+| SF-TEN-011 | accepted +1 | PASS |  |
+| SF-TEN-012 | accepted +1 | PASS |  |
+| SF-TEN-013 | accepted +1 | PASS |  |
+| SF-TEN-014 | accepted +1 | PASS |  |
+| SF-TEN-015 | rewritten; accepted +1 | PASS |  |
+| SF-TEN-016 | accepted +1 | PASS |  |
+| SF-TEN-017 | rewritten; accepted +1 | PASS |  |
+| SF-TEN-018 | accepted +1 | PASS |  |
+| SF-TEN-019 | accepted +1 | PASS |  |
+| SF-TEN-020 | accepted +1 | PASS |  |
+| SF-SVA-001 | accepted +1 | PASS |  |
+| SF-SVA-003 | altCategory don't→punctuation | REVISE | **REVISE (Major R1)**: remove `"altCategory": "punctuation"`; it contradicts curriculum rule 3 (the apostrophe is already right, so punctuation is not a defensible answer) |
+| SF-SVA-004 | accepted +1 | PASS |  |
+| SF-SVA-006 | accepted +1 | PASS |  |
+| SF-SVA-009 | rewritten; hints | PASS |  |
+| SF-SVA-012 | accepted +1 | PASS |  |
+| SF-SVA-015 | hints | PASS |  |
+| SF-HOM-004 | altCategory new→grammar | PASS |  |
+| SF-HOM-005 | altCategory one→grammar | PASS |  |
+| SF-HOM-007 | rewritten | PASS |  |
+| SF-HOM-009 | accepted +1 | PASS |  |
+| SF-HOM-011 | explanation | PASS |  |
+| SF-HOM-013 | altCategory new→grammar, one→grammar | PASS |  |
+| SF-HOM-014 | accepted +1; hints | PASS |  |
+| SF-HOM-015 | rewritten; altCategory no→grammar; hints | PASS |  |
+| SF-POS-001 | explanation; hints | PASS |  |
+| SF-POS-003 | altCategory Its→spelling | PASS |  |
+| SF-POS-005 | rewritten | PASS |  |
+| SF-POS-007 | altCategory it's→spelling | PASS |  |
+| SF-POS-013 | rewritten; hints | PASS |  |
+| SF-POS-014 | altCategory its→spelling | PASS |  |
+| SF-POS-015 | altCategory its→spelling; hints | PASS |  |
+| SF-MIX-001 | rewritten; hints | PASS |  |
+| SF-MIX-002 | accepted +1; hints | PASS |  |
+| SF-MIX-003 | rewritten; hints | PASS |  |
+| SF-MIX-004 | hints | PASS |  |
+| SF-MIX-005 | accepted +1; hints | PASS |  |
+| SF-MIX-006 | hints | PASS |  |
+| SF-MIX-007 | accepted +1; hints | PASS |  |
+| SF-MIX-008 | hints | PASS |  |
+| SF-MIX-009 | accepted +1; explanation; hints | PASS |  |
+| SF-MIX-010 | hints | PASS |  |
+| SF-MIX-011 | accepted +1; hints | PASS |  |
+| SF-MIX-012 | hints | PASS |  |
+| SF-MIX-013 | rewritten; hints | PASS |  |
+| SF-MIX-014 | accepted +1; hints | PASS |  |
+| SF-MIX-015 | altCategory Its→spelling; hints | PASS |  |
+
+Notes on the substantive rewrites, all PASS:
+- **HOM-015:** "Sometimes it is still up there" is now accurate.
+- **COM-015:** the Golden Gate Bridge did open on May 27, 1937. That was Pedestrian Day; cars crossed from May 28. The date fact repeats the earlier comma frame without reusing the moon landing.
+- **MIX-013:** "after lunch" removes the Saturday/school contradiction.
+- **POS-013:** "the coach's chair" now has only one reading.
+- **MIX-001 and COM-014:** they no longer duplicate SPL-001 and COM-008.
+- **SVA-009:** "Honeybees" makes the science accurate.
+- **TEN-015:** "sits" removes the hidden agreement error.
+- **Mixed-item hints:** hint 1 in every mixed item now uses the Lab category words.
+- **Wording fixes:** "cannot", the gender-neutral hints and the circular explanation of "rode" are all fixed.
+
+### 12.3 Accepted-answer consistency
+The optional opening comma is now handled the same way across the bank. Every item whose sentence opens with an opening phrase or a short opening clause lists the comma-less form in `accepted` (51 items carry accepted answers in total). The bank test enforces this, and so do my 34 `OPTIONAL_INTRO` tests, all of which pass.
+
+Commas that are taught stay required, and the engine still marks them incorrect when they are missing. These are commas after Yes/No/Well, after the name of the person spoken to, before a quotation, in dates, between city and state, and in lists.
+
+Two policy notes, not defects:
+- **COM-013, HOM-014, TEN-015:** the rule now also covers short opening *clauses* ("As we hurried out the door", "When the bell rang"). Chicago and AP style allow this, and the grade-3 standards do not teach introductory-clause commas, so it is acceptable.
+- **Exclamation points:** "!" is accepted only where the sentence is a natural exclamation, and questions always need "?". This is consistent.
+
+### 12.4 Thinking Lab: `altCategory` review (16 errors)
+
+| Errors | Main / alt | Verdict |
+|---|---|---|
+| new→knew (HOM-004, HOM-013), one→won (HOM-005, HOM-013), no→know (HOM-015) | spelling / grammar | **Defensible.** The right word is a verb and the explanation talks about tense. |
+| runing, stoped, carryed, hopeing (SPL-013, SPL-015, SPL-016, SPL-023 ×2) | spelling / grammar | **Defensible.** These are verb endings. The main category stays right under rule 2. |
+| Its/it's (POS-003, POS-007, POS-014, POS-015, MIX-015) | punctuation / spelling | **Defensible.** Many classrooms teach its/it's as a homophone pair. |
+| don't→doesn't (SVA-003) | grammar / **punctuation** | **Not defensible. Major R1.** The curriculum's own rule 3 says "don't → doesn't is grammar (agreement), not punctuation, because the apostrophe is already right." Accepting Punctuation rewards exactly the misconception rule 3 rules out, and the curriculum document now contradicts itself. **Fix:** delete `"altCategory": "punctuation"` from SF-SVA-003's error. Then change the curriculum's altCategory list to "15 places" and remove the SVA-003 bullet. The `todo` test `Lab: SF-SVA-003 … must not accept "punctuation"` will pass once this is done. |
+
+Behaviour of `labAccepts()`, checked on all 150 items:
+- The main category of every item is always accepted.
+- A category that no error carries, as either its category or its altCategory, is never accepted.
+- Made-up irregular past tenses such as "catched" stay Grammar only, as documented.
+- An item with an altCategory also accepts "More than one type". For example, SPL-016 accepts it if the child files "carryed" under Grammar and "togeather" under Spelling. That is logically consistent.
+
+One Minor consistency point (m-R2): POS-006 "Were → We're" is a real-word pair just like Its/It's, but it has no `altCategory: "spelling"`. This is optional; add it for consistency or leave it as it is.
+
+### 12.5 Grading engine: re-test
+
+**First-audit defects E1–E9 are all fixed.** All 66 former `todo` tests now pass as ordinary tests:
+- E1: "cannot" and "were" go to review or correct, never incorrect.
+- E2: "!" is handled the same way on every item.
+- E3: optional commas are handled.
+- E4 and E5: a missing end mark and "." for "?" inside quotes are now incorrect.
+- E6: goed, swimed, finded, catch, teach, knowed, am, There's, "they're" for "their" and "no" for "knew" are all incorrect.
+- E7: misplaced added commas are incorrect.
+- E8: "Mr Patel" and "March, 4" are incorrect.
+- E9: "a hour" is incorrect.
+
+**Fresh answers (88), with nothing marked wrongly:**
+- **No invalid answer is marked correct.** "Correct" still requires an exact match with the key or an accepted answer.
+- **No valid answer is marked incorrect.** Every unlisted valid alternative went to review or correct: "cannot" in POS-001, POS-015 and MIX-009; "It is", "will not", "is not", "didn't"; "ocean", "got", "feed it"; past-tense rewrites of SVA-015 and SVA-002; "Tucson, AZ"; "!" for "."; and opening commas left out.
+- The typical third-grade mistakes are all incorrect:
+  - over-regularized verbs: blewed, ated, caughted, swum, eated, sended, sitted;
+  - wrong homophones: rite, they're, "They're are", dear, you're;
+  - added commas: "planted, beans", "and, Omar", "and, boxes", "house, in", "San Francisco,";
+  - a misplaced date comma: "May, 27";
+  - a/an slips;
+  - British spellings: colours, favourite;
+  - "?" outside the quotation marks, a missing comma before a quotation, "his Dad";
+  - over-capitalization: Sister, Winter, Report, golden gate bridge;
+  - "fox's" or "coaches'" where the sentence fixes the number.
+
+**SF-POS-013 decision.** The key is now "the coach's chair". The sentence fixes the number at one chair, so one coach. I therefore keep **incorrect** for both "coaches' chair" and "coaches' chairs". This matches how "fox's den" is treated in POS-015, and "chairs" also changes a word the child was not asked to fix. The test is now a normal assertion.
+
+**Remaining engine findings, all Minor.** Each is a clearly wrong answer sent to a grown-up for review rather than marked incorrect. None marks a valid answer wrong. Each is a `todo` in `RE_CASES`.
+
+| # | Case | Engine says | Should be |
+|---|---|---|---|
+| e-R1 | SVA-003 "dosent" (misspelling 3+ letters from "doesn't") | review | incorrect |
+| e-R2 | CAP-015 appositive commas dropped ("team the Hilltop Hawks won"); POS-011 tag-question comma dropped ("penny isn't it?") | review | incorrect. Compound-sentence commas dropped (MIX-006, SPL-025) also go to review, which is defensible because style guides allow it in short compounds. |
+| e-R3 | HOM-006, HOM-011: "are" for "our" in an untouched word | review | incorrect |
+| e-R4 | END-010 "open?."; POS-011 "is not it?" | review | incorrect |
+| e-R5 | HOM-014 "fresh pears, and peaches" (comma before *and* with only two items) | review | incorrect |
+
+Suggested low-risk fixes:
+- e-R1: allow distance 3 when the word is 6 letters or longer and shares its first letter.
+- e-R2: treat a dropped comma as clear when the model has a pair of commas around a phrase that starts with "the" or a name, or before a tag question (", isn't it?", ", don't you?").
+- e-R3: a small list of confusable function words (are/our, then/than, of/off, were/where), with a swap counting as clear.
+- e-R4: two end marks in a row other than "?!" count as clear.
+- e-R5: `commaAllowed` before *and* should require at least two earlier list commas.
+
+### 12.6 Test output
+`node --test tests/unit/sentencefix-grading-audit.test.mjs` gives `tests 389, pass 381, fail 0, todo 8`.
+
+The 8 `todo` tests are e-R1 to e-R5 (7 cases) and the SVA-003 altCategory check (R1). Every `todo` assertion currently fails, which confirms each finding is real. No todo passes by accident. `sentencefix-bank.test.mjs` (13/13) and `sentencefix-engine.test.mjs` (30/30) also pass.
+
+### 12.7 FINAL VERDICT
+- **Content bank: NOT YET APPROVED — one Major finding blocks it.** 149 of 150 items PASS with no Critical or Major issue. The exception is SF-SVA-003: its `altCategory: "punctuation"` contradicts curriculum rule 3 (R1). Once that one field is deleted and the curriculum's altCategory list says 15, **the bank is approved**, with all 150 items passing. m-R2 (POS-006) is optional.
+- **Grading engine: APPROVED.** No Critical or Major defects remain. E1–E9 are fixed and verified. No invalid answer is marked correct, and no valid answer is marked incorrect. The five Minor leftovers (e-R1 to e-R5) only send clearly wrong answers to review, and they can be scheduled as polish.

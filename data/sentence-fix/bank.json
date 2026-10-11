@@ -3005,8 +3005,7 @@
           "category": "grammar",
           "wrong": "don't",
           "right": "doesn't",
-          "explanation": "Use doesn't with one person, like he, she, or my sister.",
-          "altCategory": "punctuation"
+          "explanation": "Use doesn't with one person, like he, she, or my sister."
         }
       ],
       "hints": [

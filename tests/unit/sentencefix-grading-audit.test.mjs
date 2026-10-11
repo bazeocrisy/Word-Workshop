@@ -14,7 +14,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { grade } from '../../js/sentencefix/engine.js';
+import { grade, labAccepts, labCategory } from '../../js/sentencefix/engine.js';
 
 const bank = JSON.parse(readFileSync(new URL('../../data/sentence-fix/bank.json', import.meta.url), 'utf8'));
 const items = bank.items;
@@ -207,11 +207,11 @@ const CASES = [
   ['SF-POS-006', 'We\'re going to visit the zoo, and I am so excited.', 'ok'],
   ['SF-POS-007', 'The bird flapped it\'s wings, but it didn\'t fly very far.', 'incorrect'],
   ['SF-POS-008', 'My two brother\'s bikes are in the garage, but Dad\'s car isn\'t.', 'incorrect'],
-  ['SF-POS-013', 'Let\'s go watch Kofi\'s game, but we shouldn\'t sit in the coaches\' chairs.', 'ok', 'bank: "coachs chairs" is ambiguous (one coach or several); change to "the coach\'s chair" or accept "coaches\'"'],
+  ['SF-POS-013', 'Let\'s go watch Kofi\'s game, but we shouldn\'t sit in the coaches\' chairs.', 'incorrect'], // re-audit decision: the key is now "the coach's chair" (one chair, one coach), so "coaches'" is the wrong possessive for this sentence (like "fox's" in POS-015) and "chairs" changes an untouched word
   ['SF-POS-014', 'I’m sure Grandpa’s old photos are in the attic, but it’s too dark to look today.', 'correct'],
   ['SF-POS-015', 'The foxes\' den is under a log, and we can\'t see it, but we know its there.', 'incorrect'],
   // mixed
-  ['SF-MIX-001', 'My friend Ava sits next to me in art class', 'incorrect'],
+  ['SF-MIX-001', 'My sister Ava used bright colors in art class', 'incorrect'], // revised item: missing end mark
   ['SF-MIX-002', 'Last Sunday, we went to the Zoo with our cousins.', 'incorrect'],
   ['SF-MIX-005', 'On Friday, Tariq and his friends practiced their soccer moves at the park until dark?', 'incorrect'],
   ['SF-MIX-007', 'In 1776 American leaders met in Philadelphia and signed the Declaration of Independence to start a new country.', 'ok'],
@@ -219,7 +219,7 @@ const CASES = [
   ['SF-MIX-008', 'Mrs. Jones asked, "Who wants to help plant flowers at the park."', 'incorrect'],
   ['SF-MIX-010', 'Yes, we finished our projects, but Leah and Nora are still painting they\'re poster.', 'incorrect'],
   ['SF-MIX-012', 'Isaac asked his dad, "can we go to the library after lunch?"', 'incorrect'],
-  ['SF-MIX-013', 'Kai and Noah play basketball every Saturday at the gym on Elm street after school.', 'incorrect'],
+  ['SF-MIX-013', 'Kai and Noah play basketball every Saturday at the gym on Elm street after lunch.', 'incorrect'], // revised item: half of the street name
   ['SF-MIX-015', 'It\'s time for recess, but Hugo wants to finish his drawing of a dinosaur first', 'incorrect'],
 ];
 
@@ -235,4 +235,161 @@ test('hand-written sample covers every skill and difficulty with 40+ responses a
   assert.equal(skills.size, 9);
   assert.equal(levels.size, 3);
   assert.ok(ids.size >= 60, `hand-written items: ${ids.size}`);
+});
+
+// ================================================================ RE-AUDIT (after the curriculum revision
+// and the engine fixes for E1–E9). Fresh realistic answers, not used in the first audit. The revised
+// items (MIX-001, COM-014, HOM-015, COM-015, MIX-013, POS-013, TEN-015, SVA-009 …) are included.
+// Minor engine leftovers are marked { todo: 'engine (minor): …' }.
+
+const M = {
+  misspelledTarget: 'engine (minor): a misspelling more than 2 letters from the target ("dosent") is "unknown" → review',
+  droppedRequired: 'engine (minor): dropping a required non-error comma (appositive, tag question) is not "clear" → review',
+  wrongRealWord: 'engine (minor): a different real word swapped in for an untouched word ("are" for "our") is "different-word" → review',
+  doubleMark: 'engine (minor): a doubled or ungrammatical end ("?.", "is not it?") goes to review',
+  addedTwoItem: 'engine (minor): an added comma before "and" joining only two nouns is allowed as if it were optional → review',
+};
+
+const RE_CASES = [
+  // revised items
+  ['SF-MIX-001', 'My sister Ava used bright colors in art class.', 'correct'],
+  ['SF-MIX-001', 'My sister Ava used bright collers in art class.', 'incorrect'], // new misspelling of the target
+  ['SF-MIX-001', 'My Sister Ava used bright colors in art class.', 'incorrect'], // over-capitalized
+  ['SF-MIX-001', 'My sister Ava used bright colours in art class.', 'incorrect'], // British spelling in a US bank
+  ['SF-COM-014', 'Mom, I packed crayons, glue and paper but I forgot the scissors.', 'incorrect'], // one comma left out
+  ['SF-COM-014', 'Mom I packed crayons, glue and paper, but I forgot the scissors.', 'incorrect'],
+  ['SF-COM-014', 'Mom, I packed crayons, glue, and paper, but, I forgot the scissors.', 'incorrect'], // added comma
+  ['SF-COM-014', 'Mom, I packed crayons, glue, and paper, but I forgot the scissors.', 'correct'], // Oxford comma
+  ['SF-COM-014', 'Mom, I packed crayons, glue and paper, but I forgot my scissors.', 'ok'], // harmless word swap
+  ['SF-HOM-015', 'Do you know where the moon is during the day? Sometimes it is still up there in the sky.', 'correct'],
+  ['SF-HOM-015', 'Do you know where the moon is during the day? Sometimes it\'s still up there in the sky.', 'ok'], // contraction
+  ['SF-HOM-015', 'Do you now where the moon is during the day? Sometimes it is still up there in the sky.', 'incorrect'],
+  ['SF-HOM-015', 'Do you know where the moon is during the day? Sometimes it is still up they\'re in the sky.', 'incorrect'],
+  ['SF-HOM-015', 'Do you know where the moon is during the day. Sometimes it is still up there in the sky.', 'incorrect'],
+  ['SF-COM-015', 'No, Theo, the Golden Gate Bridge in San Francisco opened on May 27, 1937.', 'correct'],
+  ['SF-COM-015', 'No, Theo the Golden Gate Bridge in San Francisco opened on May 27, 1937.', 'incorrect'],
+  ['SF-COM-015', 'No, Theo, the Golden Gate Bridge in San Francisco, opened on May 27, 1937.', 'incorrect'], // added comma
+  ['SF-COM-015', 'No, Theo, the Golden Gate Bridge in San Francisco opened on May, 27 1937.', 'incorrect'], // misplaced comma
+  ['SF-COM-015', 'No, Theo, the golden gate bridge in San Francisco opened on May 27, 1937.', 'incorrect'],
+  ['SF-MIX-013', 'Kai and Noah play basketball every Saturday at the gym on Elm Street after lunch', 'incorrect'],
+  ['SF-MIX-013', 'Kai and Noah play basket ball every Saturday at the gym on Elm Street after lunch.', 'incorrect'],
+  ['SF-POS-013', 'Let\'s go watch Kofi\'s game, but we shouldn\'t sit in the coaches\' chair.', 'incorrect'],
+  ['SF-POS-013', 'Let\'s go watch Kofi\'s game, but we should not sit in the coach\'s chair.', 'ok'], // full form
+  ['SF-TEN-015', 'When the bell rang Sofia grabbed her lunch and sat with her friends.', 'correct'], // optional clause comma
+  ['SF-TEN-015', 'When the bell rang, Sofia grabbed her lunch and sits with her friends.', 'incorrect'],
+  ['SF-TEN-015', 'When the bell rang, Sofia grabbed her lunch and sitted with her friends.', 'incorrect'],
+  ['SF-SVA-009', 'Honeybees make honey, and each bee have a special job in the hive.', 'incorrect'],
+  ['SF-SVA-009', 'Bees make honey, and each bee has a special job in the hive.', 'ok'],
+  ['SF-SVA-004', 'Our players had new jerseys this year.', 'correct'],
+  ['SF-SVA-004', 'Our players haves new jerseys this year.', 'incorrect'],
+  // optional comma omitted (+ another mistake must still be caught)
+  ['SF-TEN-006', 'Last spring our town builded a new playground.', 'incorrect'],
+  ['SF-TEN-002', 'Yesterday my dad cooked spagetti for dinner.', 'incorrect'],
+  ['SF-CAP-011', 'For Thanksgiving we drove to my aunts house in Ohio.', 'incorrect'],
+  ['SF-TEN-017', 'In 1620 the Pilgrims sailed on a ship that was called the Mayflower and the trip took many weeks.', 'ok'],
+  // "!" for "."
+  ['SF-END-002', 'The leaves on the maple tree turn red in the fall!', 'ok'],
+  ['SF-END-007', 'The bus is late again! Do you think it will come soon?', 'ok'],
+  ['SF-MIX-001', 'My sister Ava used bright colors in art class!', 'ok'],
+  ['SF-END-004', 'How many laps can you swim without stopping.', 'incorrect'], // questions still need "?"
+  // cannot / full forms
+  ['SF-POS-001', 'I cannot find my other sock anywhere.', 'ok'],
+  ['SF-POS-015', 'The foxes\' den is under a log, and we cannot see it, but we know it\'s there.', 'ok'],
+  ['SF-MIX-009', 'On Tuesday, our puppy turns two, and my brother cannot believe how big he is.', 'ok'],
+  ['SF-POS-003', 'It is going to snow tonight, so wear your hat.', 'ok'],
+  ['SF-POS-009', 'The city\'s new library will not open until next month.', 'ok'],
+  // over-regularized and wrong verb forms
+  ['SF-TEN-004', 'The wind blewed the leaves across the yard last night.', 'incorrect'],
+  ['SF-TEN-005', 'I ated two pancakes for breakfast this morning.', 'incorrect'],
+  ['SF-TEN-003', 'Last week, Mia caughted the ball with one hand.', 'incorrect'],
+  ['SF-TEN-011', 'Last summer, my sister and I swum in the lake and found a smooth rock.', 'incorrect'],
+  ['SF-TEN-013', 'Last Saturday, my aunt made bread, and we eated it while it was still warm.', 'incorrect'],
+  ['SF-TEN-014', 'Last month, our class wrote letters to the mayor, and she sended us a reply.', 'incorrect'],
+  ['SF-TEN-018', 'At the swim meet yesterday, Hana jumped into the pool and swum so fast that she won a blue ribbon.', 'incorrect'],
+  // wrong homophone
+  ['SF-HOM-008', 'Please rite your name at the top of the paper and hand it in by noon.', 'incorrect'],
+  ['SF-HOM-005', 'Our team won the game, and the players threw they\'re caps in the air.', 'incorrect'],
+  ['SF-HOM-012', 'They\'re are too many leaves in the yard, so we will rake them in a big pile over here.', 'incorrect'],
+  ['SF-HOM-011', 'A dear ran across the road in front of our car.', 'incorrect'],
+  ['SF-MIX-003', 'Please don\'t forget to bring you\'re lunch to school tomorrow.', 'incorrect'],
+  // added comma
+  ['SF-COM-005', 'We planted, beans, peas, carrots and lettuce in the school garden.', 'incorrect'],
+  ['SF-COM-011', 'Lucia, you can paint the sign, and, Omar can hang it up.', 'incorrect'],
+  ['SF-COM-012', 'Yes, Mrs. Gomez, our class collected cans, bottles, and, boxes for the recycling drive.', 'incorrect'],
+  ['SF-COM-004', 'My grandparents moved to a small house, in Tucson, Arizona.', 'incorrect'],
+  // a/an
+  ['SF-HOM-010', 'Our family ate an whole pizza in less than an hour.', 'incorrect'],
+  ['SF-HOM-010', 'Our family ate a whole pizza in less than a hour.', 'incorrect'],
+  // fully correct alternatives that are not listed → never incorrect
+  ['SF-HOM-009', 'Long ago, sailors used the stars to find their way across the ocean.', 'ok'],
+  ['SF-TEN-020', 'Yesterday, the power went out, so we got flashlights and told stories until the lights came back on.', 'ok'],
+  ['SF-END-009', 'Our class pet is a turtle named Pickles. What should we feed it?', 'ok'],
+  ['SF-POS-008', 'My two brothers\' bikes are in the garage, but Dad\'s car is not.', 'ok'],
+  ['SF-SVA-015', 'My brothers were cleaning the garage, and Dad said we could go swimming when the job was done.', 'ok'],
+  ['SF-SVA-002', 'Look! The robins were building a nest in our tree.', 'ok'],
+  ['SF-COM-006', 'No, Diego, I didn\'t see who kicked the ball.', 'ok'],
+  ['SF-COM-004', 'My grandparents moved to a small house in Tucson, AZ.', 'ok'],
+  // other typical slips
+  ['SF-MIX-012', 'Isaac asked his dad, "Can we go to the library after lunch"?', 'incorrect'], // ? outside quotes (US)
+  ['SF-MIX-012', 'Isaac asked his Dad, "Can we go to the library after lunch?"', 'incorrect'],
+  ['SF-MIX-008', 'Mrs. Jones asked "Who wants to help plant flowers at the park?"', 'incorrect'],
+  ['SF-MIX-007', 'In 1776, American leaders met in Philadelphia and signed the Declaration of Independance to start a new country.', 'incorrect'],
+  ['SF-MIX-014', 'On April 22, our class celebrated Earth day by picking up trash in the park.', 'incorrect'],
+  ['SF-MIX-015', 'Its time for recess, but Hugo wants to finish his drawing of a dinosaur first.', 'incorrect'],
+  ['SF-MIX-004', 'Squirrels hide acorns in the ground before Winter comes.', 'incorrect'],
+  ['SF-SPL-019', 'Two baby fox\'s were hiding under the bushes near our tent.', 'incorrect'],
+  ['SF-SPL-013', 'Diego was running so fast that he almost trippped on the grass.', 'incorrect'],
+  ['SF-POS-012', 'They\'re hanging all the student\'s drawings in the hallway, and Ms. Lee\'s class can\'t wait to see them.', 'incorrect'],
+  ['SF-CAP-014', 'Mrs. Okafor said that I could read my Report about Harriet Tubman on Friday.', 'incorrect'],
+  ['SF-CAP-004', 'Our soccer coach Mr. Patel ran laps with us.', 'incorrect'],
+  // minor engine leftovers (clearly wrong, but sent to review)
+  ['SF-SVA-003', 'My little sister dosent like spicy food at all.', 'incorrect', M.misspelledTarget],
+  ['SF-CAP-015', 'My brother\'s team the Hilltop Hawks won the big game against the Lakeview Lions on Saturday.', 'incorrect', M.droppedRequired],
+  ['SF-POS-011', 'Abraham Lincoln\'s face is on the penny isn\'t it?', 'incorrect', M.droppedRequired],
+  ['SF-HOM-006', 'We mixed flour and water to make clay for are science project.', 'incorrect', M.wrongRealWord],
+  ['SF-END-010', 'The library has a new reading room. When does it open?.', 'incorrect', M.doubleMark],
+  ['SF-POS-011', 'Abraham Lincoln\'s face is on the penny, is not it?', 'incorrect', M.doubleMark],
+  ['SF-HOM-014', 'When we went to the market, we saw a sign for a sale on fresh pears, and peaches.', 'incorrect', M.addedTwoItem],
+];
+
+for (const [id, answer, expect, todo] of RE_CASES) {
+  test(`re-audit ${id}: ${JSON.stringify(answer)} → ${expect}`, todo ? { todo } : {}, () => check(id, answer, expect));
+}
+
+test('re-audit: at least 30 new hand-written answers', () => assert.ok(RE_CASES.length >= 30));
+
+// ---------------------------------------------------------------- Thinking Lab (altCategory / labAccepts)
+
+const CATS = ['spelling', 'capitalization', 'punctuation', 'grammar'];
+
+test('Lab: the main category of every item is always accepted', () => {
+  for (const it of items) assert.ok(labAccepts(it, labCategory(it)), it.id);
+});
+
+test('Lab: every altCategory is a real category and differs from category', () => {
+  for (const it of items) {
+    for (const e of it.errors) {
+      if (!e.altCategory) continue;
+      assert.ok(CATS.includes(e.altCategory), `${it.id} ${e.wrong}`);
+      assert.notEqual(e.altCategory, e.category, `${it.id} ${e.wrong}`);
+    }
+  }
+});
+
+test('Lab: a category that no error can have is never accepted', () => {
+  for (const it of items) {
+    const possible = new Set(it.errors.flatMap((e) => [e.category, e.altCategory].filter(Boolean)));
+    for (const c of CATS) if (!possible.has(c)) assert.equal(labAccepts(it, c), false, `${it.id} ${c}`);
+  }
+});
+
+test('Lab: genuinely disputable boundary cases accept both answers', () => {
+  assert.ok(labAccepts(item('SF-HOM-004'), 'spelling') && labAccepts(item('SF-HOM-004'), 'grammar')); // new → knew
+  assert.ok(labAccepts(item('SF-POS-003'), 'punctuation') && labAccepts(item('SF-POS-003'), 'spelling')); // Its → It's
+  assert.ok(labAccepts(item('SF-SPL-016'), 'spelling')); // carryed → carried
+  assert.equal(labAccepts(item('SF-TEN-003'), 'spelling'), false); // catched is always grammar
+});
+
+test('Lab: SF-SVA-003 don\'t → doesn\'t must not accept "punctuation" (curriculum rule 3: the apostrophe is already right)', () => {
+  assert.equal(labAccepts(item('SF-SVA-003'), 'punctuation'), false);
 });

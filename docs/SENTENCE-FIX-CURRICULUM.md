@@ -46,11 +46,10 @@ Rules for words that could fall into two groups:
 
 ### `altCategory` (a second acceptable Lab answer)
 
-An error may carry an optional `altCategory` (one of the four categories, never the same as `category`). It is used only when a reasonable teacher could file the mistake either way. The Lab accepts either choice. `category` stays the main answer, and the feedback can explain why (for example: "This is a spelling-rule mistake: the verb and tense are right, only the spelling is wrong."). The current bank uses it in 16 places:
+An error may carry an optional `altCategory` (one of the four categories, never the same as `category`). It is used only when a reasonable teacher could file the mistake either way. The Lab accepts either choice. `category` stays the main answer, and the feedback can explain why (for example: "This is a spelling-rule mistake: the verb and tense are right, only the spelling is wrong."). The current bank uses it in 15 places:
 
 - Homophones that are verbs: new → knew, one → won, no → know (category spelling, altCategory grammar). Items: HOM-004, HOM-005, HOM-013 (twice), HOM-015.
 - Spelling-rule verb endings: runing, stoped, carryed, hopeing (category spelling, altCategory grammar). Items: SPL-013, SPL-015, SPL-016, SPL-023 (twice).
-- don't → doesn't (category grammar, altCategory punctuation). Item: SVA-003.
 - its / it's (category punctuation, altCategory spelling, because many classrooms teach it as a homophone pair). Items: POS-003, POS-007, POS-014, POS-015, MIX-015.
 
 Made-up irregular past forms (goed, catched, eated) have no `altCategory`: they are always grammar. Contractions that are not real words without the apostrophe (cant, dont, Youre) are always punctuation.
