@@ -56,8 +56,9 @@ class SpellSession {
 
   render() {
     this.body = h('div', { class: 'quiz spell-quiz' });
+    this.live = h('div', { class: 'sr-only', 'aria-live': 'assertive', role: 'status' });
     this.root = page({ title: this.title, back: this.base, backLabel: 'This week', cls: 'student',
-      subtitle: this.only ? `Missed words · ${this.words.length} word${this.words.length === 1 ? '' : 's'}` : (this.mode === 'test' ? `${this.words.length} words · ${this.teacherOrder ? 'teacher\'s order' : 'mixed-up order'}` : `${this.words.length} words`) }, this.body);
+      subtitle: this.only ? `Missed words · ${this.words.length} word${this.words.length === 1 ? '' : 's'}` : (this.mode === 'test' ? `${this.words.length} words · ${this.teacherOrder ? 'teacher\'s order' : 'mixed-up order'}` : `${this.words.length} words`) }, this.live, this.body);
     if (this.mode === 'test') setLeaveGuard(async () => { const ok = this.finished || await confirmDialog('Leave the test?', 'Your answers so far are kept on this device, so you can come back and finish it.', 'Leave'); if (ok) stopSpeaking(); return ok; });
     else setLeaveGuard(() => { stopSpeaking(); return true; });
     this.persist();
@@ -88,7 +89,7 @@ class SpellSession {
     const w = this.words[this.idx];
     const lock = this.mode === 'practice' && this.done[this.idx];
     const shown = w.sentence ? blankSentence(w.sentence, w.word) : null;
-    const input = h('input', { type: 'text', class: 'answer-input spell-input', id: 'spell-answer', autocomplete: 'off', autocapitalize: 'none', autocorrect: 'off', spellcheck: 'false', inputmode: 'text', value: this.answers[this.idx] ?? '', disabled: lock, 'aria-describedby': 'spell-help' });
+    const input = h('input', { type: 'text', class: 'answer-input spell-input', id: 'spell-answer', autocomplete: 'off', autocapitalize: 'none', autocorrect: 'off', spellcheck: 'false', inputmode: 'text', value: this.answers[this.idx] ?? '', disabled: lock, 'aria-describedby': shown ? 'spell-sentence spell-help' : 'spell-help' });
     input.addEventListener('input', () => { this.answers[this.idx] = input.value; this.persist(); if (this.mode === 'test') this.body.querySelector('.quiz-head')?.replaceWith(this.header()); });
     this.feedback = h('div', { class: 'feedback', 'aria-live': 'polite' });
     const audioRow = this.audio
@@ -99,13 +100,13 @@ class SpellSession {
       : h('p', { class: 'notice-inline' }, `Grown-up: read word number ${this.idx + 1} and its sentence.`);
     const form = h('form', { class: 'question card', onsubmit: (e) => { e.preventDefault(); this.mode === 'practice' ? this.check() : this.next(1, true); } },
       audioRow,
-      shown ? h('p', { class: 'q-sentence' }, shown) : h('p', { class: 'hint' }, 'No sentence for this word.'),
+      shown ? h('p', { class: 'q-sentence', id: 'spell-sentence' }, shown) : h('p', { class: 'hint' }, 'No sentence for this word.'),
       h('label', { for: 'spell-answer', class: 'label' }, 'Type the word'),
       input, h('p', { class: 'hint', id: 'spell-help' }, 'Spelling counts. Capital letters do not.'),
       this.feedback, this.controls());
     fill(this.body, this.header(), form);
     if (this.mode === 'practice' && this.done[this.idx]) this.showFeedback(true);
-    if (!lock) input.focus({ preventScroll: true });
+    if (!lock) input.focus({ preventScroll: true }); else form.querySelector('.quiz-controls .btn')?.focus({ preventScroll: true });
     if (autoplay) this.sayWord();
   }
 
@@ -136,6 +137,7 @@ class SpellSession {
     if (this.firstTry[this.idx] == null) this.firstTry[this.idx] = { given, ok };
     if (ok) { this.done[this.idx] = true; this.persist(); this.show(false); return; }
     this.persist();
+    this.live.textContent = 'Not quite. Listen again and try once more.';
     fill(this.feedback, h('div', { class: 'fb fb-wrong' },
       h('p', { class: 'fb-title' }, '✗ Not quite. Listen again and try once more.'),
       h('div', { class: 'row' },
@@ -147,6 +149,7 @@ class SpellSession {
     const w = this.words[this.idx];
     const given = String(this.answers[this.idx] ?? '');
     const ok = isCorrectAnswer(given, w.word);
+    this.live.textContent = ok ? `Correct! ${w.word}` : `The word is ${w.word}. You typed ${given || 'nothing'}.`;
     fill(this.feedback, ok
       ? h('div', { class: 'fb fb-right' }, h('p', { class: 'fb-title' }, '✓ Correct! ', h('span', { class: 'spell-reveal' }, w.word)),
         w.groups?.spelling?.reason && w.groups.spelling.key !== 'other' ? h('p', { class: 'muted' }, w.groups.spelling.reason) : null)

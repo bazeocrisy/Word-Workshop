@@ -14,8 +14,8 @@ Architecture: `docs/ARCHITECTURE-PROPOSAL.md` (vanilla JS ES modules, IndexedDB,
 |---|---|---|
 | 1 | Core application, profiles, storage | **Complete** — reviewed; 5 Major + 7 Minor findings fixed (see below) |
 | 2 | Weekly lesson editor and approval | **Complete** — reviewed; 4 Major + 6 Minor findings fixed (see below) |
-| 3 | Vocabulary learning and assessment | Built, tests passing; independent review in progress |
-| 4 | Spelling learning and assessment | Built, tests passing; review together with Milestone 3 follow-up |
+| 3 | Vocabulary learning and assessment | **Complete** — reviewed; 4 Major + 6 Minor findings fixed (see below) |
+| 4 | Spelling learning and assessment | Built, tests passing; independent review in progress |
 | 5 | Photograph extraction and verification | Not started |
 | 6 | Illustrated-card workflow and printable materials | Not started |
 | 7 | Full-system testing and final audit | Not started |
@@ -56,6 +56,9 @@ No Critical findings (definition integrity, approval enforcement and XSS checks 
 - Results: score, %, encouragement, every answer with the correct answer, missed words, "Practice missed words"; saved per student/week/lesson version; retakes add new results.
 - Speech: speechSynthesis with voice selection, tap-to-start, honest status ("Playing…" only after start; explanation if it did not play), disabled with a message when unsupported. Parent "Test the voice" page.
 - Grading rules: docs/GRADING.md.
+
+### Milestone 3 review — resolution
+No Critical findings (answer keys, leak checks on every question of a mixed test, version linkage and speech honesty all passed). Major fixed: (1) a word listed twice (e.g. two meanings of "bat") is never put in the same matching round — extra copies are skipped and reported; (2) remaining non-word -ed bases (changed→"chang", ignored→"ignor", compared, inhaled, created) → "Check me" or a correct silent-e base; (3) screen readers now hear the actual question: choices and answer box are labelled by instruction + prompt, and focus starts on the question; (4) after a correct practice answer focus moves to Next and the result is announced through a persistent live region (spelling too). Minor fixed: a definition that contains part of its word (sample: Fortunate/"fortune") is not used for "Choose the word" or "Write the word" (reported as not asked); practice matching needs every row before Check; Try again focuses the chosen answer; a definition shared by two words is asked once; the "Words after Note:" preview message only appears when words were kept; "word | definition" tables; toasts no longer linger over the next page.
 
 ## Milestone 4 — Spelling learning and assessment
 - Study: teacher's order with example sentences; audio for word (normal and slow) and sentence; separate views "Spelling patterns" (how letters change) and "Ending sounds" (/t/, /d/, /id/) with the reason for each word. Sample list verified: only "stepped" doubles its consonant; /t/ 6, /d/ 4, /id/ 5.

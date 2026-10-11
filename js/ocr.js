@@ -1,0 +1,126 @@
+// On-device OCR with Tesseract.js (vendored in vendor/tesseract, Apache-2.0). Photos never leave the device.
+// The engine (~7 MB with the English data) downloads from this site the first time and is then cached.
+// Output is always a DRAFT: lines of text with the reader's confidence, for the parent to check.
+
+const VENDOR = 'vendor/tesseract/';
+let workerPromise = null;
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (window.Tesseract) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.async = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('The photo reader could not be loaded.'));
+    document.head.append(s);
+  });
+}
+
+const abs = (p) => new URL(p, location.href).href;
+
+/** Create (once) the OCR worker. `onProgress({ status, progress })` reports download/initialisation. */
+export async function getWorker(onProgress) {
+  if (!workerPromise) {
+    workerPromise = (async () => {
+      await loadScript(abs(VENDOR + 'tesseract.min.js'));
+      const worker = await window.Tesseract.createWorker('eng', 1, {
+        workerPath: abs(VENDOR + 'worker.min.js'),
+        corePath: abs(VENDOR + 'core/'),
+        langPath: abs(VENDOR + 'lang/'),
+        gzip: true,
+        logger: (m) => { if (workerPromise.onProgress) workerPromise.onProgress(m); },
+        errorHandler: () => {},
+      });
+      await worker.setParameters({ preserve_interword_spaces: '1' });
+      return worker;
+    })();
+    workerPromise.catch(() => { workerPromise = null; });
+  }
+  workerPromise.onProgress = onProgress;
+  return workerPromise;
+}
+
+export async function terminate() {
+  if (!workerPromise) return;
+  try { (await workerPromise).terminate(); } catch { /* ignore */ }
+  workerPromise = null;
+}
+
+/**
+ * Clean up a photo for reading: greyscale, then a local (adaptive) threshold that removes uneven lighting
+ * and shadows. Returns a new canvas.
+ */
+export function preprocess(src) {
+  const w = src.width, h = src.height;
+  const ctx = src.getContext('2d', { willReadFrequently: true });
+  const img = ctx.getImageData(0, 0, w, h);
+  const d = img.data;
+  const gray = new Float32Array(w * h);
+  for (let i = 0, p = 0; i < d.length; i += 4, p++) gray[p] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+  // Integral image for fast local means.
+  const integ = new Float64Array((w + 1) * (h + 1));
+  for (let y = 1; y <= h; y++) {
+    let row = 0;
+    for (let x = 1; x <= w; x++) { row += gray[(y - 1) * w + (x - 1)]; integ[y * (w + 1) + x] = integ[(y - 1) * (w + 1) + x] + row; }
+  }
+  const r = Math.max(8, Math.round(Math.max(w, h) / 40));
+  const out = document.createElement('canvas');
+  out.width = w; out.height = h;
+  const octx = out.getContext('2d');
+  const o = octx.createImageData(w, h);
+  for (let y = 0; y < h; y++) {
+    const y0 = Math.max(0, y - r), y1 = Math.min(h, y + r + 1);
+    for (let x = 0; x < w; x++) {
+      const x0 = Math.max(0, x - r), x1 = Math.min(w, x + r + 1);
+      const sum = integ[y1 * (w + 1) + x1] - integ[y0 * (w + 1) + x1] - integ[y1 * (w + 1) + x0] + integ[y0 * (w + 1) + x0];
+      const mean = sum / ((x1 - x0) * (y1 - y0));
+      const v = gray[y * w + x] < mean * 0.86 ? 0 : 255; // darker than its surroundings ⇒ ink
+      const k = (y * w + x) * 4;
+      o.data[k] = o.data[k + 1] = o.data[k + 2] = v; o.data[k + 3] = 255;
+    }
+  }
+  octx.putImageData(o, 0, 0);
+  return out;
+}
+
+/**
+ * Turn Tesseract lines into our line format. A wide gap between words (a table or two-column sheet) becomes a
+ * tab, so "Produce        Fresh fruits and vegetables" keeps word and definition apart.
+ */
+export function linesFromResult(data, pageWidth) {
+  const out = [];
+  for (const line of data.lines || []) {
+    const words = (line.words || []).filter((x) => x.text && x.text.trim());
+    if (!words.length) continue;
+    const charW = words.reduce((n, x) => n + (x.bbox.x1 - x.bbox.x0) / Math.max(1, x.text.length), 0) / words.length;
+    const gapLimit = Math.max(charW * 3.2, pageWidth * 0.035);
+    let text = words[0].text;
+    for (let i = 1; i < words.length; i++) {
+      const gap = words[i].bbox.x0 - words[i - 1].bbox.x1;
+      text += (gap > gapLimit ? '\t' : ' ') + words[i].text;
+    }
+    const unsure = words.filter((x) => x.confidence < 75).map((x) => ({ text: x.text, conf: Math.round(x.confidence) }));
+    out.push({ text: text.trim(), conf: Math.round(line.confidence), unsure, bbox: line.bbox });
+  }
+  return out;
+}
+
+const meanConf = (lines) => (lines.length ? lines.reduce((n, l) => n + l.conf, 0) / lines.length : 0);
+
+/**
+ * Read one page. Tries the shadow-corrected image first; if the reader is unsure, also tries the plain image
+ * and keeps whichever result it was more confident about.
+ */
+export async function readPage(canvas, { onProgress } = {}) {
+  const worker = await getWorker(onProgress);
+  const attempt = async (c, label) => {
+    const { data } = await worker.recognize(c);
+    return { lines: linesFromResult(data, c.width), label };
+  };
+  let best = await attempt(preprocess(canvas), 'cleaned');
+  if (meanConf(best.lines) < 80) {
+    const plain = await attempt(canvas, 'original');
+    if (meanConf(plain.lines) > meanConf(best.lines) + 2) best = plain;
+  }
+  return { ...best, confidence: Math.round(meanConf(best.lines)) };
+}

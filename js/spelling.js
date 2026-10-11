@@ -28,7 +28,9 @@ function group(key, base, extra, stem = null) {
 
 const vowelGroups = (s) => (s.match(/[aeiouy]+/g) || []).length;
 // Unstressed endings that take plain -ed (open → opened, offer → offered, travel → traveled).
-const PLAIN_ENDINGS = /(en|er|on|el|al|or|ar|om|um|ow|it|et)$/;
+const PLAIN_ENDINGS = /(en|er|on|el|om|um|ow)$/;
+// Common words whose base ends in silent e but whose letters look plain (create → created).
+const SILENT_E_BASES = new Set(['create', 'delete', 'complete', 'locate', 'donate', 'rotate', 'relate', 'translate', 'debate', 'operate', 'celebrate', 'decorate', 'educate', 'separate', 'update', 'invite', 'decide', 'provide', 'divide', 'explode', 'escape', 'ignore', 'explore', 'adore', 'compare', 'prepare', 'declare', 'inhale', 'exhale', 'change', 'arrange', 'exchange', 'range', 'surprise', 'excite', 'erase', 'admire', 'promise', 'practice', 'continue', 'behave', 'arrive', 'describe', 'imagine', 'examine', 'determine']);
 
 /** Work out the base word and spelling-change rule for an -ed word. */
 export function spellingChange(word) {
@@ -44,6 +46,7 @@ export function spellingChange(word) {
   if (!/[aeiouy]/.test(stem)) return group('other', null);
   // freed (free + d) vs speed / succeed (not -ed words at all): can't tell from letters.
   if (w.endsWith('eed')) return group('check', null, null, stem);
+  if (SILENT_E_BASES.has(stem + 'e')) { const base = stem + 'e'; return group('drop-e', base, `${base} → ${w}`); }
   const last = stem.at(-1), prev = stem.at(-2);
   if (stem.length >= 3 && last === prev && !VOWEL.test(last)) {
     // quizzed: quiz is short vowel + z, so the z doubles (buzz/fizz already end in zz).
@@ -68,8 +71,8 @@ export function spellingChange(word) {
     if (PLAIN_ENDINGS.test(stem) && !/(it|et)$/.test(stem)) return group('add-ed', stem, `${stem} + ed → ${w}`);
     return group('check', null, null, stem);
   }
-  // sensed / lapsed: could be "sense"/"lapse" or not — let the parent decide.
-  if (/(rs|ls|ns|ps)$/.test(stem)) return group('check', null, null, stem);
+  // sensed / lapsed / changed / banged: could end in silent e or not — let the parent decide.
+  if (/(rs|ls|ns|ps|ng)$/.test(stem)) return group('check', null, null, stem);
   return group('add-ed', stem, `${stem} + ed → ${w}`);
 }
 

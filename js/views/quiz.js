@@ -61,8 +61,9 @@ class Session {
 
   render() {
     this.body = h('div', { class: 'quiz' });
+    this.live = h('div', { class: 'sr-only', 'aria-live': 'assertive', role: 'status' });
     this.root = page({ title: this.title, back: this.base, backLabel: 'This week', cls: 'student',
-      subtitle: `${VOCAB_ACTIVITIES[this.activity].label}${this.only ? ' · missed words' : ''}` }, this.body);
+      subtitle: `${VOCAB_ACTIVITIES[this.activity].label}${this.only ? ' · missed words' : ''}` }, this.live, this.body);
     if (this.mode === 'test') {
       setLeaveGuard(async () => this.finished || confirmDialog('Leave the test?', 'Your answers so far are kept on this device, so you can come back and finish it.', 'Leave'));
     }
@@ -89,18 +90,20 @@ class Session {
     form.append(this.controls(q));
     fill(this.body, this.header(), form);
     if (this.mode === 'practice' && this.done[this.idx]) this.showFeedback(grade(q, this.responses[this.idx]), true);
-    form.querySelector('input[type=text], input:checked, input[type=radio], select')?.focus({ preventScroll: true });
+    // Focus the instruction (screen readers then read the question); after a finished practice question, focus Next.
+    const doneQ = this.mode === 'practice' && this.done[this.idx];
+    (doneQ ? form.querySelector('.quiz-controls .btn') : form.querySelector('.q-instruction'))?.focus({ preventScroll: true });
   }
 
   promptEls(q, qid) {
-    if (q.type === 'def-mc') return [h('p', { class: 'q-instruction', id: qid }, 'What does this word mean?'), h('p', { class: 'q-word' }, q.prompt),
+    if (q.type === 'def-mc') return [h('p', { class: 'q-instruction', id: qid, tabindex: '-1' }, 'What does this word mean?'), h('p', { class: 'q-word', id: `${qid}-p` }, q.prompt),
       speakButton('Hear the word', () => q.prompt, { ariaLabel: 'Hear the word' })];
-    if (q.type === 'word-mc' || q.type === 'write') return [h('p', { class: 'q-instruction', id: qid }, q.type === 'write' ? 'Type the word that means:' : 'Which word means:'),
-      h('blockquote', { class: 'q-def' }, q.prompt, q.definitionKind === 'parent-edited' ? h('span', { class: 'badge badge-grey' }, 'parent-edited') : null),
+    if (q.type === 'word-mc' || q.type === 'write') return [h('p', { class: 'q-instruction', id: qid, tabindex: '-1' }, q.type === 'write' ? 'Type the word that means:' : 'Which word means:'),
+      h('blockquote', { class: 'q-def', id: `${qid}-p` }, q.prompt, q.definitionKind === 'parent-edited' ? h('span', { class: 'badge badge-grey' }, 'parent-edited') : null),
       speakButton('Hear the definition', () => q.prompt, { ariaLabel: 'Hear the definition' })];
-    if (q.type === 'blank') return [h('p', { class: 'q-instruction', id: qid }, 'Which word fits in the blank?'), h('p', { class: 'q-sentence' }, q.prompt),
+    if (q.type === 'blank') return [h('p', { class: 'q-instruction', id: qid, tabindex: '-1' }, 'Which word fits in the blank?'), h('p', { class: 'q-sentence', id: `${qid}-p` }, q.prompt),
       speakButton('Hear the sentence', () => q.prompt.replace(/_+/g, 'blank'), { ariaLabel: 'Hear the sentence' })];
-    if (q.type === 'match') return [h('p', { class: 'q-instruction', id: qid }, q.rounds > 1 ? `Match each word to its meaning (set ${q.round} of ${q.rounds}).` : 'Match each word to its meaning.')];
+    if (q.type === 'match') return [h('p', { class: 'q-instruction', id: qid, tabindex: '-1' }, q.rounds > 1 ? `Match each word to its meaning (set ${q.round} of ${q.rounds}).` : 'Match each word to its meaning.')];
     return [];
   }
 
@@ -109,7 +112,7 @@ class Session {
     const lock = this.mode === 'practice' && this.done[this.idx];
     const store = (v) => { this.responses[this.idx] = v; this.persist(); if (this.mode === 'test') this.refreshProgress(); };
     if (q.type === 'write') {
-      const input = h('input', { type: 'text', class: 'answer-input', autocomplete: 'off', autocapitalize: 'off', autocorrect: 'off', spellcheck: 'false', 'aria-labelledby': qid, value: saved ?? '', disabled: lock });
+      const input = h('input', { type: 'text', class: 'answer-input', autocomplete: 'off', autocapitalize: 'off', autocorrect: 'off', spellcheck: 'false', 'aria-labelledby': `${qid} ${qid}-p`, value: saved ?? '', disabled: lock });
       input.addEventListener('input', () => store(input.value));
       return h('div', { class: 'field' }, input);
     }
@@ -123,7 +126,7 @@ class Session {
       }));
     }
     // multiple choice
-    return h('fieldset', { class: 'choices', 'aria-labelledby': qid }, q.options.map((o) => {
+    return h('fieldset', { class: 'choices', 'aria-labelledby': `${qid} ${qid}-p` }, q.options.map((o) => {
       const input = h('input', { type: 'radio', name: qid, value: o.key, checked: saved === o.key, disabled: lock });
       input.addEventListener('change', () => store(o.key));
       return h('label', { class: 'choice' }, input, h('span', { class: 'choice-key', 'aria-hidden': 'true' }, o.key), h('span', { class: 'choice-text' }, o.text));
@@ -162,7 +165,8 @@ class Session {
   // ── Practice ──
   check() {
     const q = this.questions[this.idx];
-    if (!this.answered(q)) { fill(this.feedback, h('p', { class: 'warn-text' }, q.type === 'write' ? 'Type your answer first.' : 'Choose an answer first.')); return; }
+    const r0 = this.responses[this.idx];
+    if (!this.answered(q) || (q.type === 'match' && Object.keys(r0 || {}).length < q.pairs.length)) { fill(this.feedback, h('p', { class: 'warn-text' }, q.type === 'write' ? 'Type your answer first.' : q.type === 'match' ? 'Choose a meaning for every word first.' : 'Choose an answer first.')); return; }
     const g = grade(q, this.responses[this.idx]);
     if (this.firstTry[this.idx] == null) this.firstTry[this.idx] = g;
     if (g.points === g.possible) { this.done[this.idx] = true; this.persist(); this.show(); return; }
@@ -178,16 +182,19 @@ class Session {
       : h('div', null, h('p', null, h('strong', null, q.word), ' means: ', q.definition), q.sentence ? h('p', { class: 'muted' }, `Example: ${q.sentence}`) : null);
     if (allRight) {
       fill(this.feedback, h('div', { class: 'fb fb-right' }, h('p', { class: 'fb-title' }, '✓ Correct!'), explain));
+      this.live.textContent = 'Correct! ' + this.feedback.textContent.replace('✓ Correct!', '').trim();
       return;
     }
     if (final) {
+      this.live.textContent = 'The answer is ' + (q.type === 'match' ? 'shown below.' : q.correctText);
       fill(this.feedback, h('div', { class: 'fb fb-shown' }, h('p', { class: 'fb-title' }, 'The answer:'), q.type === 'match' ? explain : h('p', null, h('strong', null, q.correctText)), q.type === 'match' ? null : explain));
       return;
     }
+    this.live.textContent = q.type === 'match' ? `${g.points} of ${g.possible} right. Fix the others.` : 'Not quite. Try again or show the answer.';
     fill(this.feedback, h('div', { class: 'fb fb-wrong' },
       h('p', { class: 'fb-title' }, q.type === 'match' ? `✗ ${g.points} of ${g.possible} right. Fix the others.` : '✗ Not quite.'),
       h('div', { class: 'row' },
-        btn('Try again', () => { fill(this.feedback); this.body.querySelector('input[type=text], input[type=radio], select')?.focus(); }, 'btn-ghost'),
+        btn('Try again', () => { fill(this.feedback); (this.body.querySelector('input[type=text]') || this.body.querySelector('.choices input:checked') || this.body.querySelector('.choices input, .match select'))?.focus(); }, 'btn-ghost'),
         btn('Show the answer', () => { this.done[this.idx] = true; this.persist(); this.show(); }, 'btn-ghost'))));
   }
 

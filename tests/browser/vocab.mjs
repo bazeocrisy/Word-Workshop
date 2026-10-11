@@ -50,6 +50,12 @@ export default {
       return { fb1, fb2: document.querySelector('.feedback').innerText, n: qs.length };`);
     check('practice: a wrong answer gets immediate feedback with retry', /Not quite/.test(r.fb1) && /Try again/.test(r.fb1), r.fb1);
     check('practice: the correct answer is confirmed with its meaning', /Correct!/.test(r.fb2) && /means/.test(r.fb2), r.fb2);
+    const a11y = await b.js(`return { focus: document.activeElement.textContent, live: document.querySelector('.quiz [role=status], .page [role=status]')?.textContent || '' };`);
+    check('after a correct answer, focus moves to Next and the result is announced', /Next|Finish/.test(a11y.focus) && /Correct/.test(a11y.live), a11y);
+    const named = await b.js(`
+      const fs = document.querySelector('.choices'); const ids = (fs.getAttribute('aria-labelledby') || '').split(' ');
+      return ids.map((id) => document.getElementById(id)?.textContent || '').join(' | ');`);
+    check('answer choices are labelled with the question itself (word shown), not just the instruction', /What does this word mean\?/.test(named) && named.split(' | ')[1].length > 2, named);
     // answer the rest correctly
     await b.js(`${CURRENT_VOCAB_QUESTIONS}
       for (let i = 0; i < qs.length; i++) {
@@ -85,14 +91,14 @@ export default {
       }
       return { sawFeedback, text: document.getElementById('app').innerText };`);
     check('test: no correctness feedback before submitting', !r.sawFeedback);
-    check('test: review screen before submitting', /Ready to submit\?/.test(r.text) && /answered 12 of 12/.test(r.text), r.text.slice(0, 200));
+    check('test: review screen before submitting', /Ready to submit\?/.test(r.text) && /answered 11 of 11/.test(r.text), r.text.slice(0, 200));
     await b.click('.submit-test');
     await b.wait(400);
     t = await b.text();
-    check('test: graded result 9/12 (75%) with correct answers shown', /9 \/ 12/.test(t) && /75%/.test(t) && /Correct answer:/.test(t), t.slice(0, 300));
+    check('test: graded result 9/11 (82%) with correct answers shown; Fortunate skipped as unfair', /9 \/ 11/.test(t) && /82%/.test(t) && /Not asked/.test(t) && /Correct answer:/.test(t), t.slice(0, 300));
     attempts = await b.js(`return await WW.store.listAttempts({ studentId: window.__S });`);
     const test1 = attempts.find((a) => a.mode === 'test');
-    check('test result saved to the right student, week and lesson version', test1 && test1.studentId === sid && test1.weekId === wid && test1.snapshotVersion === 1 && test1.missed.length === 3 && test1.questions.length === 12);
+    check('test result saved to the right student, week and lesson version', test1 && test1.studentId === sid && test1.weekId === wid && test1.snapshotVersion === 1 && test1.missed.length === 2 && test1.questions.length === 11);
 
     // Written test: the target word must not be in the page while answering.
     await b.go(`${base}/vocab/test?type=write`);
@@ -111,7 +117,7 @@ export default {
     await b.click('.submit-test'); await b.wait(400);
     attempts = await b.js(`return await WW.store.listAttempts({ studentId: window.__S });`);
     const w1 = attempts.find((a) => a.activity === 'write');
-    check('written test grading: case/outer spaces ignored, a missing letter is wrong', w1 && w1.score === 11 && w1.missed.length === 1, w1 && [w1.score, w1.missed]);
+    check('written test grading: case/outer spaces ignored, a missing letter is wrong', w1 && w1.score === 10 && w1.total === 11 && w1.missed.length === 1, w1 && [w1.score, w1.missed]);
 
     // Draft persistence: answer 2 questions, reload, answers kept.
     await b.go(`${base}/vocab/test?type=def-mc`);
@@ -165,16 +171,16 @@ export default {
       }
       document.querySelector('.submit-test').click(); await new Promise((r) => setTimeout(r, 400)); return 1;`);
     attempts = await b.js(`return (await WW.store.listAttempts({ studentId: window.__S })).filter((a) => a.activity === 'word-mc' && a.mode === 'test').map((a) => a.score);`);
-    check('retaking a test adds a new result and keeps the old one', attempts.length === 2 && attempts.includes(9) && attempts.includes(12), attempts);
+    check('retaking a test adds a new result and keeps the old one', attempts.length === 2 && attempts.includes(9) && attempts.includes(11), attempts);
     await b.go(`#/s/${sid}/results`);
     t = await b.text();
-    check('student results list activity, mode, score, missed words and version', /Choose the word/.test(t) && /Test/.test(t) && /Practice/.test(t) && /9\/12 \(75%\)/.test(t) && /v1/.test(t));
+    check('student results list activity, mode, score, missed words and version', /Choose the word/.test(t) && /Test/.test(t) && /Practice/.test(t) && /9\/11 \(82%\)/.test(t) && /v1/.test(t));
 
     // Missed-word practice uses only missed words.
     const href = await b.js(`const a = (await WW.store.listAttempts({ studentId: window.__S })).find((x) => x.score === 9); const m = await import('./js/views/results.js'); return m.missedPracticeHref(a);`);
     await b.go(href);
     t = await b.text();
-    check('missed-word practice contains only the missed words', /Question 1 of 3/.test(t) && /missed words/.test(t), t.slice(0, 200));
+    check('missed-word practice contains only the missed words', /Question 1 of 2/.test(t) && /missed words/.test(t), t.slice(0, 200));
 
     // Another student sees none of these results.
     const other = await b.js(`const s = (await WW.store.listStudents())[1]; return (await WW.store.listAttempts({ studentId: s.id })).length;`);

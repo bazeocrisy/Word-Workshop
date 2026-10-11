@@ -89,6 +89,12 @@ function stemOf(word) {
   return w.length <= 5 ? w : w.slice(0, Math.max(5, Math.ceil(w.length * 0.6)));
 }
 
+/** Does the definition contain a recognisable part of the word (so it would give the answer away)? */
+export function definitionHintsWord(word, definition) {
+  const w = String(word || '').trim();
+  return !!w && !!String(definition || '').trim() && compareKey(definition).includes(stemOf(w));
+}
+
 /** Heuristic: definition phrased like a verb ("To …") for a word that looks like an adjective/participle. */
 function looksLikePosMismatch(word, definition) {
   const w = compareKey(word), d = compareKey(definition);

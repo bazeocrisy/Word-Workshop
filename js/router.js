@@ -62,6 +62,7 @@ async function show(view, ctx, root, token) {
   }
   if (current !== token) return; // a newer navigation won
   root.replaceChildren(el);
+  document.getElementById('toast')?.classList.remove('show'); // a message from the previous page must not cover this one
   root.removeAttribute('aria-busy');
   window.scrollTo(0, 0);
   const h1 = root.querySelector('h1');

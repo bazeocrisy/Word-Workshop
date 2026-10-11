@@ -46,7 +46,7 @@ const isWordLike = (s) => {
 /** Split "word - definition" (also : = – — tab or a wide gap). Returns null when there is no separator. */
 export function splitPair(text) {
   const t = String(text ?? '');
-  const seps = [/\t+/, /\s+[-–—=]\s+/, /\s*[–—]\s*/, /\s*:\s+/, /\s*=\s*/, /\s{3,}/, /(?<=\p{L})-\s+/u];
+  const seps = [/\t+/, /\s*\|\s*/, /\s+[-–—=]\s+/, /\s*[–—]\s*/, /\s*:\s+/, /\s*=\s*/, /\s{3,}/, /(?<=\p{L})-\s+/u];
   for (const re of seps) {
     const m = re.exec(t);
     if (!m) continue;
@@ -164,10 +164,12 @@ export function parseSpellingLines(lines) {
   for (const ln of lines) {
     let raw = String(ln.text ?? '').replace(/ /g, ' ').trim();
     if (!raw) continue;
+    let labelNote = null;
+    const before = tokens.length;
     // "Bonus: stepped" / "Challenge words: tomorrow, yesterday" — keep the words, mention the label.
     const label = /^([\p{L} ]{2,30}):\s*(\S.*)$/u.exec(raw);
     if (label && label[2].split(/[\s,;]+/).filter(Boolean).every((x) => WORD_RE.test(x.replace(/[.,;]$/, '')))) {
-      if (!/^(spelling|words?|word list|list|spelling words?|spelling list)$/i.test(label[1].trim())) notes.push(`Words after "${label[1].trim()}:" were included. Remove them if they are not part of the test.`);
+      if (!/^(spelling|words?|word list|list|spelling words?|spelling list)$/i.test(label[1].trim())) labelNote = (`Words after "${label[1].trim()}:" were included. Remove them if they are not part of the test.`);
       raw = label[2];
     }
     if (isHeading(stripMarker(raw).text) && !/\d/.test(raw.slice(0, 3))) { ignored.push(raw); continue; }
@@ -191,6 +193,7 @@ export function parseSpellingLines(lines) {
       }
       tokens.push({ word, number: stripMarker(raw).number && parts.length === 1 ? stripMarker(raw).number : null, conf: ln.conf });
     }
+    if (labelNote && tokens.length > before) notes.push(labelNote); // only mention the label if its words were kept
   }
   const allNumbered = tokens.length > 1 && tokens.every((t) => t.number != null);
   if (allNumbered) tokens.sort((a, b) => a.number - b.number);

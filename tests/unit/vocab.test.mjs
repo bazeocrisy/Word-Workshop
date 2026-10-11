@@ -17,8 +17,8 @@ test('answer keys: the keyed option is always the right one, and only one option
   for (let seed = 1; seed <= 40; seed++) {
     for (const type of ['def-mc', 'word-mc', 'blank']) {
       const { questions, skipped } = buildActivity(type, items, { seed });
-      assert.equal(skipped.length, 0);
-      assert.equal(questions.length, 12);
+      assert.equal(skipped.length, type === 'word-mc' ? 1 : 0, 'Fortunate is skipped for word-mc (its definition says "fortune")');
+      assert.equal(questions.length, type === 'word-mc' ? 11 : 12);
       for (const q of questions) {
         const item = items.find((i) => i.id === q.itemId);
         const right = q.options.filter((o) => (type === 'def-mc' ? compareKey(o.text) === compareKey(item.definition) : compareKey(o.text) === compareKey(item.word)));
@@ -102,4 +102,22 @@ test('missed-word practice restricts targets but keeps all words as distractors'
 
 test('same seed → same quiz (reproducible attempts)', () => {
   assert.deepEqual(buildActivity('mixed', items, { seed: 99 }), buildActivity('mixed', items, { seed: 99 }));
+});
+
+test('M3 review: same word twice is never in a matching round; shared definition asked once; hinting definitions skipped', () => {
+  const bats = [...items, { id: 'b1', word: 'bat', definition: 'a flying animal', definitionKind: 'teacher' }, { id: 'b2', word: 'Bat', definition: 'a stick to hit a ball', definitionKind: 'teacher' }];
+  for (let seed = 1; seed <= 20; seed++) {
+    const r = buildActivity('match', bats, { seed });
+    for (const q of r.questions) assert.equal(new Set(q.pairs.map((p) => p.word.toLowerCase())).size, q.pairs.length);
+    assert.equal(r.skipped.length, 1);
+  }
+  const twins = [...items, { id: 'x', word: 'Odd', definition: 'Strange or unusual', definitionKind: 'teacher', sentence: 'That is an odd hat.' }];
+  const w = buildActivity('write', twins, { seed: 3 });
+  const prompts = w.questions.map((q) => q.prompt.toLowerCase());
+  assert.equal(new Set(prompts).size, prompts.length, 'no definition asked twice');
+  const fort = buildActivity('write', items, { seed: 1 });
+  assert.ok(fort.skipped.some((s) => s.word === 'Fortunate'));
+  const mixed = buildActivity('mixed', items, { seed: 5 });
+  const f = mixed.questions.find((q) => q.word === 'Fortunate');
+  assert.ok(f && ['def-mc', 'blank'].includes(f.type), 'mixed falls back to a fair type for Fortunate');
 });

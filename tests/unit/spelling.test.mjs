@@ -63,8 +63,17 @@ test('review fixes: longer silent-e words are not called "just add -ed" (Milesto
   assert.equal(k('quizzed'), 'double');
   assert.equal(k('buzzed'), 'add-ed');
   assert.notEqual(spellingChange('controlled').base, 'controll');
-  for (const w of ['opened', 'happened', 'listened', 'offered', 'entered', 'wondered', 'traveled', 'colored']) assert.equal(k(w), 'add-ed', w);
+  for (const w of ['opened', 'happened', 'listened', 'offered', 'entered', 'wondered', 'traveled', 'followed', 'collected', 'complained', 'repeated']) assert.equal(k(w), 'add-ed', w);
   assert.equal(endingSound('decided').key, 'id', 'sound still known when the spelling rule is unclear');
   assert.equal(endingSound('escaped').key, 't');
   assert.equal(endingSound('admired').key, 'd');
+});
+
+test('M3 review: common silent-e words never get a non-word base (changed, ignored, compared, inhaled, created)', () => {
+  for (const w of ['changed', 'arranged', 'exchanged', 'ignored', 'explored', 'adored', 'compared', 'prepared', 'declared', 'inhaled', 'exhaled', 'created', 'colored', 'banged']) {
+    const c = spellingChange(w);
+    assert.ok(c.key === 'check' || (c.key === 'drop-e' && c.base + 'd' === w), w + ' → ' + c.key + ' ' + c.base);
+  }
+  assert.equal(spellingChange('created').base, 'create');
+  assert.equal(spellingChange('ignored').base, 'ignore');
 });

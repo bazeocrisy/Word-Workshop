@@ -5,7 +5,7 @@
 //    already appear in that sentence;
 //  • if two approved words share a definition, either word is accepted where that definition is the prompt;
 //  • a question that cannot be made fair is skipped and reported, never graded.
-import { compareKey, isCorrectAnswer, rng, shuffle, findWord } from './model.js';
+import { compareKey, isCorrectAnswer, rng, shuffle, findWord, definitionHintsWord } from './model.js';
 
 export const VOCAB_ACTIVITIES = {
   'def-mc': { label: 'Choose the meaning', short: 'Meaning', desc: 'See a word, pick its definition.' },
@@ -60,6 +60,7 @@ export function makeQuestion(type, item, items, rand) {
     if (!wrong.length) return { skip: 'Needs at least two words with different definitions.' };
     return { ...base, prompt: item.word, ...mcOptions(item, wrong, rand, (x) => x.definition), correctText: item.definition };
   }
+  if ((type === 'word-mc' || type === 'write') && definitionHintsWord(item.word, item.definition)) return { skip: 'The definition contains part of the word, so it would give the answer away.' };
   if (type === 'word-mc') {
     const wrong = distractors(item, items, MAX_OPTIONS - 1, rand);
     if (!wrong.length) return { skip: 'Needs at least two words with different definitions.' };
@@ -109,16 +110,22 @@ export function buildActivity(activity, snapshotVocab, { seed = 1, only = null }
   const targets = only ? all.filter((v) => only.includes(v.id)) : all;
   const skipped = [];
   if (activity === 'match') {
-    if (targets.length < 2) return { questions: [], skipped: targets.map((t) => ({ word: t.word, type: 'match', reason: 'Matching needs at least two words.' })) };
-    return { questions: makeMatchRounds(targets, rand), skipped };
+    // The same word twice (e.g. two meanings of "bat") cannot be matched fairly: keep the first, report the rest.
+    const seen = new Set(); const usable = [];
+    for (const t of targets) { const k = compareKey(t.word); if (seen.has(k)) skipped.push({ word: t.word, type: 'match', reason: 'This word appears twice, so its meanings cannot be matched fairly.' }); else { seen.add(k); usable.push(t); } }
+    if (usable.length < 2) return { questions: [], skipped: [...skipped, ...usable.map((t) => ({ word: t.word, type: 'match', reason: 'Matching needs at least two words.' }))] };
+    return { questions: makeMatchRounds(usable, rand), skipped };
   }
   const questions = [];
   const kinds = ['def-mc', 'word-mc', 'blank', 'write'];
+  const usedDefinitionPrompts = new Set(); // a definition shared by two words is asked once (either word accepted)
   for (const item of shuffle(targets, rand)) {
     let order = activity === 'mixed' ? shuffle(kinds, rand) : [activity];
     let q = null; let reason = '';
     for (const k of order) {
+      if ((k === 'word-mc' || k === 'write') && usedDefinitionPrompts.has(compareKey(item.definition))) { reason = 'Another word has the same definition; that question was asked once.'; continue; }
       const r = makeQuestion(k, item, all, rand);
+      if (!r.skip && (k === 'word-mc' || k === 'write')) usedDefinitionPrompts.add(compareKey(item.definition));
       if (!r.skip) { q = r; break; }
       reason = r.skip;
     }
