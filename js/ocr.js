@@ -99,10 +99,24 @@ export function linesFromResult(data, pageWidth) {
       const gap = words[i].bbox.x0 - words[i - 1].bbox.x1;
       text += (gap > gapLimit ? '\t' : ' ') + words[i].text;
     }
-    const unsure = words.filter((x) => x.confidence < 75).map((x) => ({ text: x.text, conf: Math.round(x.confidence) }));
-    out.push({ text: text.trim(), conf: Math.round(line.confidence), unsure, bbox: line.bbox });
+    text = cleanEdges(text);
+    if (!text) continue;
+    const unsure = words.filter((x) => x.confidence < 75 && text.includes(x.text) && !isJunk(x.text)).map((x) => ({ text: x.text, conf: Math.round(x.confidence) }));
+    // A line is only as trustworthy as its least certain real word, so one misread letter still gets flagged.
+    const wordConfs = words.filter((x) => !isJunk(x.text)).map((x) => x.confidence);
+    const conf = Math.round(Math.min(line.confidence, ...(wordConfs.length ? wordConfs : [line.confidence])));
+    out.push({ text, conf, unsure, bbox: line.bbox });
   }
   return out;
+}
+
+/** A fragment that is page-edge noise rather than text: one character, or only punctuation/lines. */
+export const isJunk = (t) => { const s = String(t).trim(); return s.length <= 1 || /^[^\p{L}\p{N}]+$/u.test(s); };
+
+/** Remove noise fragments separated from the text by a wide gap (borders, binder holes, shadows). */
+export function cleanEdges(text) {
+  const out = String(text).split('\t').map((s) => s.trim()).filter((s) => !isJunk(s)).join('\t');
+  return /^[^\p{L}]*$/u.test(out) ? '' : out; // nothing but numbers/marks left
 }
 
 const meanConf = (lines) => (lines.length ? lines.reduce((n, l) => n + l.conf, 0) / lines.length : 0);

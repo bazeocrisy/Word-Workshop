@@ -16,7 +16,7 @@ Architecture: `docs/ARCHITECTURE-PROPOSAL.md` (vanilla JS ES modules, IndexedDB,
 | 2 | Weekly lesson editor and approval | **Complete** — reviewed; 4 Major + 6 Minor findings fixed (see below) |
 | 3 | Vocabulary learning and assessment | **Complete** — reviewed; 4 Major + 6 Minor findings fixed (see below) |
 | 4 | Spelling learning and assessment | Built, tests passing; independent review in progress |
-| 5 | Photograph extraction and verification | Not started |
+| 5 | Photograph extraction and verification | Built and tested on synthetic pages; **real-photo accuracy BLOCKED** (photos not supplied); review pending |
 | 6 | Illustrated-card workflow and printable materials | Not started |
 | 7 | Full-system testing and final audit | Not started |
 
@@ -66,6 +66,14 @@ No Critical findings (answer keys, leak checks on every question of a mixed test
 - Test: mixed-up order by default (seeded, reproducible) or teacher order (parent setting); word spoken when each question opens (after a tap, as iPhone requires) with replay; sentence shown with the word removed; the correct spelling never appears in the page, title or URL before submitting (tested for every word); review screen; blanks confirmed and graded wrong; score, %, every answer; saved with version and order.
 - No speech: buttons disabled with a clear message; tests/practice switch to teacher order with a "Grown-up: read word number N" prompt and a link to the printable read-aloud list. Speech that fails to start is reported ("did not play"), never shown as playing.
 - Tests: 44 unit, 121 browser checks.
+
+## Milestone 5 — Photograph extraction and verification
+- Genuine on-device OCR (Tesseract.js 5.1.1, vendored in vendor/, Apache-2.0); nothing uploaded. See docs/OCR.md.
+- Upload 1–6 pages; rotate/remove; unsupported/oversized/undecodable files refused with clear messages; "no words found" and reader-load failures explained with "Type or paste instead".
+- Shadow-correcting preprocessing; column gaps → tabs; edge-noise removal; headings/notes left out and listed; numbered column lists restored to teacher order; wrapped definitions joined and flagged.
+- Review step: each photo beside editable spelling/vocabulary text, unsure words listed, live preview; "Add to the week as drafts" (never approved). Items carry reader confidence (least certain word); <80% raises a warning. Source photos and raw reader text are kept with the week and shown beside the editor.
+- Accuracy: `npm run test:ocr`. Real photos: BLOCKED until placed in local-fixtures/. Synthetic: 15/15 spelling, 12/12 vocabulary on mild distortion; harsh distortion 11/12 words, 50% exact definitions, 97.8% character accuracy.
+- Tests: 19 browser checks (synthetic end-to-end through the UI).
 
 ## Known limitations / decisions log
 - Data lives in one browser on one device; no sync (by design, documented in the UI).

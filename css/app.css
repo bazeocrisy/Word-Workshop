@@ -287,3 +287,18 @@ details > summary { cursor: pointer; min-height: 44px; display: flex; align-item
 .spell-input { font-size: 1.8rem; letter-spacing: .05em; }
 .spell-reveal { font-size: 1.4rem; letter-spacing: .05em; color: var(--accent); }
 .notice-inline { background: var(--warn-soft); padding: .6rem .8rem; border-radius: 12px; font-weight: 700; }
+
+/* Photo import */
+.thumbs { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); margin: .75rem 0; }
+.thumb-page { margin: 0; background: #faf9ff; border: 1px solid var(--line); border-radius: 12px; padding: .5rem; }
+.thumb-page img { width: 100%; height: 140px; object-fit: contain; background: #fff; border-radius: 8px; }
+.thumb-page figcaption { font-weight: 700; font-size: .9rem; margin: .25rem 0; }
+.thumb-page .row { margin: .25rem 0 0; gap: .3rem; }
+.ocr-status { font-weight: 700; }
+.ocr-layout { display: grid; gap: 1rem; }
+@media (min-width: 900px) { .ocr-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; } .ocr-photos { position: sticky; top: .5rem; max-height: calc(100vh - 1rem); overflow: auto; } }
+.ocr-photo { margin: 0 0 .75rem; }
+.ocr-photo img { width: 100%; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.ocr-photo figcaption { font-size: .9rem; color: var(--muted); }
+.ocr-text { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 1rem; }
+.tip summary { font-weight: 700; }

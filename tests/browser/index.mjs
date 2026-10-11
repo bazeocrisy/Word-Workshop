@@ -2,5 +2,6 @@ import core from './core.mjs';
 import lessons from './lessons.mjs';
 import vocab from './vocab.mjs';
 import spelling from './spelling.mjs';
+import ocr from './ocr.mjs';
 
-export const suites = [core, lessons, vocab, spelling];
+export const suites = [core, lessons, vocab, spelling, ocr];
