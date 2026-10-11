@@ -1,7 +1,7 @@
 {
   "produce": { "file": "produce.svg", "alt": "A basket full of fresh fruits and vegetables" },
   "exception": { "file": "exception.svg", "alt": "A row of green apples with one red apple that is different" },
-  "installment": { "file": "installment.svg", "alt": "Four calendar months, each adding one more coin, until there is enough to buy a bike" },
+  "installment": { "file": "installment.svg", "alt": "A happy child with a new bike, paying for it one equal coin each month, with three months paid and one to go" },
   "peculiar": { "file": "peculiar.svg", "alt": "A cat wearing a tall top hat and yellow rain boots on a sunny day" },
   "employee": { "file": "employee.svg", "alt": "A shop worker in an apron and name badge behind a counter, being handed their pay" },
   "fortunate": { "file": "fortunate.svg", "alt": "A happy child holding up a lucky four-leaf clover in the sunshine, with a shiny coin in the grass" },
