@@ -5,7 +5,7 @@ import * as db from './db.js';
 import { h } from './ui.js';
 import { homeView } from './views/home.js';
 import { studentHome, weekHome } from './views/student.js';
-import { parentDashboard, settingsView } from './views/parent.js';
+import { parentDashboard, settingsView, resultsIndex } from './views/parent.js';
 import { backupView } from './views/backupView.js';
 import { notFoundPage, parentOnly } from './views/common.js';
 
@@ -28,6 +28,13 @@ route('/print/:wid', lazy('./views/print.js', 'printWeek'));
 route('/print/results/:sid', lazy('./views/print.js', 'printResults'));
 // Parent
 route('/parent', parentOnly(parentDashboard));
+// Create a lesson, step by step (views/wizard.js)
+route('/parent/new', parentOnly(lazy('./views/wizard.js', 'wizardStart')));
+route('/parent/week/:wid/start', parentOnly(lazy('./views/wizard.js', 'wizardStart')));
+route('/parent/week/:wid/words', parentOnly(lazy('./views/wizard.js', 'wizardWords')));
+route('/parent/week/:wid/review', parentOnly(lazy('./views/wizard.js', 'wizardReview')));
+route('/parent/week/:wid/approve', parentOnly(lazy('./views/wizard.js', 'wizardApprove')));
+route('/parent/results', parentOnly(resultsIndex));
 route('/parent/settings', parentOnly(settingsView));
 route('/parent/backup', parentOnly(backupView));
 route('/parent/speech', parentOnly(lazy('./views/speechTest.js', 'speechTest')));

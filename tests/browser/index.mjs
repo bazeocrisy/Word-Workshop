@@ -5,5 +5,6 @@ import spelling from './spelling.mjs';
 import ocr from './ocr.mjs';
 import print from './print.mjs';
 import responsive from './responsive.mjs';
+import wizard from './wizard.mjs';
 
-export const suites = [core, lessons, vocab, spelling, ocr, print, responsive];
+export const suites = [core, lessons, vocab, spelling, ocr, print, responsive, wizard];

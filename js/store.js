@@ -90,11 +90,12 @@ export async function editWeek(id, mutate, log) {
 
 /** Delete a week, its snapshots and its results. Parent must confirm in the UI. */
 export async function deleteWeek(id) {
-  return transact(['weeks', 'snapshots', 'attempts'], 'readwrite', async (s, d) => {
+  return transact(['weeks', 'snapshots', 'attempts', 'meta'], 'readwrite', async (s, d) => {
     const snaps = await d(s.snapshots.index('weekId').getAllKeys(id));
     const atts = await d(s.attempts.index('weekId').getAllKeys(id));
     snaps.forEach((k) => s.snapshots.delete(k));
     atts.forEach((k) => s.attempts.delete(k));
+    s.meta.delete(`wizard:${id}`); // the lesson wizard's "continue at step" note
     s.weeks.delete(id);
   });
 }

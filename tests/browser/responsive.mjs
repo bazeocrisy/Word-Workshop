@@ -25,12 +25,20 @@ export default {
   async run({ b, check }) {
     await b.fresh();
     const { sid, wid } = await b.js(APPROVED_SAMPLE);
+    // An unfinished lesson (sample words, nothing checked) for the wizard screens.
+    const draft = await b.js(`const st = (await WW.store.listStudents())[1];
+      const w = await WW.store.createWeek(st.id, { startDate: '2026-10-19', endDate: '2026-10-23' });
+      const { sampleItems } = await import('./js/sample.js'); const s = await sampleItems();
+      await WW.store.editWeek(w.id, (x) => { x.vocab = s.vocab; x.spelling = s.spelling; }, { action: 'test setup' });
+      return w.id;`);
     const routes = [
       ['home', '#/'], ['student', `#/s/${sid}`], ['week', `#/s/${sid}/w/${wid}`],
       ['flashcard', `#/s/${sid}/w/${wid}/vocab/study`], ['vocab-practice', `#/s/${sid}/w/${wid}/vocab/practice?type=def-mc`],
       ['vocab-match', `#/s/${sid}/w/${wid}/vocab/practice?type=match`], ['spell-study', `#/s/${sid}/w/${wid}/spell/study`],
       ['parent', '#/parent'], ['editor', `#/parent/week/${wid}`], ['import', `#/parent/week/${wid}/import`],
       ['backup', '#/parent/backup'], ['settings', '#/parent/settings'], ['print', `#/print/${wid}`],
+      ['wizard-start', '#/parent/new'], ['wizard-words', `#/parent/week/${draft}/words`], ['wizard-review', `#/parent/week/${draft}/review`],
+      ['wizard-approve', `#/parent/week/${draft}/approve`], ['results', '#/parent/results'],
     ];
     for (const [vname, w, hgt] of VIEWPORTS) {
       await b.viewport(w, hgt);

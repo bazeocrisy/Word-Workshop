@@ -19,18 +19,18 @@ export default {
     t = await b.text();
     check('parent dashboard shows both students', /Alex/.test(t) && /Jordan/.test(t));
     check('parent dashboard nudges for a first backup', /not made a backup yet/.test(t));
-    await b.click('.student-card .btn-primary', '/New week/');
-    await b.wait(100);
-    const dlg = await b.js(`return { title: document.querySelector('.dialog h2')?.textContent, start: document.querySelector('.dialog input[type=date]')?.value };`);
-    check('new-week dialog opens with a Monday start date', dlg.title === 'New week' && /^\d{4}-\d{2}-\d{2}$/.test(dlg.start) && new Date(dlg.start + 'T12:00').getDay() === 1, dlg);
-    await b.js(`const d = document.querySelectorAll('.dialog input[type=date]'); d[0].value = '2026-10-12'; d[0].dispatchEvent(new Event('change')); return true;`);
-    const endAuto = await b.js(`return document.querySelectorAll('.dialog input[type=date]')[1].value;`);
+    await b.click('a.create-lesson', /Create this week/);
+    await b.settle();
+    const dlg = await b.js(`return { title: document.querySelector('h1')?.textContent, start: document.getElementById('wz-start')?.value };`);
+    check('"Create this week\'s lesson" opens the wizard with a Monday start date', /Create this week/.test(dlg.title) && /^\d{4}-\d{2}-\d{2}$/.test(dlg.start) && new Date(dlg.start + 'T12:00').getDay() === 1, dlg);
+    await b.js(`const d = document.getElementById('wz-start'); d.value = '2026-10-12'; d.dispatchEvent(new Event('change')); document.querySelector('input[name=wz-student]').click(); return true;`);
+    const endAuto = await b.js(`return document.getElementById('wz-end').value;`);
     check('end date follows the start date (Friday)', endAuto === '2026-10-16', endAuto);
-    await b.click('.dialog .btn-primary', '/Create week/');
+    await b.click('.wizard-next');
     await b.settle();
     const hash = await b.js('return location.hash;');
-    check('creating a week opens its editor', /^#\/parent\/week\/w_/.test(hash), hash);
-    const wid = hash.split('/').pop();
+    check('creating a lesson goes to its Add words step', /^#\/parent\/week\/w_[^/]+\/words$/.test(hash), hash);
+    const wid = hash.split('/')[3];
 
     await b.js(`await WW.store.createWeek(${JSON.stringify(jordan)}, { startDate: '2026-10-12', endDate: '2026-10-16' }); return true;`);
     const counts = await b.js(`return [(await WW.store.listWeeks(${JSON.stringify(alex)})).length, (await WW.store.listWeeks(${JSON.stringify(jordan)})).length];`);

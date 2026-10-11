@@ -5,12 +5,13 @@ Automated tests run in headless Chrome at phone, tablet and desktop sizes, with 
 Devices: ☐ iPhone (Safari) ☐ iPad (Safari) ☐ Android phone (Chrome) ☐ Windows or Mac (Chrome/Edge/Safari)
 
 ## Setup
-- ☐ Open the site; the two demo profiles appear. Rename them to your children in Parent area → Settings.
+- ☐ Open the site; the first screen shows a Parents area ("Create this week's lesson") and a Students area with the two demo profiles. Rename them to your children in Settings.
+- ☐ Create a lesson with the four steps: student and week → add words → review → approve. Leave half-way (close the tab), reopen the site and use "Continue …'s lesson": nothing typed or added is lost.
 - ☐ iPhone/iPad: Share → Add to Home Screen; open from the icon (protects data from Safari's 7-day clean-up).
 - ☐ Optional: set a parent PIN; check a child cannot open the parent area without it.
 
 ## Photo extraction (real photos — the key unmeasured item)
-- ☐ Take a photo of this week's newsletter and the vocabulary sheet with the phone camera; upload both in one go.
+- ☐ Take a photo of this week's newsletter and the vocabulary sheet with the phone camera. In Add words, use "Upload spelling list or newsletter" for the newsletter and "Upload vocabulary worksheet" for the vocabulary sheet.
 - ☐ The reader downloads the first time (needs internet), then reads each page in under ~30 s.
 - ☐ Compare the text boxes with the photos. Note how many words/definitions were wrong: ____ / ____.
 - ☐ Add as drafts; the editor shows the source pages beside the words; low-confidence words are flagged.

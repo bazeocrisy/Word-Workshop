@@ -8,7 +8,7 @@ A simple weekly spelling and vocabulary study web app for elementary students (g
 Version 1 built on the `claude/build-v1` branch and awaiting owner sign-off. **Not merged to `main` and not deployed.** Progress, review findings and limitations: [`docs/STATUS.md`](docs/STATUS.md).
 
 ## What it does
-- **Parent:** create a week for a student, add words by photo (read on the device), by pasting text, or by typing; check every word against the source; approve. Students only ever see approved versions.
+- **Parent:** on the first screen choose **Create this week's lesson**. Four steps: (1) student and week, (2) add words, with separate Vocabulary and Spelling sections, each offering photo upload (read on the device), paste a list, or add one word, (3) review every word against the source, (4) approve. Unfinished lessons can be continued from the first screen or the parent area. Students only ever see approved versions.
 - **Teacher definitions are kept exactly.** The original capture, the verified teacher wording and any parent wording are stored separately; every correction is recorded.
 - **Student:** vocabulary flashcards with pictures, sentences and audio; five practice and test activities; spelling study grouped by spelling pattern and by -ed sound; spelling practice and tests read aloud.
 - **Results** for each student and week, linked to the exact lesson version, with missed-word practice and printable sheets.

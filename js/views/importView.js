@@ -11,11 +11,11 @@ import { go } from '../router.js';
 
 const MAX_PAGES = 6;
 
-export async function importView({ params }) {
+export async function importView({ params, query = {} }) {
   const week = await store.getWeek(params.wid);
   if (!week) return page({ title: 'Week not found', back: '#/parent' });
   const student = await store.getStudent(week.studentId);
-  return new Importer(week, student).render();
+  return new Importer(week, student, query).render();
 }
 
 /** Decide which lines are spelling and which are vocabulary. */
@@ -85,11 +85,17 @@ export function extractPages(pages, target) {
 }
 
 class Importer {
-  constructor(week, student) { this.w = week; this.student = student; this.pages = []; }
+  constructor(week, student, query = {}) {
+    this.w = week; this.student = student; this.pages = [];
+    // From the lesson wizard: ?for=vocab|spelling presets what is on the pages; ?from=wizard returns to "Add words".
+    if (query.for === 'vocab' || query.for === 'spelling') this.target = query.for;
+    this.back = query.from === 'wizard' ? `#/parent/week/${week.id}/words` : `#/parent/week/${week.id}`;
+  }
 
   render() {
     this.body = h('div', { class: 'import' });
-    this.root = page({ title: 'Upload photos', back: `#/parent/week/${this.w.id}`, backLabel: 'Back to the week', cls: 'parent',
+    const title = { vocab: 'Upload the vocabulary worksheet', spelling: 'Upload the spelling list' }[this.target] || 'Upload photos';
+    this.root = page({ title, back: this.back, backLabel: this.back.endsWith('/words') ? 'Back to Add words' : 'Back to the week', cls: 'parent',
       subtitle: `${weekLabel(this.w)} · ${this.student?.displayName || ''}` }, this.body);
     this.choose();
     return this.root;
@@ -120,7 +126,7 @@ class Importer {
         h('p', { class: 'hint' }, 'The first time, the photo reader downloads about 7 MB from this site. After that the browser keeps a copy, so it starts faster.')),
       h('details', { class: 'card tip' }, h('summary', null, 'Tip: the quickest way on iPhone or iPad'),
         h('p', null, 'In the Photos app, press and hold the text in the photo, choose "Select All" and "Copy". Then go back to the week, choose "Paste or type a list" and paste. Your phone\'s own text reader is often more accurate than the one in this app.'),
-        link('Back to the week', `#/parent/week/${this.w.id}`, 'btn btn-ghost btn-small')));
+        link('Back', this.back, 'btn btn-ghost btn-small')));
     this.drawThumbs();
   }
 
@@ -244,7 +250,7 @@ class Importer {
 
   failed(message) {
     fill(this.body, h('div', { class: 'card notice notice-error', role: 'alert' }, h('p', null, message),
-      h('div', { class: 'row' }, btn('Try again', () => this.choose(), 'btn-primary'), link('Type or paste instead', `#/parent/week/${this.w.id}`, 'btn btn-ghost'))));
+      h('div', { class: 'row' }, btn('Try again', () => this.choose(), 'btn-primary'), link('Type or paste instead', this.back, 'btn btn-ghost'))));
   }
 
   // ── Step 3: check the text beside each photo, then add as drafts ──
@@ -283,7 +289,7 @@ class Importer {
       nothing ? h('div', { class: 'card notice notice-error', role: 'alert' },
         h('p', null, h('strong', null, 'No words were found in these photos.')),
         h('p', null, 'Try a clearer photo taken straight on in good light, turn the page the right way up, or type or paste the words.'),
-        h('div', { class: 'row' }, btn('Try other photos', () => { this.pages = []; this.choose(); }, 'btn-primary'), link('Type or paste instead', `#/parent/week/${this.w.id}`, 'btn btn-ghost'))) : null,
+        h('div', { class: 'row' }, btn('Try other photos', () => { this.pages = []; this.choose(); }, 'btn-primary'), link('Type or paste instead', this.back, 'btn btn-ghost'))) : null,
       h('div', { class: 'card notice notice-warn' },
         h('p', null, h('strong', null, 'Check the text against the photo. '), 'The photo reader makes mistakes, especially with shadows, slanted photos and handwriting. Fix anything here, or later in the week editor. Nothing is shown to students until you approve the week.'),
         ex.notes.length ? h('ul', { class: 'import-notes' }, ex.notes.map((n) => h('li', null, n))) : null,
@@ -384,6 +390,6 @@ class Importer {
       w.sources.push(...sources);
     }, { action: 'photos read', detail: `${sources.length} page(s): ${spItems.length} spelling, ${voItems.length} vocabulary added as drafts${corrected ? `; ${corrected} corrected on the review screen (recorded)` : ''}. Raw reader text kept with the source pages (${rawText.length} characters).` });
     toast(`Added ${spItems.length + voItems.length} words as drafts. Check each one against the photo.`);
-    go(`#/parent/week/${this.w.id}`);
+    go(this.back);
   }
 }

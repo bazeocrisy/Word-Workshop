@@ -1,9 +1,10 @@
-// Parent dashboard, new-week dialog and settings.
-import { h, page, link, btn, field, dialog, toast, badge, confirmDialog, emptyState } from '../ui.js';
-import { listStudents, listWeeks, createWeek, addStudent, updateStudent, removeStudent, getMeta, COLORS, deleteWeek, getWeek } from '../store.js';
-import { weekStatus, STATUS_LABELS, weekLabel, schoolWeekOf } from '../model.js';
+// Parent dashboard (create, continue and manage lessons), results index and settings.
+import { h, page, link, btn, field, toast, badge, confirmDialog, emptyState } from '../ui.js';
+import { listStudents, listWeeks, addStudent, updateStudent, removeStudent, getMeta, COLORS, deleteWeek, getWeek } from '../store.js';
+import { weekStatus, STATUS_LABELS, weekLabel } from '../model.js';
 import { DEMO_STUDENTS } from '../store.js';
-import { avatar, deviceNotice, pinEnabled, setPin, askPinDialog, lockParent } from './common.js';
+import { avatar, themeClass, deviceNotice, pinEnabled, setPin, askPinDialog, lockParent } from './common.js';
+import { resumeHref, resumeStep, stepLabel } from './lessonSteps.js';
 import { go } from '../router.js';
 
 const STATUS_KIND = { draft: 'grey', 'pending-review': 'warn', approved: 'ok', 'pending-changes': 'warn' };
@@ -23,52 +24,74 @@ async function backupReminder() {
     link('Make a backup', '#/parent/backup', 'btn btn-primary'));
 }
 
-export async function newWeekDialog(studentId, students) {
-  const def = schoolWeekOf();
-  const who = h('select', null, students.map((s) => h('option', { value: s.id, selected: s.id === studentId }, s.displayName)));
-  const start = h('input', { type: 'date', value: def.startDate, required: true });
-  const end = h('input', { type: 'date', value: def.endDate });
-  start.addEventListener('change', () => {
-    const [y, m, d] = start.value.split('-').map(Number);
-    if (!y) return;
-    const e = new Date(y, m - 1, d + 4);
-    end.value = `${e.getFullYear()}-${String(e.getMonth() + 1).padStart(2, '0')}-${String(e.getDate()).padStart(2, '0')}`;
-  });
-  const title = h('input', { type: 'text', maxlength: '60', placeholder: 'Optional, e.g. Unit 3 Week 2' });
-  const v = await dialog({ title: 'New week', body: h('div', null, field('Student', who), h('div', { class: 'two-col' }, field('Starts', start), field('Ends', end)), field('Name (optional)', title)),
-    buttons: [{ label: 'Create week', value: () => ({ studentId: who.value, startDate: start.value, endDate: end.value, title: title.value.trim() }) }] });
-  if (!v) return null;
-  if (!v.startDate) { toast('Choose a start date.', 'error'); return null; }
-  if (v.endDate && v.endDate < v.startDate) { toast('The end date is before the start date.', 'error'); return null; }
-  const w = await createWeek(v.studentId, { startDate: v.startDate, endDate: v.endDate || v.startDate, title: v.title });
-  go(`#/parent/week/${w.id}`);
-  return w;
-}
-
 export async function parentDashboard() {
   const students = await listStudents();
-  const cards = [];
-  for (const st of students) {
-    const weeks = await listWeeks(st.id);
-    cards.push(h('section', { class: 'card student-card', 'aria-labelledby': `ps-${st.id}` },
-      h('div', { class: 'card-head' }, avatar(st), h('h2', { id: `ps-${st.id}` }, st.displayName, st.grade ? h('span', { class: 'muted' }, ` · Grade ${st.grade}`) : null)),
-      weeks.length ? h('ul', { class: 'admin-weeks', role: 'list' }, weeks.map((w) => h('li', null,
-        h('a', { href: `#/parent/week/${w.id}`, class: 'admin-week' }, h('span', null, weekLabel(w), w.archived ? h('span', { class: 'muted' }, ' (archived)') : null), statusBadge(w)))))
-        : h('p', { class: 'hint' }, 'No weeks yet.'),
-      h('div', { class: 'row' },
-        btn('New week', () => newWeekDialog(st.id, students), 'btn-primary'),
-        link('Results', `#/parent/results/${st.id}`, 'btn btn-ghost'))));
+  const drafts = [], approved = [];
+  for (const st of students) for (const w of await listWeeks(st.id)) {
+    if (w.approvedVersion) approved.push({ st, w });
+    // In progress: never approved, or approved and then changed (the student still sees the approved version).
+    if (!w.approvedVersion || weekStatus(w) === 'pending-changes') drafts.push({ st, w });
   }
-  return page({ title: 'Parent area', back: '#/', backLabel: 'Students', cls: 'parent',
-    subtitle: 'Upload or type this week\'s words, check them, then approve the week so your child can study it.' },
-  students.some((s) => DEMO_STUDENTS.some((d) => d.displayName === s.displayName)) ? h('div', { class: 'card notice' }, h('p', null, 'The profiles start with demo names. Change them to your children\'s names in Settings (names stay on this device).'), link('Rename in Settings', '#/parent/settings', 'btn btn-ghost btn-small')) : null,
+  drafts.sort((x, y) => String(y.w.updatedAt).localeCompare(String(x.w.updatedAt)));
+  const counts = (w) => `${w.vocab.length} vocabulary · ${w.spelling.length} spelling`;
+
+  const draftRows = await Promise.all(drafts.map(async ({ st, w }) => h('li', { class: 'lesson-row' },
+    avatar(st),
+    h('div', { class: 'lesson-main' },
+      h('span', { class: 'lesson-name' }, `${st.displayName} · ${weekLabel(w)} `, statusBadge(w)),
+      h('span', { class: 'lesson-meta' }, counts(w), ' · ', w.approvedVersion ? `Changes not approved yet; ${st.displayName} still sees version ${w.approvedVersion}` : stepLabel(await resumeStep(w)))),
+    h('div', { class: 'lesson-actions' },
+      link('Continue', await resumeHref(w), 'btn btn-primary btn-small continue-draft', { 'aria-label': `Continue ${st.displayName}'s lesson, ${weekLabel(w)}` }),
+      // An approved lesson has results; deleting it is done deliberately from the lesson page, not from this list.
+      w.approvedVersion ? null : btn('Delete', () => confirmDeleteWeek(w.id), 'btn-ghost btn-small', { 'aria-label': `Delete ${st.displayName}'s draft lesson, ${weekLabel(w)}` })))));
+
+  const approvedFor = (st) => {
+    const mine = approved.filter((x) => x.st.id === st.id);
+    return h('section', { class: 'card student-card', 'aria-labelledby': `ps-${st.id}` },
+      h('div', { class: 'card-head' }, avatar(st), h('h3', { id: `ps-${st.id}` }, st.displayName, st.grade ? h('span', { class: 'muted' }, ` · Grade ${st.grade}`) : null)),
+      mine.length ? h('ul', { class: 'admin-weeks', role: 'list' }, mine.map(({ w }) => h('li', null,
+        h('a', { href: `#/parent/week/${w.id}`, class: 'admin-week' },
+          h('span', null, weekLabel(w), w.archived ? h('span', { class: 'muted' }, ' (archived)') : null, h('span', { class: 'lesson-meta' }, counts(w))),
+          statusBadge(w)))))
+        : h('p', { class: 'hint' }, 'No approved lessons yet.'),
+      h('div', { class: 'row' }, link(`${st.displayName}'s results`, `#/parent/results/${st.id}`, 'btn btn-ghost btn-small')));
+  };
+
+  return page({ title: 'Parent area', back: '#/', backLabel: 'Home', cls: 'parent dashboard',
+    subtitle: 'Create each week\'s lesson, check it, and approve it so your child can study it.' },
+  students.length ? h('section', { class: 'card create-card', 'aria-labelledby': 'pd-create' },
+    h('h2', { id: 'pd-create' }, 'New week'),
+    h('p', null, 'Upload or type the teacher\'s spelling and vocabulary lists, check every word, then approve.'),
+    link(h('span', null, h('span', { 'aria-hidden': 'true' }, '＋ '), 'Create this week\'s lesson'), '#/parent/new', 'btn btn-primary btn-big create-lesson'))
+    : emptyState('Add a student in Settings to get started.', link('Settings', '#/parent/settings', 'btn btn-primary')),
+  students.some((x) => DEMO_STUDENTS.some((d) => d.displayName === x.displayName)) ? h('div', { class: 'card notice' }, h('p', null, 'The profiles start with demo names. Change them to your children\'s names in Settings (names stay on this device).'), link('Rename in Settings', '#/parent/settings', 'btn btn-ghost btn-small')) : null,
   await backupReminder(),
-  students.length ? cards : emptyState('Add a student in Settings to get started.', link('Settings', '#/parent/settings', 'btn btn-primary')),
-  h('nav', { class: 'row parent-nav', 'aria-label': 'Parent tools' },
-    link('Backup & restore', '#/parent/backup', 'btn btn-ghost'),
-    link('Settings', '#/parent/settings', 'btn btn-ghost'),
-    (await pinEnabled()) ? btn('Lock parent area', () => { lockParent(); go('#/'); }, 'btn-ghost') : null),
+  h('div', { class: 'dash-grid' },
+    h('section', { class: 'dash-col', 'aria-labelledby': 'pd-drafts' },
+      h('h2', { id: 'pd-drafts' }, `Lessons in progress (${drafts.length})`),
+      drafts.length ? h('ul', { class: 'lesson-list card', role: 'list' }, draftRows)
+        : h('p', { class: 'hint' }, 'None. Lessons you start but have not approved yet appear here, so you can continue them later.')),
+    h('section', { class: 'dash-col', 'aria-labelledby': 'pd-approved' },
+      h('h2', { id: 'pd-approved' }, 'Approved lessons'),
+      h('p', { class: 'hint' }, 'Open a lesson to change it. Changes need approving again before your child sees them.'),
+      students.map(approvedFor))),
+  h('section', { 'aria-labelledby': 'pd-tools' },
+    h('h2', { id: 'pd-tools' }, 'Results, backup and settings'),
+    h('nav', { class: 'row parent-nav', 'aria-label': 'Parent tools' },
+      link('Student results', '#/parent/results', 'btn btn-ghost'),
+      link('Backup & restore', '#/parent/backup', 'btn btn-ghost'),
+      link('Settings', '#/parent/settings', 'btn btn-ghost'),
+      (await pinEnabled()) ? btn('Lock parent area', () => { lockParent(); go('#/'); }, 'btn-ghost') : null)),
   deviceNotice());
+}
+
+/** Results: one entry per student. */
+export async function resultsIndex() {
+  const students = await listStudents();
+  return page({ title: 'Student results', back: '#/parent', backLabel: 'Parent area', cls: 'parent' },
+    students.length ? h('ul', { class: 'profile-grid', role: 'list' }, students.map((st) => h('li', null,
+      h('a', { href: `#/parent/results/${st.id}`, class: `profile-card ${themeClass(st)}` }, avatar(st, 'avatar-lg'), h('span', { class: 'profile-name' }, st.displayName), h('span', { class: 'profile-grade' }, 'See results')))))
+      : emptyState('No students yet.'));
 }
 
 export async function settingsView() {
@@ -113,6 +136,7 @@ export async function confirmDeleteWeek(weekId) {
   const ok = await confirmDialog('Delete this week?', `Delete ${weekLabel(w)} with all its versions and results? This cannot be undone. Consider making a backup first.`, 'Delete week', true);
   if (!ok) return;
   await deleteWeek(weekId);
+  for (const kind of ['vocab', 'spelling']) { try { sessionStorage.removeItem(`ww-add:${weekId}:${kind}`); } catch { /* ignore */ } }
   toast('Week deleted.');
   go('#/parent');
 }
