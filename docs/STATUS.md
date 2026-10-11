@@ -1,10 +1,10 @@
 # Word Workshop — build status (checkpoint log)
 
-Branches: `main` is live (198640e: Redesign 2.0 + optional online photo reader, PR #4, deployed with owner approval) · `claude/student-first-v3` (Word Workshop 3.0, student-first; **awaiting owner review — not merged, not deployed**). Never merge or deploy without owner approval.
+Branches: `main` is live (57a0462: Word Workshop 3.0 student-first, merged from `claude/student-first-v3` and deployed 2026-10-11 with owner approval; live student suite 47/47). Never merge or deploy without owner approval.
 Architecture: `docs/ARCHITECTURE-PROPOSAL.md` (vanilla JS ES modules, IndexedDB, hash routes, no build step).
 
 ## How to resume
-1. `git pull` on the branch under review (now `claude/student-first-v3`); read this file top to bottom.
+1. `git pull` on `main` (or the current feature branch); read this file top to bottom.
 2. `npm test` (Node unit tests) and `npm run test:browser` (headless Chrome, serves the repo under `/Word-Workshop/`).
 3. Continue with the first milestone not marked **Complete** below. Never rewrite completed milestones without a recorded reason.
 
