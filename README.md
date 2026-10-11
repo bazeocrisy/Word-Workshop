@@ -1,19 +1,28 @@
 # Word Workshop
 
-A simple weekly spelling and vocabulary study web app for elementary students.
+A simple weekly spelling and vocabulary study web app for elementary students (grades 3 and 5).
+
+**Upload → Review → Approve → Study → Practice → Test → Review Results.**
 
 ## Project status
-Planning and architecture. No application has been implemented or deployed yet.
+Version 1 built on the `claude/build-v1` branch and awaiting owner sign-off. **Not merged to `main` and not deployed.** Progress, review findings and limitations: [`docs/STATUS.md`](docs/STATUS.md).
 
-## Product principles
-- Upload photos and extract word lists, with **mandatory parent review** before a week is published.
-- Support manual entry and editing alongside photo extraction.
-- Preserve teacher-provided vocabulary definitions exactly as approved; flag suspected errors instead of silently correcting them.
-- Separate study, practice, and graded tests for vocabulary and spelling.
-- Maintain separate student profiles, weeks, and results.
-- Keep the interface straightforward and usable on phones, tablets, and computers.
+## What it does
+- **Parent:** create a week for a student, add words by photo (read on the device), by pasting text, or by typing; check every word against the source; approve. Students only ever see approved versions.
+- **Teacher definitions are kept exactly.** The original capture, the verified teacher wording and any parent wording are stored separately; every correction is recorded.
+- **Student:** vocabulary flashcards with pictures, sentences and audio; five practice and test activities; spelling study grouped by spelling pattern and by -ed sound; spelling practice and tests read aloud.
+- **Results** for each student and week, linked to the exact lesson version, with missed-word practice and printable sheets.
+- **Backup and restore** of everything as one file. Data stays in this browser on this device; there is no account and no sync.
+
+## Using it
+Open `index.html` from a web server (GitHub Pages, or `npx serve` / any static server). It does not work from `file://`. On iPhone and iPad, add it to the Home Screen so Safari keeps the data.
 
 ## Development
-Claude is the implementation owner. The `claude/build-v1` branch contains initial requirements, examples, and handoff instructions. Do not merge or deploy without owner approval.
+- No build step and no runtime dependencies: plain HTML, CSS and JavaScript modules. Tesseract.js (photo reading) is vendored in `vendor/`.
+- `npm test`: unit tests (Node ≥ 22).
+- `npm run test:browser`: end-to-end tests in headless Chrome/Edge, served under `/Word-Workshop/` like GitHub Pages (set `CHROME_PATH` if needed; `SHOTS=1` saves screenshots).
+- `npm run test:ocr`: photo-extraction accuracy. Put real photos in `local-fixtures/` (git-ignored); never commit them.
 
-See `docs/` on the development branch for the full plan.
+Docs: [architecture](docs/ARCHITECTURE-PROPOSAL.md) · [directive](docs/IMPLEMENTATION-DIRECTIVE.md) · [grading rules](docs/GRADING.md) · [photo extraction](docs/OCR.md) · [pictures](docs/ILLUSTRATIONS.md) · [manual device tests](docs/MANUAL-TESTS.md) · [deployment](docs/DEPLOYMENT.md)
+
+Claude is the implementation owner; the parent approves merges and deployment.
