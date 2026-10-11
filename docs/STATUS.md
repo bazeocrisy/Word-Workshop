@@ -1,6 +1,6 @@
 # Word Workshop — build status (checkpoint log)
 
-Branches: `claude/build-v1` (v1, merged to `main` and deployed 2026-10-11 with owner approval) · `claude/ux-wizard` (landing page + lesson wizard, awaiting owner review). Never merge or deploy without owner approval.
+Branches: `claude/build-v1` (v1, merged to `main` and deployed 2026-10-11 with owner approval) · `claude/ux-wizard` (landing page + lesson wizard; merged to `main` as 8d52ba5 via PR #2 and deployed 2026-10-11 with owner approval). Never merge or deploy without owner approval.
 Architecture: `docs/ARCHITECTURE-PROPOSAL.md` (vanilla JS ES modules, IndexedDB, hash routes, no build step).
 
 ## How to resume
@@ -121,7 +121,7 @@ The owner supplied the two original photos (kept in git-ignored local-fixtures/,
 - Unresolved: vocabulary photo extraction needs a better source (full-resolution photo or phone text recognition) or an owner-approved online reader.
 
 ## UX correction: landing page and lesson wizard (2026-10-11, branch `claude/ux-wizard`)
-The first real parent test showed parents could not find where to upload worksheets or enter words. The learning, OCR, testing and storage engines are unchanged; the parent experience is reorganised around creating a weekly lesson. **Not merged or deployed; awaiting owner review.**
+The first real parent test showed parents could not find where to upload worksheets or enter words. The learning, OCR, testing and storage engines are unchanged; the parent experience is reorganised around creating a weekly lesson. **Published 2026-10-11 (owner-approved): PR #2 merged to `main` as 8d52ba5; verified on the live site at phone, tablet and desktop sizes (new landing page, wizard, Step 2 add options; 244/244 live browser checks). An upgrade test confirmed that a profile, approved lesson and score saved by the previous release are intact under the new one.**
 
 **Screens**
 - **Landing page (`#/`)**: explains the purpose. *Parents: create and manage lessons* has the primary **Create this week's lesson** button, Continue buttons for up to two unfinished lessons (hidden while a parent PIN locks the parent area), and Manage lessons / Results / Settings / Backup. *Students: study and test* has the profile cards (approved lessons only, as before).
