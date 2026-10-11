@@ -1,6 +1,6 @@
 # Sentence Fix — Independent Educational Audit (Agent 5)
 
-> **FINAL status (section 17):** **Content bank: APPROVED. All 150 items PASS.** **Grading engine: NOT APPROVED, but close** (ca3ca1d). K-1 to K-4 are verified fixed, and no Major issue remains. Two narrow, older Critical cases remain: "in art classes." (L-1) and "one pencil" (L-2). The engine is APPROVED once they are fixed, or once the lead rules that they can be graded incorrect. Audit tests: 687 tests, 680 pass, 0 fail, 7 todo.
+> **FINAL status (section 18):** **Content bank: APPROVED. All 150 items PASS.** **Grading engine: NOT APPROVED, one narrow issue left** (fd0a87b). L-1 and L-2 are verified fixed, the new rules do not misfire, and no Major issue remains. One older Critical case remains (M-1): a new subject followed by an of/in phrase, such as "everything in our library is", "the collection in our library is" or "The family of robins is", is marked incorrect. The engine is APPROVED once M-1 is fixed. Audit tests: 722 tests, 712 pass, 0 fail, 10 todo.
 
 Branch `claude/student-first-v3`. Audited: `data/sentence-fix/bank.json` (all 150 items read one by one), `docs/SENTENCE-FIX-CURRICULUM.md`, `js/sentencefix/engine.js`. Independent grading tests: `tests/unit/sentencefix-grading-audit.test.mjs`. Nothing in the bank, the engine, or other app code was changed.
 
@@ -927,3 +927,55 @@ These wrong answers are incorrect: "Jin and his brother play tennis and Jin win"
 - **Grading engine: NOT APPROVED, but close.** No Major issue remains, and none was introduced by ca3ca1d. Two narrow, older Critical cases remain: L-1 ("in art classes.") and L-2 ("one pencil"). Each is a one-line rule change.
 
   Once L-1 and L-2 pass, only Minor review-direction items will remain, and the engine is **APPROVED** by the agreed bar. The lead may instead decide that these two answers can be graded incorrect, as an explicit decision like G-2. In that case the engine is **APPROVED** as it stands at ca3ca1d.
+
+---
+
+## 18. Final verdict check (commit fd0a87b: L-1, L-2 and the newest rules)
+
+**This section supersedes the engine verdict in section 17.**
+
+**L-1 and L-2 are confirmed fixed.** "in art classes." and "one pencil" go to review. "Everyone are" and the child-added "two loafs" are now incorrect.
+
+**Method.** I wrote 34 fresh answers of my own, without reusing anyone else's tests: 27 valid and 7 wrong. They are in the `VERDICT` cases in `tests/unit/sentencefix-grading-audit.test.mjs`. I compared every Critical case with the engine as it was just before fd0a87b.
+
+**The new "certain-only" rules do not misfire.** These valid look-alikes all go to review:
+- **a/an + describing word + plural:** "under a few rocks", "a few pieces of shell", "a lot of shells", "a great many tiny crabs", "a few cards", "a few fresh pears", "a few flashlights".
+- **Indefinite pronoun + have/do:** "Does anyone have chairs?", "Did everyone have their … homework?"
+- **does/can/will + pronoun + verb:** "Does it open soon?", "How many laps can it swim…?"
+- **very + describing word:** "turn very red".
+- **Number words with a plural:** "two loaves of fresh bread", "some bushes", "two parks".
+- **Subjects:** "Everyone in my family is", "Everyone on our team has", "Someone is", "the whole class takes", "each book … is", "every book … is", "every one of them has".
+
+These wrong answers are incorrect: "does it opens", "Everybody are", "Nobody are".
+
+### Critical: valid answers marked incorrect (older behaviour; the K-2 fix is incomplete)
+- **M-1.** The new subject is followed by an *of/in* phrase, and the planted singular verb is kept. These are valid answers, but they are marked incorrect:
+  - SVA-005 "…that **everything in our library is** for everyone."
+  - SVA-005 "…that **the collection in our library is** for everyone."
+  - SVA-002 "Look! **The family of robins is** building a nest…"
+
+  They were incorrect before fd0a87b too. The cause is that `subjectNumber` takes the last word before the verb ("library", "robins") as the head of the subject.
+
+  **Fix:**
+  - Take the head as the last word before the first preposition (of/in/on/at…) in the look-back.
+  - Count everyone, everything, someone, nothing and the like (the `ONE_PERSON` words) as one thing.
+
+  Similar subjects with "each/every" before the noun ("each book in our library is") already work.
+
+### Minor (review direction only)
+- "**a tiny crabs**" (the number word was changed to "a" and the noun kept plural)
+- "**three loafs**" in the mistake's own spot
+- "for **breakfasts**." (a known side effect of the L-1 fix)
+- "very **tireds**"
+- SVA-013 "tool … **show**"
+- SVA-002 "The **robins family** is"
+- G-8: a dropped "the" (by design)
+
+### Tests
+`node --test tests/unit/sentencefix-grading-audit.test.mjs` gives `tests 722, pass 712, fail 0, todo 10`. I ran it on its own. The 10 todos are M-1 (3 cases) and the 7 Minor cases above. Every todo currently fails, so each one is a real finding. I did not change `engine.js` or `bank.json`.
+
+### FINAL VERDICTS
+- **Content bank: APPROVED.** All 150 items pass, with no Critical or Major findings (section 12.7).
+- **Grading engine: NOT APPROVED, one narrow issue left.** No Major issue remains, and nothing in fd0a87b caused a problem. The only Critical item is M-1: a new subject followed by an *of/in* phrase, with the planted verb kept, is marked incorrect even though the sentence is valid. M-1 is older behaviour and needs a small change to how `subjectNumber` finds the subject.
+
+  When M-1's 3 todo tests pass, only Minor review-direction items will remain, and the grading engine is **APPROVED**.

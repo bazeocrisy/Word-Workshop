@@ -847,3 +847,61 @@ for (const [id, answer, expect, todo] of VERIFY) {
 }
 
 test('verification check: 25+ fresh answers', () => assert.ok(VERIFY.length >= 25));
+
+// ================================================================ FINAL VERDICT CHECK (commit fd0a87b)
+// Fresh answers (not anyone else's) for the newest rules: does/can/will + pronoun + -s verb, very/quite + -s,
+// a/an + describing word + plural, indefinite pronoun + are/were/have/do, and "loafs"-type words after a number.
+
+const P = {
+  headBeforePhrase: 'engine defect (Critical, pre-existing; the K-2 fix is incomplete): when the new subject is followed by an "of/in" phrase ("everything in our library is", "the collection in our library is", "The family of robins is"), the look-back takes the last word before the verb ("library", "robins") as the head, so the kept singular verb stays unfixed → incorrect. Take the head before the first preposition, and count everyone/everything/… as one.',
+  aAdjPlural: 'engine (minor): "a tiny crabs" (the number word changed to "a", noun kept plural) goes to review',
+  numberLoafs: 'engine (minor): "three loafs" in the mistake\'s own spot goes to review',
+  markSlotPlural: 'engine (minor, known side effect of the L-1 fix): a clearly wrong plural of a word that only lacked its end mark ("for breakfasts.") goes to review',
+  veryPlural: 'engine (minor): "very tireds" goes to review',
+};
+
+const VERDICT = [
+  // L-1 / L-2 confirmation
+  ['SF-MIX-001', 'My sister Ava used bright colors in art classes.', 'ok'],
+  ['SF-HOM-002', 'I have one pencil and an eraser in my desk.', 'ok'],
+  // VALID look-alikes of the new rules
+  ['SF-MIX-011', 'At the beach, Elena found a starfish and two tiny crabs under a few rocks.', 'ok'],
+  ['SF-SPL-010', 'We found a few pieces of shell and a little crab in the sand.', 'ok'],
+  ['SF-SPL-010', 'We found a lot of shells and a little crab in the sand.', 'ok'],
+  ['SF-MIX-011', 'At the beach, Elena found a starfish and a great many tiny crabs under a rock.', 'ok'],
+  ['SF-END-014', 'Is the game at noon? I packed snacks and water. Does anyone have chairs?', 'ok'],
+  ['SF-END-001', 'Did everyone have their spelling homework last night?', 'ok'],
+  ['SF-END-010', 'The library has a new reading room. Does it open soon?', 'ok'],
+  ['SF-END-004', 'How many laps can it swim without stopping?', 'ok'],
+  ['SF-SVA-015', 'Everyone in my family is cleaning the garage, and Dad says we can go swimming when the job is done.', 'ok'],
+  ['SF-SVA-004', 'Everyone on our team has new jerseys this year.', 'ok'],
+  ['SF-SVA-002', 'Look! Someone is building a nest in our tree.', 'ok'],
+  ['SF-SVA-012', 'Every Friday, the whole class takes a spelling test, and Ravi always gets every word right because he studies hard.', 'ok'],
+  ['SF-SVA-005', 'Our teacher always says that each book in our library is for everyone.', 'ok'],
+  ['SF-SVA-005', 'Our teacher always says that every book in our library is for everyone.', 'ok'],
+  ['SF-SVA-013', 'The old tools in our museum show how farmers worked, and every one of them has a sign that tells about it.', 'ok'],
+  ['SF-SPL-018', 'I was so excited to open my birthday presents and a few cards.', 'ok'],
+  ['SF-HOM-014', 'When we went to the market, we saw a sign for a sale on a few fresh pears and peaches.', 'ok'],
+  ['SF-END-002', 'The leaves on the maple trees turn very red in the fall.', 'ok'],
+  ['SF-HOM-007', 'Dad and I rode to the store to buy milk and two loaves of fresh bread.', 'ok'],
+  ['SF-SPL-019', 'Two baby foxes were hiding under some bushes near our tent.', 'ok'],
+  ['SF-MIX-014', 'On April 22, our class celebrated Earth Day by picking up trash in two parks.', 'ok'],
+  ['SF-TEN-020', 'Yesterday, the power went out, so we found a few flashlights and told stories until the lights came back on.', 'ok'],
+  ['SF-SVA-005', 'Our teacher always says that everything in our library is for everyone.', 'ok', P.headBeforePhrase],
+  ['SF-SVA-005', 'Our teacher always says that the collection in our library is for everyone.', 'ok', P.headBeforePhrase],
+  ['SF-SVA-002', 'Look! The family of robins is building a nest in our tree.', 'ok', P.headBeforePhrase],
+  // WRONG
+  ['SF-END-010', 'The library has a new reading room. When does it opens?', 'incorrect'],
+  ['SF-SVA-015', 'Everybody are cleaning the garage, and Dad says we can go swimming when the job is done.', 'incorrect'],
+  ['SF-SVA-002', 'Look! Nobody are building a nest in our tree.', 'incorrect'],
+  ['SF-MIX-011', 'At the beach, Elena found a starfish and a tiny crabs under a rock.', 'incorrect', P.aAdjPlural],
+  ['SF-HOM-007', 'Dad and I rode to the store to buy milk and three loafs of bread.', 'incorrect', P.numberLoafs],
+  ['SF-END-006', 'Grandpa asked if we wanted pancakes for breakfasts.', 'incorrect', P.markSlotPlural],
+  ['SF-SPL-007', 'Our team was very tireds after the long game.', 'incorrect', P.veryPlural],
+];
+
+for (const [id, answer, expect, todo] of VERDICT) {
+  test(`verdict ${id}: ${JSON.stringify(answer)} → ${expect}`, todo ? { todo } : {}, () => check(id, answer, expect));
+}
+
+test('final verdict check: 20+ fresh answers', () => assert.ok(VERDICT.length >= 20));
