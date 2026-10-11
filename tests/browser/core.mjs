@@ -5,7 +5,7 @@ export default {
     await b.fresh();
     let t = await b.text();
     check('home lists the two demo profiles', /Alex/.test(t) && /Jordan/.test(t) && /Grade 3/.test(t) && /Grade 5/.test(t), t.slice(0, 200));
-    check('home explains data stays on this device', /this device only/.test(t));
+    check('home keeps technical notes off the first screen', !/this device only/.test(t));
     const ids = await b.js(`return (await WW.store.listStudents()).map((s) => s.id);`);
     check('two students created on first run', ids.length === 2);
     const [alex, jordan] = ids;
@@ -21,16 +21,17 @@ export default {
     check('parent dashboard nudges for a first backup', /not made a backup yet/.test(t));
     await b.click('a.create-lesson', /Create this week/);
     await b.settle();
-    const dlg = await b.js(`return { title: document.querySelector('h1')?.textContent, start: document.getElementById('wz-start')?.value };`);
-    check('"Create this week\'s lesson" opens the wizard with a Monday start date', /Create this week/.test(dlg.title) && /^\d{4}-\d{2}-\d{2}$/.test(dlg.start) && new Date(dlg.start + 'T12:00').getDay() === 1, dlg);
-    await b.js(`const d = document.getElementById('wz-start'); d.value = '2026-10-12'; d.dispatchEvent(new Event('change')); document.querySelector('input[name=wz-student]').click(); return true;`);
-    const endAuto = await b.js(`return document.getElementById('wz-end').value;`);
+    const dlg = await b.js(`return { title: document.querySelector('h1')?.textContent, start: document.getElementById('ws-start')?.value };`);
+    check('"Create this week\'s lesson" opens the lesson workspace with a Monday start date', /Create this week/.test(dlg.title) && /^\d{4}-\d{2}-\d{2}$/.test(dlg.start) && new Date(dlg.start + 'T12:00').getDay() === 1, dlg);
+    await b.js(`const d = document.getElementById('ws-start'); d.value = '2026-10-12'; d.dispatchEvent(new Event('change')); document.querySelector('input[name=ws-student]').click(); return true;`);
+    const endAuto = await b.js(`return document.getElementById('ws-end').value;`);
     check('end date follows the start date (Friday)', endAuto === '2026-10-16', endAuto);
-    await b.click('.wizard-next');
-    await b.settle();
+    // The lesson is saved as soon as the first word is added.
+    await b.click('.add-one-spelling');
+    await b.js(`const i = document.getElementById('ws-one-word-spelling'); i.value = 'rushed'; i.dispatchEvent(new Event('input')); i.form.requestSubmit(); await new Promise((r) => setTimeout(r, 400)); return 1;`);
     const hash = await b.js('return location.hash;');
-    check('creating a lesson goes to its Add words step', /^#\/parent\/week\/w_[^/]+\/words$/.test(hash), hash);
-    const wid = hash.split('/')[3];
+    check('adding the first word saves the lesson (its own address)', /^#\/parent\/lesson\/w_[^/?]+\?stage=add$/.test(hash), hash);
+    const wid = hash.split('/')[3].split('?')[0];
 
     await b.js(`await WW.store.createWeek(${JSON.stringify(jordan)}, { startDate: '2026-10-12', endDate: '2026-10-16' }); return true;`);
     const counts = await b.js(`return [(await WW.store.listWeeks(${JSON.stringify(alex)})).length, (await WW.store.listWeeks(${JSON.stringify(jordan)})).length];`);
@@ -43,7 +44,7 @@ export default {
     check('week survives a page reload', persisted);
     await b.go('#/parent');
     t = await b.text();
-    check('new empty week shows as Draft', /Draft/.test(t), t.slice(0, 400));
+    check('an unapproved lesson is listed as in progress', /Lessons in progress \(2\)/.test(t) && /Needs review/.test(t), t.slice(0, 400));
 
     // Student cannot open a week that is not approved, even by typing the URL.
     await b.go(`#/s/${alex}/w/${wid}`);

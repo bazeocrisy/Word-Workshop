@@ -28,12 +28,14 @@ route('/print/:wid', lazy('./views/print.js', 'printWeek'));
 route('/print/results/:sid', lazy('./views/print.js', 'printResults'));
 // Parent
 route('/parent', parentOnly(parentDashboard));
-// Create a lesson, step by step (views/wizard.js)
-route('/parent/new', parentOnly(lazy('./views/wizard.js', 'wizardStart')));
-route('/parent/week/:wid/start', parentOnly(lazy('./views/wizard.js', 'wizardStart')));
-route('/parent/week/:wid/words', parentOnly(lazy('./views/wizard.js', 'wizardWords')));
-route('/parent/week/:wid/review', parentOnly(lazy('./views/wizard.js', 'wizardReview')));
-route('/parent/week/:wid/approve', parentOnly(lazy('./views/wizard.js', 'wizardApprove')));
+// The lesson workspace: Add → Check → Finish on one screen (views/workspace.js)
+const workspace = lazy('./views/workspace.js', 'lessonWorkspace');
+route('/parent/new', parentOnly(workspace));
+route('/parent/lesson/:wid', parentOnly(workspace));
+// Addresses from the earlier four-step wizard open the matching stage.
+for (const old of ['start', 'words', 'review', 'approve']) {
+  route(`/parent/week/:wid/${old}`, parentOnly((ctx) => workspace({ ...ctx, query: { ...ctx.query, stage: { start: 'add', words: 'add', review: 'check', approve: 'finish' }[old] } })));
+}
 route('/parent/results', parentOnly(resultsIndex));
 route('/parent/settings', parentOnly(settingsView));
 route('/parent/backup', parentOnly(backupView));

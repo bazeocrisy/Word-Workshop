@@ -4,7 +4,7 @@ import { listStudents, listWeeks, addStudent, updateStudent, removeStudent, getM
 import { weekStatus, STATUS_LABELS, weekLabel } from '../model.js';
 import { DEMO_STUDENTS } from '../store.js';
 import { avatar, themeClass, deviceNotice, pinEnabled, setPin, askPinDialog, lockParent } from './common.js';
-import { resumeHref, resumeStep, stepLabel } from './lessonSteps.js';
+import { resumeHref, resumeStage, stageLabel, lessonHref } from './lessonSteps.js';
 import { go } from '../router.js';
 
 const STATUS_KIND = { draft: 'grey', 'pending-review': 'warn', approved: 'ok', 'pending-changes': 'warn' };
@@ -39,7 +39,7 @@ export async function parentDashboard() {
     avatar(st),
     h('div', { class: 'lesson-main' },
       h('span', { class: 'lesson-name' }, `${st.displayName} · ${weekLabel(w)} `, statusBadge(w)),
-      h('span', { class: 'lesson-meta' }, counts(w), ' · ', w.approvedVersion ? `Changes not approved yet; ${st.displayName} still sees version ${w.approvedVersion}` : stepLabel(await resumeStep(w)))),
+      h('span', { class: 'lesson-meta' }, counts(w), ' · ', w.approvedVersion ? `Changes not approved yet; ${st.displayName} still sees version ${w.approvedVersion}` : stageLabel(await resumeStage(w)))),
     h('div', { class: 'lesson-actions' },
       link('Continue', await resumeHref(w), 'btn btn-primary btn-small continue-draft', { 'aria-label': `Continue ${st.displayName}'s lesson, ${weekLabel(w)}` }),
       // An approved lesson has results; deleting it is done deliberately from the lesson page, not from this list.
@@ -50,7 +50,7 @@ export async function parentDashboard() {
     return h('section', { class: 'card student-card', 'aria-labelledby': `ps-${st.id}` },
       h('div', { class: 'card-head' }, avatar(st), h('h3', { id: `ps-${st.id}` }, st.displayName, st.grade ? h('span', { class: 'muted' }, ` · Grade ${st.grade}`) : null)),
       mine.length ? h('ul', { class: 'admin-weeks', role: 'list' }, mine.map(({ w }) => h('li', null,
-        h('a', { href: `#/parent/week/${w.id}`, class: 'admin-week' },
+        h('a', { href: `${lessonHref(w.id)}?stage=check`, class: 'admin-week' },
           h('span', null, weekLabel(w), w.archived ? h('span', { class: 'muted' }, ' (archived)') : null, h('span', { class: 'lesson-meta' }, counts(w))),
           statusBadge(w)))))
         : h('p', { class: 'hint' }, 'No approved lessons yet.'),

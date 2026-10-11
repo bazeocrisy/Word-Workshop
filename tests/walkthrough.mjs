@@ -1,172 +1,200 @@
-// Sunday-workflow walkthrough: drives the real UI the way a parent and a student would and counts every manual
-// action. Uses the teacher newsletter pages in local-fixtures/ (git-ignored). Speech is simulated.
-// Run: node tests/walkthrough.mjs   (needs local-fixtures/sept28-newsletter-p1.png and -p2.png)
+// Real-world walkthrough of the parent workflow (Add → Check → Finish) on the teacher's own worksheets, then the
+// student opening the lesson. Drives the real UI and counts every parent action, every screen change and every
+// correction needed because the photo reader got something wrong. Photos stay in git-ignored local-fixtures/.
+//
+// Run: node tests/walkthrough.mjs                      → Oct 12–16 photos (spelling-original.jpg, vocab-original.jpg)
+//      FIXTURE=sept28 node tests/walkthrough.mjs       → Sept 28 newsletter (two clean pages)
+//      VOCAB=table   … reads the vocabulary photo as a table of cards (corners from vocab-original.corners.json)
+//      SENTENCES=helper … adds sentences with the copy/paste sentence helper instead of continuing without them
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, BASE, startServer, startBrowser } from './lib/harness.mjs';
 
 const FIX = path.join(ROOT, 'local-fixtures');
-const pages = ['sept28-newsletter-p1.png', 'sept28-newsletter-p2.png'].map((f) => path.join(FIX, f));
-if (!pages.every((p) => fs.existsSync(p))) { console.log('BLOCKED: newsletter pages not found in local-fixtures/.'); process.exit(0); }
-const SENTENCE_MODE = process.env.SENTENCES || 'helper'; // 'helper' (copy/paste via a writing tool) or 'skip' (acknowledge "no sentence")
+const FIXTURE = process.env.FIXTURE || 'oct12';
+const VOCAB_MODE = process.env.VOCAB || 'photo';
+const SENTENCES = process.env.SENTENCES || 'skip';
+let spellingFile, vocabFile, truth, label;
+if (FIXTURE === 'sept28') {
+  const t = JSON.parse(fs.readFileSync(path.join(FIX, 'sept28-newsletter.truth.json'), 'utf8'));
+  spellingFile = 'sept28-newsletter-p1.png'; vocabFile = 'sept28-newsletter-p2.png';
+  truth = { spelling: t.spelling, vocab: t.vocab };
+  label = 'Sept 28–Oct 2 newsletter (2 clean pages, not camera photos)';
+} else {
+  spellingFile = 'spelling-original.jpg'; vocabFile = 'vocab-original.jpg';
+  truth = {
+    spelling: JSON.parse(fs.readFileSync(path.join(ROOT, 'sample-data/spelling.json'), 'utf8')).words.sort((a, b) => a.order - b.order).map((w) => w.word),
+    vocab: JSON.parse(fs.readFileSync(path.join(ROOT, 'sample-data/vocabulary.json'), 'utf8')).items.sort((a, b) => a.order - b.order).map((i) => ({ word: i.word, definition: i.sourceDefinition })),
+  };
+  label = 'Oct 12–16 school photos (newsletter + 12-card vocabulary table, 1152 × 1536 phone photos)';
+}
+for (const f of [spellingFile, vocabFile]) if (!fs.existsSync(path.join(FIX, f))) { console.log(`BLOCKED: ${f} not found in local-fixtures/.`); process.exit(0); }
+const corners = VOCAB_MODE === 'table' ? JSON.parse(fs.readFileSync(path.join(FIX, 'vocab-original.corners.json'), 'utf8')) : null;
 
 const MOCK_SPEECH = `window.SpeechSynthesisUtterance = class { constructor(t) { this.text = t; } };
   Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: { speak(u) { setTimeout(() => { u.onstart && u.onstart(); setTimeout(() => u.onend && u.onend(), 10); }, 5); }, cancel() {}, getVoices() { return [{ name: 't', lang: 'en-US', localService: true }]; }, addEventListener() {}, removeEventListener() {} } });`;
+// Count every change of screen (address path); stage changes inside the workspace do not change the screen.
+const COUNT_SCREENS = `window.__screens = 0; let __p = location.hash.split('?')[0]; addEventListener('hashchange', () => { const p = location.hash.split('?')[0]; if (p !== __p) { window.__screens++; __p = p; } });`;
 
-const steps = { parent: [], external: [], student: [] };
-const act = (who, what, n = 1) => { steps[who].push({ what, n }); };
-
+const steps = [];
+const act = (what, n = 1, kind = 'click') => { if (n > 0) steps.push({ what, n, kind }); };
+const fixes = { spelling: [], vocab: [] };
 const server = await startServer();
 const b = await startBrowser();
-await b.send('Page.addScriptToEvaluateOnNewDocument', { source: MOCK_SPEECH });
+await b.send('Page.addScriptToEvaluateOnNewDocument', { source: MOCK_SPEECH + COUNT_SCREENS });
 const U = server.origin + BASE;
 const js = b.js;
-const settle = async (ms = 150) => { await b.wait(ms); await js('await WW.whenRendered(); return 1;'); };
-const click = async (sel, text) => { await js(`const e = [...document.querySelectorAll(${JSON.stringify(sel)})].find((x) => ${text ? `/${text}/.test(x.textContent)` : 'true'}); if (!e) throw new Error('missing ' + ${JSON.stringify(sel + ' ' + (text || ''))}); e.click(); return 1;`); await settle(); };
-b.go = async (hash) => { await js('location.hash = ' + JSON.stringify(hash) + '; await new Promise((r) => setTimeout(r, 60)); const l = [...document.querySelectorAll(".dialog .btn-primary")].find((x) => x.textContent === "Leave"); if (l) { l.click(); await new Promise((r) => setTimeout(r, 60)); } await WW.whenRendered(); return 1;'); await b.wait(80); };
+const settle = async (ms = 200) => { await b.wait(ms); await js('await WW.whenRendered(); return 1;'); };
+const click = async (sel, n = 0) => { await js(`const e = document.querySelectorAll(${JSON.stringify(sel)})[${n}]; if (!e) throw new Error('missing ' + ${JSON.stringify(sel)}); e.click(); return 1;`); await settle(); };
+const typeInto = (sel, value, i = 0) => js(`const el = document.querySelectorAll(${JSON.stringify(sel)})[${i}]; if (!el) throw new Error('no ' + ${JSON.stringify(sel)}); el.focus(); el.value = ${JSON.stringify(value)}; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); await new Promise((r) => setTimeout(r, 250)); return 1;`);
+const norm = (s) => String(s || '').trim().replace(/\s+/g, ' ');
+const sim = (a, b) => { a = norm(a).toLowerCase(); b = norm(b).toLowerCase(); if (!a || !b) return 0; const d = Array.from({ length: a.length + 1 }, (_, i) => [i]); for (let j = 1; j <= b.length; j++) d[0][j] = j; for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return 1 - d[a.length][b.length] / Math.max(a.length, b.length); };
+let typedChars = 0;
+
+const upload = async (target, file) => {
+  const payload = { name: file, type: /png$/i.test(file) ? 'image/png' : 'image/jpeg', b64: fs.readFileSync(path.join(FIX, file)).toString('base64') };
+  const t0 = Date.now();
+  await js(`const p = ${JSON.stringify(payload)}; const f = new File([Uint8Array.from(atob(p.b64), (c) => c.charCodeAt(0))], p.name, { type: p.type });
+    const input = document.querySelector('input[type=file][data-target="${target}"]'); const dt = new DataTransfer(); dt.items.add(f); input.files = dt.files; input.dispatchEvent(new Event('change'));
+    await new Promise((r) => setTimeout(r, 400)); for (let i = 0; i < 1500 && document.querySelector('.ws-reading'); i++) await new Promise((r) => setTimeout(r, 200)); await new Promise((r) => setTimeout(r, 400)); return 1;`);
+  return (Date.now() - t0) / 1000;
+};
+const rows = (kind) => js(`return [...document.querySelectorAll('.ws-table-${kind} .ws-row')].map((r) => ({ id: r.dataset.item, word: r.querySelector('.ws-word').value, def: r.querySelector('.ws-def')?.value ?? null }));`);
+
 const t0 = Date.now();
+let readSecs = 0;
+let firstRead = null;
 try {
-  await b.viewport(390, 844);
+  await b.viewport(1366, 900);
   await b.load(U + 'index.html'); await b.wait(400);
-  await js('await WW.db.deleteDatabase(); sessionStorage.clear(); return 1;');
+  await js('for (let i = 0; i < 100 && !window.WW?.ready; i++) await new Promise((r) => setTimeout(r, 50)); await WW.db.deleteDatabase(); sessionStorage.clear(); return 1;');
   await b.load('about:blank'); await b.load(U + 'index.html#/'); await b.wait(500);
 
-  // ── Parent: step 1, student and week (from the landing page) ──
-  await click('a.create-lesson'); act('parent', 'Create this week\'s lesson (landing page)');
-  await js(`document.querySelector('input[name=wz-student]').click(); return 1;`); act('parent', 'Choose the student (dates default to the coming Monday–Friday)');
-  await click('.wizard-next'); act('parent', 'Continue to Add words');
-  const wid = await js('return location.hash.split("/")[3];');
+  // ── Add ──
+  await click('a.create-lesson'); act('Create this week\'s lesson (home page)');
+  await js(`document.querySelector('input[name=ws-student]').click(); return 1;`); act('Choose the student (week defaults to the coming Monday–Friday)');
+  readSecs += await upload('vocab', vocabFile); act('Upload vocabulary worksheet'); act('Choose the photo', 1, 'file');
+  firstRead = { vocab: await rows('vocab') };
+  if (VOCAB_MODE === 'table') {
+    // Same photo read as a table of word cards: the parent drags the four corners and enters the card counts.
+    await click('.ws-table-mode'); act('Words in a grid of cards? Read as a table');
+    const c = corners.rough;
+    await js(`const box = document.querySelector('.corner-stage').getBoundingClientRect(); const img = document.querySelector('.corner-img');
+      const W = img.naturalWidth, H = img.naturalHeight; const pts = ${JSON.stringify(c)};
+      [...document.querySelectorAll('.corner-handle')].forEach((hd, k) => { const x = box.left + pts[k].x / W * box.width, y = box.top + pts[k].y / H * box.height;
+        hd.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: x, clientY: y, pointerId: 1 })); hd.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: x, clientY: y, pointerId: 1 })); hd.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, clientX: x, clientY: y, pointerId: 1 })); });
+      const sels = document.querySelectorAll('.grid-count'); sels[0].value = '${corners.grid.cols}'; sels[1].value = '${corners.grid.rows}'; return 1;`);
+    act('Drag the four table corners', 4, 'drag'); act('Enter cards across and down', 2);
+    const tr = Date.now();
+    await js(`[...document.querySelectorAll('.dialog .btn-primary')].find((x) => /Read the cards/.test(x.textContent)).click();
+      await new Promise((r) => setTimeout(r, 500)); for (let i = 0; i < 1500 && document.querySelector('.ws-reading'); i++) await new Promise((r) => setTimeout(r, 200)); await new Promise((r) => setTimeout(r, 600)); return 1;`);
+    readSecs += (Date.now() - tr) / 1000; act('Read the cards');
+    firstRead.vocabTable = await rows('vocab');
+  }
+  readSecs += await upload('spelling', spellingFile); act('Upload spelling worksheet (from the Spelling table)'); act('Choose the photo', 1, 'file');
+  firstRead.spelling = await rows('spelling');
+  const attentionBefore = await js(`return document.querySelectorAll('.ws-row.is-attention').length;`);
 
-  // ── Step 2: upload each page in its section, read it, check the text, add ──
-  const readTimes = [];
-  const fixes = [];
-  let review = { notes: [] };
-  const upload = async (kind, file) => {
-    await click(`a.upload-${kind}`); act('parent', kind === 'vocab' ? 'Upload vocabulary worksheet' : 'Upload spelling list or newsletter');
-    const payload = [{ name: path.basename(file), b64: fs.readFileSync(file).toString('base64') }];
-    await js(`const files = ${JSON.stringify(payload)}.map((p) => new File([Uint8Array.from(atob(p.b64), (c) => c.charCodeAt(0))], p.name, { type: 'image/png' }));
-      const input = document.getElementById('photo-input'); const dt = new DataTransfer(); files.forEach((f) => dt.items.add(f)); input.files = dt.files; input.dispatchEvent(new Event('change'));
-      for (let i = 0; i < 100 && !document.querySelector('.thumb-page'); i++) await new Promise((r) => setTimeout(r, 100)); return 1;`);
-    act('parent', 'Choose the photo');
-    const tRead = Date.now();
-    await click('.read-btn'); act('parent', 'Read the photo');
-    await js(`for (let i = 0; i < 900 && !document.querySelector('.commit-btn'); i++) await new Promise((r) => setTimeout(r, 200)); return 1;`);
-    readTimes.push((Date.now() - tRead) / 1000);
-    const rv = await js(`return { vo: document.getElementById('ocr-vocab').value, notes: [...document.querySelectorAll('.import-notes li, .notice p')].map((x) => x.innerText) };`);
-    review.notes.push(...rv.notes);
-    if (kind === 'vocab') {
-      // Correct what the reader got wrong (compare with the photo).
-      const vo = rv.vo.replace(/enjoyable or \S+$/m, (m) => { if (m !== 'enjoyable or pleasant') fixes.push(`"${m}" → "enjoyable or pleasant"`); return 'enjoyable or pleasant'; });
-      await js(`const t = document.getElementById('ocr-vocab'); t.value = ${JSON.stringify(vo)}; t.dispatchEvent(new Event('input')); return 1;`);
-      fixes.forEach((f) => act('parent', `Correct a misread on the review screen: ${f}`));
+  // ── Check: correct what the reader got wrong, comparing with the sheet ──
+  // Spelling: the list is numbered, so fix each position in place; add missing words; remove extras.
+  let sp = await rows('spelling');
+  for (let i = 0; i < truth.spelling.length; i++) {
+    if (i < sp.length) {
+      if (norm(sp[i].word) !== truth.spelling[i]) { await typeInto('.ws-table-spelling .ws-word', truth.spelling[i], i); typedChars += truth.spelling[i].length; act(`Fix spelling #${i + 1}: "${sp[i].word}" → "${truth.spelling[i]}"`, 1, 'type'); fixes.spelling.push(`#${i + 1} "${sp[i].word}" → "${truth.spelling[i]}"`); }
+    } else {
+      await click('.ws-add-row-spelling'); act('Add a missing spelling word');
+      await typeInto('.ws-table-spelling .ws-word', truth.spelling[i], i); typedChars += truth.spelling[i].length; act(`Type "${truth.spelling[i]}"`, 1, 'type'); fixes.spelling.push(`missing #${i + 1} "${truth.spelling[i]}" added`);
     }
-    await click('.commit-btn'); act('parent', 'Add to the lesson as drafts (returns to Add words)');
-    await settle(800);
-  };
-  await upload('spelling', pages[0]);
-  await upload('vocab', pages[1]);
-  const readSecs = readTimes.reduce((a, x) => a + x, 0);
-  await click('.wizard-next'); act('parent', 'Continue to Review');
+    sp = await rows('spelling');
+  }
+  while ((sp = await rows('spelling')).length > truth.spelling.length) {
+    const last = sp.length - 1;
+    await js(`const r = document.querySelectorAll('.ws-table-spelling .ws-row')[${last}]; r.querySelector('.ws-menu summary').click(); await new Promise((x) => setTimeout(x, 50)); r.querySelector('.ws-delete').click(); await new Promise((x) => setTimeout(x, 400)); return 1;`);
+    act(`Remove extra spelling row "${sp[last].word}"`, 2); fixes.spelling.push(`extra "${sp[last].word}" removed`);
+  }
+  // Vocabulary: match rows to the sheet's words (order does not matter for vocabulary); fix word and definition
+  // fields that differ; delete rows that match nothing; add words the reader missed.
+  let vo = await rows('vocab');
+  const used = new Set();
+  for (const t of truth.vocab) {
+    let best = -1, bs = 0.55;
+    vo.forEach((r, i) => { if (used.has(i)) return; const s = Math.max(sim(r.word, t.word), 0.9 * sim(`${r.word} ${r.def}`, `${t.word} ${t.definition}`)); if (s > bs) { bs = s; best = i; } });
+    if (best >= 0) {
+      used.add(best);
+      const r = vo[best];
+      if (norm(r.word) !== t.word) { await typeInto('.ws-table-vocab .ws-word', t.word, best); typedChars += t.word.length; act(`Fix word "${r.word}" → "${t.word}"`, 1, 'type'); fixes.vocab.push(`word "${r.word}" → "${t.word}"`); }
+      if (norm(r.def) !== t.definition) { await typeInto('.ws-table-vocab .ws-def', t.definition, best); typedChars += t.definition.length; act(`Fix definition of "${t.word}"`, 1, 'type'); fixes.vocab.push(`definition of ${t.word}: "${norm(r.def)}" → "${t.definition}"`); }
+    } else t.missing = true;
+  }
+  const extras = vo.map((r, i) => ({ r, i })).filter((x) => !used.has(x.i)).reverse();
+  for (const { r, i } of extras) {
+    await js(`const row = document.querySelectorAll('.ws-table-vocab .ws-row')[${i}]; row.querySelector('.ws-menu summary').click(); await new Promise((x) => setTimeout(x, 50)); row.querySelector('.ws-delete').click(); await new Promise((x) => setTimeout(x, 400)); return 1;`);
+    act(`Remove misread row "${r.word}"`, 2); fixes.vocab.push(`extra row "${r.word} – ${norm(r.def).slice(0, 40)}" removed`);
+  }
+  for (const t of truth.vocab.filter((x) => x.missing)) {
+    await click('.ws-add-row-vocab'); act('Add a missing vocabulary word');
+    const n = (await rows('vocab')).length - 1;
+    await typeInto('.ws-table-vocab .ws-word', t.word, n); await typeInto('.ws-table-vocab .ws-def', t.definition, n);
+    typedChars += t.word.length + t.definition.length; act(`Type "${t.word}" and its definition`, 2, 'type'); fixes.vocab.push(`missing "${t.word}" added`);
+  }
+  // Remaining "Needs attention" words were compared with the sheet and are right.
+  let looks = 0;
+  for (let g = 0; g < 80; g++) { const has = await js(`const x = document.querySelector('.ws-looks-right'); if (x) x.click(); return !!x;`); if (!has) break; looks++; await b.wait(250); }
+  act('"Looks right" on a flagged word (after comparing with the photo)', looks);
+  for (const k of ['vocab', 'spelling']) if (await js(`return !!document.querySelector('.ws-confirm-${k}');`)) { await click(`.ws-confirm-${k}`); act(`"I checked the ${k === 'vocab' ? 'vocabulary' : 'spelling'} words against the sheet"`); }
 
   // ── Sentences ──
-  let w = await js(`return await WW.store.getWeek(${JSON.stringify(wid)});`);
-  const counts = { spelling: w.spelling.length, vocab: w.vocab.length };
-  if (SENTENCE_MODE === 'helper') {
-    // What a parent would paste back from a writing helper (ChatGPT etc.). Written here for the test.
-    const spellSentences = { rings: 'Her phone rings at dinner time.', snacks: 'We packed snacks for the trip.', glasses: 'Grandpa wears glasses to read.', desks: 'Our desks are in a circle.', jumps: 'The frog jumps into the pond.', buzzes: 'A bee buzzes near the flowers.', crashes: 'The wave crashes on the sand.', shops: 'Mom shops for food on Saturday.', boxes: 'We stacked the boxes in the garage.', trees: 'The trees turn orange in the fall.', mends: 'Dad mends the hole in my jacket.', tables: 'The tables in the lunchroom are long.', flashes: 'The camera flashes when it takes a picture.', bushes: 'A rabbit hid in the bushes.', thanks: 'She said thanks for the gift.' };
-    const vocabSentences = { sincere: 'His sincere smile showed he was really happy for me.', agreeable: 'The weather was agreeable, so we ate outside.', capable: 'She is capable of riding her bike without help.', impartial: 'The referee stayed impartial and treated both teams the same.', author: 'The author signed my copy of her book.', generous: 'Our generous neighbor shared his apples with us.', diligent: 'A diligent student checks her work carefully.' };
-    for (const [sec, map] of [['spelling', spellSentences], ['vocab', vocabSentences]]) {
-      await js(`[...document.querySelectorAll('.btn')].filter((x) => /Add example sentences/.test(x.textContent))[${sec === 'spelling' ? 1 : 0}].click(); return 1;`); await settle(); act('parent', `Open "Add example sentences" (${sec})`);
-      act('parent', 'Copy the request'); act('external', `Paste the request into a writing helper, generate, copy the answer (${sec})`, 3);
-      await js(`const tas = document.querySelectorAll('.dialog textarea'); tas[1].value = ${JSON.stringify(Object.entries(map).map(([k, v]) => `${k}: ${v}`).join('\n'))}; return 1;`); act('parent', 'Paste the answer');
-      await click('.dialog .btn-primary', 'Use these sentences'); act('parent', 'Use these sentences'); await settle(400);
+  if (SENTENCES === 'helper') {
+    const answer = async (kind) => js(`const items = (await WW.store.getWeek(location.hash.split('/')[3].split('?')[0]))['${kind === 'vocab' ? 'vocab' : 'spelling'}'];
+      return items.map((it) => it.word + ': ' + 'We talked about the word ' + it.word + ' in class today.').join('\\n');`);
+    for (const k of ['vocab', 'spelling']) {
+      await js(`[...document.querySelectorAll('#ws-foot-${k} .btn-link')].find((x) => /Add sentences/.test(x.textContent)).click(); return 1;`); await settle(); act(`Open "Add sentences…" (${k})`);
+      act('Copy the request'); act(`Paste the request into a writing helper, generate, copy the answer (${k})`, 3, 'external');
+      const text = await answer(k);
+      await js(`const tas = document.querySelectorAll('.dialog textarea'); tas[1].value = ${JSON.stringify(text)}; return 1;`); act('Paste the answer');
+      await click('.dialog .btn-primary'); act('Use these sentences'); await settle(400);
     }
   }
 
-  // ── Review every item: read it against the photo, resolve warnings, tick "checked" ──
-  w = await js(`return await WW.store.getWeek(${JSON.stringify(wid)});`);
-  const before = await js(`return WW.model.approvalBlockers(await WW.store.getWeek(${JSON.stringify(wid)})).length;`);
-  const r = await js(`
-    const pause = () => new Promise((r) => setTimeout(r, 25)); let acks = 0, ticks = 0; const kinds = {};
-    for (let g = 0; g < 800; g++) { const box = [...document.querySelectorAll('.ack-box')].find((x) => !x.checked); if (!box) break; const msg = box.closest('.flag').querySelector('.flag-msg').innerText; const k = msg.replace(/"[^"]*"/g, '"…"').slice(0, 70); kinds[k] = (kinds[k] || 0) + 1; box.click(); acks++; await pause(); }
-    for (let g = 0; g < 800; g++) { const box = [...document.querySelectorAll('.reviewed-box')].find((x) => !x.checked); if (!box) break; box.click(); ticks++; await pause(); }
-    await new Promise((r) => setTimeout(r, 400)); return { acks, ticks, kinds };`);
-  act('parent', 'Acknowledge warnings (after checking each against the photo)', r.acks);
-  act('parent', 'Tick "Checked against the sheet/list" for each word', r.ticks);
-  await click('.wizard-next'); act('parent', 'Continue to Approve');
-  await click('.verify-box'); act('parent', 'Confirm the final check (compared every word with the sheets)');
-  await click('.approve-btn'); act('parent', 'Approve and give to the student');
-  w = await js(`return await WW.store.getWeek(${JSON.stringify(wid)});`);
+  // ── Finish ──
+  await click('.ws-next'); act('Finish');
+  if (await js(`return !!document.querySelector('.fin-skip-sentences');`)) { await click('.fin-skip-sentences'); act('Continue without example sentences'); }
+  const ready = await js(`return !!document.querySelector('.approve-btn');`);
+  const finishText = await js(`return document.getElementById('app').innerText;`);
+  if (!ready) throw new Error('Not ready to approve: ' + finishText.slice(0, 600));
+  await click('.approve-btn'); act('Approve and give to the student');
+  await settle(600);
+  const wid = await js(`return location.hash.split('/')[4];`);
   const snap = await js(`return await WW.store.getApprovedLesson(${JSON.stringify(wid)});`);
+  const parentScreens = await js('return window.__screens;');
 
   // ── Student ──
-  const sid = w.studentId; const base = `#/s/${sid}/w/${wid}`;
-  await b.go('#/'); act('student', 'Choose own profile and the week', 2); await b.go(base);
-  await b.go(`${base}/vocab/study`); act('student', 'Open vocabulary flashcards');
-  for (let i = 1; i < snap.vocab.length; i++) { await click('.fc-nav .btn-primary'); } act('student', 'Next through flashcards', snap.vocab.length - 1);
-  const flash = await js(`return { pics: document.querySelectorAll('.card-picture img').length, placeholder: !!document.querySelector('.card-picture-empty'), sentence: !!document.querySelector('.fc-sentence') };`);
-  const answerVocab = async (mode, type) => {
-    await b.go(base); await b.go(`${base}/vocab/${mode}?type=${type}`); act('student', `Open vocabulary ${mode} (${type})`, 2);
-    const res = await js(`
-      const [hp, hq = ''] = location.hash.split('?'); const qp = new URLSearchParams(hq);
-      const key = Object.keys(sessionStorage).find((k) => k.endsWith(':vocab:${mode}:${type}:'));
-      const d = JSON.parse(sessionStorage.getItem(key)); const snap = await WW.store.getApprovedLesson(${JSON.stringify(wid)});
-      const { buildActivity } = await import('./js/vocab.js'); const qs = buildActivity('${type}', snap.vocab, { seed: d.seed }).questions;
-      let actions = 0;
-      for (let i = 0; i < qs.length; i++) {
-        const q = qs[i];
-        if (q.type === 'write') { const inp = document.querySelector('.answer-input'); inp.value = q.word; inp.dispatchEvent(new Event('input')); }
-        else if (q.type === 'match') { q.pairs.forEach((p, k) => { const s = document.querySelectorAll('.match select')[k]; s.value = q.options.find((o) => o.text === p.correctText).key; s.dispatchEvent(new Event('change')); actions++; }); actions--; }
-        else document.querySelector('input[value="' + q.answerKey + '"]').click();
-        actions++;
-        if ('${mode}' === 'practice') { document.querySelector('form.question').requestSubmit(); actions++; await new Promise((r) => setTimeout(r, 40)); }
-        const nb = [...document.querySelectorAll('.quiz-controls .btn')].find((x) => /Next|Review|Finish/.test(x.textContent)); nb.click(); actions++; await new Promise((r) => setTimeout(r, 40));
-      }
-      if ('${mode}' === 'test') { document.querySelector('.submit-test').click(); actions++; await new Promise((r) => setTimeout(r, 400)); }
-      return { n: qs.length, actions, text: document.getElementById('app').innerText.slice(0, 120) };`);
-    act('student', `Answer ${res.n} questions (${mode}, ${type})`, res.actions);
-    return res;
-  };
-  const vp = await answerVocab('practice', 'mixed');
-  const vt = await answerVocab('test', 'mixed');
-  const spell = async (mode) => {
-    await b.go(base); await b.go(`${base}/spell/${mode}`); act('student', `Open spelling ${mode}`, 2);
-    await click('.start-btn'); act('student', 'Start');
-    const res = await js(`
-      const key = Object.keys(sessionStorage).find((k) => k.includes(':spelling:${mode}:'));
-      const d = JSON.parse(sessionStorage.getItem(key)); const snap = await WW.store.getApprovedLesson(${JSON.stringify(wid)});
-      const { spellingOrder } = await import('./js/views/spellQuiz.js');
-      const order = spellingOrder(snap.spelling, { seed: d.seed, teacherOrder: snap.settings.spellingTestOrder === 'teacher' }).map((s) => s.word);
-      let actions = 0;
-      for (let i = 0; i < order.length; i++) {
-        const inp = document.querySelector('.spell-input'); inp.value = order[i]; inp.dispatchEvent(new Event('input')); actions++;
-        if ('${mode}' === 'practice') { document.querySelector('form.question').requestSubmit(); actions++; await new Promise((r) => setTimeout(r, 40)); }
-        const nb = [...document.querySelectorAll('.quiz-controls .btn')].find((x) => /Next|Review|Finish/.test(x.textContent)); nb.click(); actions++; await new Promise((r) => setTimeout(r, 40));
-      }
-      if ('${mode}' === 'test') { document.querySelector('.submit-test').click(); actions++; await new Promise((r) => setTimeout(r, 400)); }
-      return { n: order.length, actions, text: document.getElementById('app').innerText.slice(0, 160) };`);
-    act('student', `Type ${res.n} words (${mode})`, res.actions);
-    return res;
-  };
-  await b.go(`${base}/spell/study`); act('student', 'Open spelling study (listen to words)');
-  const sp = await spell('practice');
-  const st = await spell('test');
-  const attempts = await js(`return (await WW.store.listAttempts({ studentId: ${JSON.stringify(sid)} })).map((a) => ({ s: a.subject, m: a.mode, score: a.score, total: a.total, v: a.snapshotVersion }));`);
+  const opened = await js(`return /Study/.test(document.getElementById('app').innerText) && /Practice/.test(document.getElementById('app').innerText) && /Test/.test(document.getElementById('app').innerText);`);
+  await js(`document.querySelector('.tile').click(); await new Promise((r) => setTimeout(r, 300)); await WW.whenRendered(); return 1;`);
+  const studyText = await js(`return document.getElementById('app').innerText.slice(0, 200);`);
 
   // ── Report ──
-  const sum = (who) => steps[who].reduce((n, s) => n + s.n, 0);
-  console.log(`\nSUNDAY WALKTHROUGH (lesson wizard; sentences: ${SENTENCE_MODE}) — Sept 28–Oct 2 teacher newsletter, 2 pages uploaded one per section (not camera photos)`);
-  console.log(`Imported: ${counts.spelling} spelling, ${counts.vocab} vocabulary. Reading time (desktop, headless): ${readSecs.toFixed(1)} s.`);
-  console.log('Review-screen notes shown:', review.notes.filter((n) => !/Check the text against/.test(n)).join(' | ') || 'none');
-  console.log(`Corrections typed on the review screen: ${fixes.length} (${fixes.join('; ') || '—'})`);
-  console.log(`Approval blockers before review: ${before}. Warnings acknowledged: ${r.acks}. Items ticked: ${r.ticks}.`);
-  console.log('Warning kinds:'); for (const [k, v] of Object.entries(r.kinds)) console.log(`  ${v} × ${k}`);
-  console.log(`Approved version ${w.approvedVersion}: ${snap.spelling.length} spelling, ${snap.vocab.length} vocabulary; sentences: ${snap.vocab.filter((v) => v.sentence).length + snap.spelling.filter((s) => s.sentence).length}/${snap.vocab.length + snap.spelling.length}; pictures: ${snap.vocab.filter((v) => v.image).length}/${snap.vocab.length}`);
-  console.log(`Flashcard on screen: picture ${flash.pics ? 'yes' : 'no'}${flash.placeholder ? ' ("Picture coming soon")' : ''}, sentence ${flash.sentence ? 'yes' : 'no'}`);
-  console.log('Results saved:', JSON.stringify(attempts));
-  for (const who of ['parent', 'external', 'student']) {
-    console.log(`\n${who.toUpperCase()} actions: ${sum(who)}`);
-    for (const s of steps[who]) console.log(`  ${String(s.n).padStart(3)}  ${s.what}`);
-  }
-  console.log(`\nErrors: ${b.errors.length ? b.errors.join(' | ') : 'none'} · automated run ${((Date.now() - t0) / 1000).toFixed(0)} s`);
+  const by = (kind) => steps.filter((s) => s.kind === kind).reduce((n, s) => n + s.n, 0);
+  const parent = steps.filter((s) => s.kind !== 'external').reduce((n, s) => n + s.n, 0);
+  const exactSp = truth.spelling.filter((w, i) => firstRead.spelling[i]?.word === w).length;
+  const firstVo = firstRead.vocabTable || firstRead.vocab;
+  const exactVoWords = truth.vocab.filter((t) => firstVo.some((r) => norm(r.word) === t.word)).length;
+  const exactVoDefs = truth.vocab.filter((t) => firstVo.some((r) => norm(r.word) === t.word && norm(r.def) === t.definition)).length;
+  // Estimated parent time: 3 s per click, 4 s per photo pick, 2 s per drag, 4 s + 0.35 s per character typed,
+  // 3 s to compare each word with the sheet, plus the measured reading time (desktop; phones are slower).
+  const words = truth.spelling.length + truth.vocab.length;
+  const est = by('click') * 3 + by('file') * 4 + by('drag') * 2 + by('type') * 4 + typedChars * 0.35 + words * 3 + readSecs;
+  console.log(`\nREAL-WORLD WALKTHROUGH — ${label}`);
+  console.log(`Vocabulary photo read: ${VOCAB_MODE === 'table' ? 'as a table of cards (rough corners, 4 × 3)' : 'as taken'} · sentences: ${SENTENCES}`);
+  console.log(`OCR (before any correction): spelling ${exactSp}/${truth.spelling.length} exact in place; vocabulary words ${exactVoWords}/${truth.vocab.length}, exact word+definition ${exactVoDefs}/${truth.vocab.length}.`);
+  console.log(`"Needs attention" after reading: ${attentionBefore} words.`);
+  console.log(`OCR corrections typed or removed: spelling ${fixes.spelling.length}, vocabulary ${fixes.vocab.length}`);
+  for (const k of ['spelling', 'vocab']) fixes[k].forEach((f) => console.log(`  ${k}: ${f}`));
+  console.log(`Approved: ${snap.spelling.length} spelling, ${snap.vocab.length} vocabulary; matches the sheets: spelling ${snap.spelling.map((s) => s.word).join() === truth.spelling.join() ? 'yes' : 'NO'}, vocabulary ${truth.vocab.every((t) => snap.vocab.some((v) => v.word === t.word && v.definition === t.definition)) ? 'yes' : 'NO'}`);
+  console.log(`Student: lesson page with Study/Practice/Test ${opened ? 'yes' : 'NO'}; first tile opened: ${studyText.split('\n')[0]}`);
+  console.log(`\nPARENT ACTIONS: ${parent} (clicks ${by('click')}, photo picks ${by('file')}, drags ${by('drag')}, typed fields ${by('type')} with ${typedChars} characters)${by('external') ? ` + ${by('external')} in another app` : ''}`);
+  for (const s of steps) console.log(`  ${String(s.n).padStart(3)}  ${s.what}${s.kind === 'external' ? ' (other app)' : ''}`);
+  console.log(`\nScreen changes for the parent: ${parentScreens} (home → lesson workspace → student lesson page); stages Add/Check/Finish switch on the same screen.`);
+  console.log(`Photo reading time (desktop, headless): ${readSecs.toFixed(0)} s. Estimated parent time: about ${Math.round(est / 60)} min (${Math.round(est)} s; estimate, not timed with a person).`);
+  console.log(`Errors: ${b.errors.length ? b.errors.join(' | ') : 'none'} · automated run ${((Date.now() - t0) / 1000).toFixed(0)} s`);
 } finally { b.close(); server.close(); }

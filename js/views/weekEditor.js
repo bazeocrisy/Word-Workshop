@@ -31,7 +31,7 @@ function sourceBadge(it) {
 
 const linesToText = (lines) => lines.map((l) => l.text).join('\n');
 
-// Also the base of the lesson wizard's "Add words" and "Review" steps (views/wizard.js).
+// Also the base of the lesson workspace (views/workspace.js), which reuses its saving, sentence and picture tools.
 export class Editor {
   constructor(week, student, snapshots) {
     this.w = week; this.student = student; this.snapshots = snapshots;
